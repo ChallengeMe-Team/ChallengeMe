@@ -1,8 +1,19 @@
 # 🚀 ChallengeMe Project
 
-This guide explains how to **set up and run the ChallengeMe project** (backend + frontend) locally. Follow the steps carefully.
+## Contributors:
+
+- [Emilia Alexandrescu](https://github.com/Andremyyy/) - Product Owner
+- [Roger Bostan](https://github.com/Roger1nho) - Scrum Master
+- [Calin Befu]()
+- [Alex Carpiuc]()
+- [Iustin Bivolaru](https://github.com/Iustinache)
+- [Emanuel Corlat](https://github.com/corlatemanuel)
+- [Stefan Alexa](https://github.com/stefanalexa25)
+- [Tudor Buta]()
 
 ---
+
+This guide explains how to **set up and run the ChallengeMe project** (backend + frontend) locally. Follow the steps carefully.
 
 ## 1️⃣ Prerequisites
 
