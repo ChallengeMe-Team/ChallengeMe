@@ -1,8 +1,19 @@
 # 🚀 ChallengeMe Project
 
-This guide explains how to **set up and run the ChallengeMe project** (backend + frontend) locally. Follow the steps carefully.
+## Contributors:
+
+- [Emilia Alexandrescu](https://github.com/Andremyyy/) - Product Owner
+- [Roger Bostan](https://github.com/Roger1nho) - Scrum Master
+- [Calin Befu]()
+- [Alex Carpiuc]()
+- [Iustin Bivolaru](https://github.com/Iustinache)
+- [Emanuel Corlat](https://github.com/corlatemanuel)
+- [Stefan Alexa](https://github.com/stefanalexa25)
+- [Tudor Buta]()
 
 ---
+
+This guide explains how to **set up and run the ChallengeMe project** (backend + frontend) locally. Follow the steps carefully.
 
 ## 1️⃣ Prerequisites
 
@@ -105,7 +116,7 @@ git push origin NR-1-my-feature
 - Make sure the branch name clearly indicates the story it relates to.
 
 ## 6️⃣ Notes & Tips
-- .gitignore is pre-configured – do not commit node_modules, /dist, .idea, etc.
+- .gitignore is pre-configured - do not commit node_modules, /dist, .idea, etc.
 - Use environment variables in environment.ts / environment.prod.ts to centralize backend URLs.
 - Backend default port: 8080, frontend default port: 4200
 - Make sure these ports are free before running.
@@ -116,4 +127,3 @@ git push origin NR-1-my-feature
   b) Java version
 
   c) Proxy configuration in frontend
-  
