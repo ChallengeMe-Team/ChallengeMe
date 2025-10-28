@@ -116,4 +116,3 @@ git push origin NR-1-my-feature
   b) Java version
 
   c) Proxy configuration in frontend
-  
