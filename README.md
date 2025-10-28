@@ -105,7 +105,7 @@ git push origin NR-1-my-feature
 - Make sure the branch name clearly indicates the story it relates to.
 
 ## 6️⃣ Notes & Tips
-- .gitignore is pre-configured – do not commit node_modules, /dist, .idea, etc.
+- .gitignore is pre-configured - do not commit node_modules, /dist, .idea, etc.
 - Use environment variables in environment.ts / environment.prod.ts to centralize backend URLs.
 - Backend default port: 8080, frontend default port: 4200
 - Make sure these ports are free before running.
