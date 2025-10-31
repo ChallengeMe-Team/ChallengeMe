@@ -4,12 +4,12 @@
 
 - [Emilia Alexandrescu](https://github.com/Andremyyy/) - Product Owner
 - [Roger Bostan](https://github.com/Roger1nho) - Scrum Master
-- [Calin Befu]()
-- [Alex Carpiuc]()
+- [Calin Befu](https://github.com/PrimeCalinBefu)
+- [Alex Carpiuc](https://github.com/AlexCarpiuc)
 - [Iustin Bivolaru](https://github.com/Iustinache)
 - [Emanuel Corlat](https://github.com/corlatemanuel)
 - [Stefan Alexa](https://github.com/stefanalexa25)
-- [Tudor Buta]()
+- [Tudor Buta](https://github.com/Tudor1508)
 
 ---
 
