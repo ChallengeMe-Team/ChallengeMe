@@ -30,11 +30,17 @@ dependencies {
 	// Spring Data JPA
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+	// Validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
 	// H2 Database (in-memory, pentru testare)
-	//momentan pana cand integram baza de date PostreSQL
 	runtimeOnly 'com.h2database:h2'
 
-	// Spring Boot DevTools (opțional, hot reload)
+	// Spring Boot DevTools (optional)
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -47,6 +53,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 }
+
 
 tasks.named('test') {
 	useJUnitPlatform()
