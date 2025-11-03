@@ -38,6 +38,14 @@ dependencies {
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	//Spring Boot validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	//Lombok
+	implementation 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
 }
 
 tasks.named('test') {

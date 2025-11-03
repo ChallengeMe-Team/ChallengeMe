@@ -1,29 +1,19 @@
 package challengeme.backend.repository;
 
 import challengeme.backend.model.User;
-import org.springframework.stereotype.Repository;
 
 import java.util.*;
 
-@Repository
-public class UserRepository {
+public interface UserRepository {
 
-    private final Map<UUID, User> users = new HashMap<>();
+    List<User> findAll();
 
-    public List<User> findAll() {
-        return new ArrayList<>(users.values());
-    }
+    User findById(UUID id);
 
-    public Optional<User> findById(UUID id) {
-        return Optional.ofNullable(users.get(id));
-    }
+    User save(User user);
 
-    public User save(User user) {
-        users.put(user.getId(), user);
-        return user;
-    }
+    void delete(UUID id);
 
-    public void delete(UUID id) {
-        users.remove(id);
-    }
+    void update(User user);
+
 }
