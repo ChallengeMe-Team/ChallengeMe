@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
+/*
  * Represents an association between a User and a Badge.
  * Allows tracking which badges each user has earned and when.
  */
