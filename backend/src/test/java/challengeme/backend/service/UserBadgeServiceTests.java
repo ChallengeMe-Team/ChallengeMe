@@ -1,6 +1,8 @@
 package challengeme.backend.service;
 
-import challengeme.backend.model.*;
+import challengeme.backend.model.Badge;
+import challengeme.backend.model.User;
+import challengeme.backend.model.UserBadge;
 import challengeme.backend.repository.RepositoryUserBadge;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +42,10 @@ public class UserBadgeServiceTests {
 
     @Test
     void testCreateUserBadgeAssignsId() {
-        UserBadge ub = new UserBadge(null, new User(), new Badge(), LocalDate.now());
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
+        UserBadge ub = new UserBadge(null, user, badge, LocalDate.now());
+
         when(repositoryUserBadge.create(any())).thenReturn(ub);
 
         UserBadge result = userBadgeService.createUserBadge(ub);
@@ -58,7 +63,10 @@ public class UserBadgeServiceTests {
     @Test
     void testUpdateUserBadge() {
         UUID id = UUID.randomUUID();
-        UserBadge ub = new UserBadge(id, new User(), new Badge(), LocalDate.now());
+        User user = new User(UUID.randomUUID(), "Ion", "ion@email.com", "pass123", 8);
+        Badge badge = new Badge(UUID.randomUUID(), "Silver", "Updated badge", "Achieve 20 challenges");
+        UserBadge ub = new UserBadge(id, user, badge, LocalDate.now());
+
         userBadgeService.updateUserBadge(id, ub);
         verify(repositoryUserBadge).update(ub);
     }

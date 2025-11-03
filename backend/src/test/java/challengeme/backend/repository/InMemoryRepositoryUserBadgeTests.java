@@ -25,7 +25,7 @@ public class InMemoryRepositoryUserBadgeTests {
     @Test
     void testCreateAndFind() {
         User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "desc");
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
         UserBadge ub = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
 
         repository.create(ub);
@@ -37,12 +37,12 @@ public class InMemoryRepositoryUserBadgeTests {
     @Test
     void testUpdate() {
         User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "desc");
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
         UserBadge ub = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
         repository.create(ub);
 
         // Update badge
-        Badge newBadge = new Badge(UUID.randomUUID(), "Silver", "Updated");
+        Badge newBadge = new Badge(UUID.randomUUID(), "Silver", "Updated badge", "Achieve 20 challenges");
         User updatedUser = new User(UUID.randomUUID(), "Ion", "ion@email.com", "newpass123", 15);
         UserBadge updated = new UserBadge(ub.getId(), updatedUser, newBadge, LocalDate.now());
         repository.update(updated);
@@ -50,12 +50,13 @@ public class InMemoryRepositoryUserBadgeTests {
         UserBadge result = repository.getUserBadge(ub.getId());
         assertEquals("Silver", result.getBadge().getName());
         assertEquals("Ion", result.getUser().getUsername());
+        assertEquals("Achieve 20 challenges", result.getBadge().getCriteria());
     }
 
     @Test
     void testDelete() {
         User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "desc");
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
         UserBadge ub = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
 
         repository.create(ub);

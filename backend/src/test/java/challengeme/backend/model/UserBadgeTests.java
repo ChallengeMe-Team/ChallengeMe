@@ -27,7 +27,7 @@ public class UserBadgeTests {
     void testUserBadgeGettersSetters() {
         UUID id = UUID.randomUUID();
         User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer");
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
 
         UserBadge userBadge = new UserBadge();
         userBadge.setId(id);
@@ -45,7 +45,7 @@ public class UserBadgeTests {
     void testAllArgsConstructor() {
         UUID id = UUID.randomUUID();
         User user = new User(UUID.randomUUID(), "Ion", "ion@email.com", "pass1234", 5);
-        Badge badge = new Badge(UUID.randomUUID(), "Silver", "Runner-up");
+        Badge badge = new Badge(UUID.randomUUID(), "Silver", "Runner-up badge", "Achieve 5 challenges");
         LocalDate date = LocalDate.of(2024, 12, 31);
 
         UserBadge userBadge = new UserBadge(id, user, badge, date);
@@ -66,7 +66,7 @@ public class UserBadgeTests {
     @Test
     void testValidationSuccess() {
         User user = new User("Ana", "ana@email.com", "secret123", 15);
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer");
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
         UserBadge userBadge = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
 
         Set<ConstraintViolation<UserBadge>> violations = validator.validate(userBadge);
@@ -75,7 +75,7 @@ public class UserBadgeTests {
 
     @Test
     void testValidationFail_UserNull() {
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer");
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
         UserBadge userBadge = new UserBadge(UUID.randomUUID(), null, badge, LocalDate.now());
 
         Set<ConstraintViolation<UserBadge>> violations = validator.validate(userBadge);
