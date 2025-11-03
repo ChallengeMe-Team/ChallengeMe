@@ -1,6 +1,7 @@
 package challengeme.backend.service;
 
 import challengeme.backend.domain.Challenge;
+import challengeme.backend.exceptions.ChallengeNotFoundException;
 import challengeme.backend.repo.ChallengeRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,8 @@ public class ChallengeService {
     }
 
     public Challenge getChallengeById(UUID id) {
-        return challengeRepository.findById(id);
+        return challengeRepository.findById(id)
+                .orElseThrow(() -> new ChallengeNotFoundException(id));
     }
     
     public Challenge addChallenge(Challenge challenge) {
@@ -53,6 +55,12 @@ public class ChallengeService {
         }
         if (challenge.getDifficulty() == null) {
             throw new IllegalArgumentException("Difficulty must be specified");
+        }
+        if (challenge.getPoints() <= 0) {
+            throw new IllegalArgumentException("Points must be positive");
+        }
+        if (challenge.getCreatedBy() == null || challenge.getCreatedBy().trim().isEmpty()) {
+            throw new IllegalArgumentException("Created by cannot be empty");
         }
     }
 }
