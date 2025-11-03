@@ -1,7 +1,6 @@
 package challengeme.backend.service;
 
 import challengeme.backend.model.User;
-import challengeme.backend.repository.inMemory.InMemoryUserRepository;
 import challengeme.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,7 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        if(user.getId() == null)
+        if (user.getId() == null)
             user.setId(UUID.randomUUID());
         return userRepository.save(user);
     }
