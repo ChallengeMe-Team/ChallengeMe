@@ -1,7 +1,8 @@
-package challengeme.backend.repository;
+package challengeme.backend.repository.inMemory;
 
 import challengeme.backend.exception.EntityNotFoundException;
 import challengeme.backend.model.UserBadge;
+import challengeme.backend.repository.RepositoryUserBadge;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;

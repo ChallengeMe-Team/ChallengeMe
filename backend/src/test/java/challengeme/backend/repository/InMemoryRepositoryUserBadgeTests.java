@@ -2,6 +2,7 @@ package challengeme.backend.repository;
 
 import challengeme.backend.exception.EntityNotFoundException;
 import challengeme.backend.model.*;
+import challengeme.backend.repository.inMemory.InMemoryRepositoryUserBadge;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
