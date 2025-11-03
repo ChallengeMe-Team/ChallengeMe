@@ -1,7 +1,9 @@
 package challengeme.backend.repository;
 
 import challengeme.backend.exception.EntityNotFoundException;
-import challengeme.backend.model.*;
+import challengeme.backend.model.Badge;
+import challengeme.backend.model.User;
+import challengeme.backend.model.UserBadge;
 import challengeme.backend.repository.inMemory.InMemoryRepositoryUserBadge;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,10 +24,9 @@ public class InMemoryRepositoryUserBadgeTests {
 
     @Test
     void testCreateAndFind() {
-        UserBadge ub = new UserBadge(UUID.randomUUID(),
-                new User(UUID.randomUUID(), "Ana", "ana@email.com"),
-                new Badge(UUID.randomUUID(), "Gold", "desc"),
-                LocalDate.now());
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "desc");
+        UserBadge ub = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
 
         repository.create(ub);
         UserBadge found = repository.getUserBadge(ub.getId());
@@ -35,19 +36,28 @@ public class InMemoryRepositoryUserBadgeTests {
 
     @Test
     void testUpdate() {
-        UserBadge ub = new UserBadge(UUID.randomUUID(), new User(), new Badge(), LocalDate.now());
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "desc");
+        UserBadge ub = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
         repository.create(ub);
 
+        // Update badge
         Badge newBadge = new Badge(UUID.randomUUID(), "Silver", "Updated");
-        UserBadge updated = new UserBadge(ub.getId(), new User(), newBadge, LocalDate.now());
+        User updatedUser = new User(UUID.randomUUID(), "Ion", "ion@email.com", "newpass123", 15);
+        UserBadge updated = new UserBadge(ub.getId(), updatedUser, newBadge, LocalDate.now());
         repository.update(updated);
 
-        assertEquals("Silver", repository.getUserBadge(ub.getId()).getBadge().getName());
+        UserBadge result = repository.getUserBadge(ub.getId());
+        assertEquals("Silver", result.getBadge().getName());
+        assertEquals("Ion", result.getUser().getUsername());
     }
 
     @Test
     void testDelete() {
-        UserBadge ub = new UserBadge(UUID.randomUUID(), new User(), new Badge(), LocalDate.now());
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "desc");
+        UserBadge ub = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
+
         repository.create(ub);
         repository.delete(ub.getId());
 

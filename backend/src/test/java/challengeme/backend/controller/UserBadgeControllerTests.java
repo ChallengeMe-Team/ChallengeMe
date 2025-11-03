@@ -33,7 +33,7 @@ public class UserBadgeControllerTests {
 
     @Test
     void testFindAll() throws Exception {
-        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com");
+        new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
         Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top");
         UserBadge ub1 = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
         UserBadge ub2 = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
@@ -50,7 +50,7 @@ public class UserBadgeControllerTests {
     @Test
     void testFindUserBadgeById() throws Exception {
         UUID id = UUID.randomUUID();
-        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com");
+        new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
         Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top");
         UserBadge userBadge = new UserBadge(id, user, badge, LocalDate.now());
 
@@ -75,7 +75,7 @@ public class UserBadgeControllerTests {
 
     @Test
     void testCreateUserBadge() throws Exception {
-        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com");
+        new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
         Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top");
         UserBadge ub = new UserBadge(null, user, badge, LocalDate.now());
 
@@ -90,7 +90,7 @@ public class UserBadgeControllerTests {
     @Test
     void testUpdateUserBadge() throws Exception {
         UUID id = UUID.randomUUID();
-        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com");
+        new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
         Badge badge = new Badge(UUID.randomUUID(), "Silver", "Updated");
         UserBadge ub = new UserBadge(id, user, badge, LocalDate.now());
 

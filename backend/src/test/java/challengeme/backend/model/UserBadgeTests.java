@@ -26,7 +26,7 @@ public class UserBadgeTests {
     @Test
     void testUserBadgeGettersSetters() {
         UUID id = UUID.randomUUID();
-        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com");
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
         Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer");
 
         UserBadge userBadge = new UserBadge();
@@ -44,7 +44,7 @@ public class UserBadgeTests {
     @Test
     void testAllArgsConstructor() {
         UUID id = UUID.randomUUID();
-        User user = new User(UUID.randomUUID(), "Ion", "ion@email.com");
+        User user = new User(UUID.randomUUID(), "Ion", "ion@email.com", "pass1234", 5);
         Badge badge = new Badge(UUID.randomUUID(), "Silver", "Runner-up");
         LocalDate date = LocalDate.of(2024, 12, 31);
 
@@ -65,7 +65,7 @@ public class UserBadgeTests {
 
     @Test
     void testValidationSuccess() {
-        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com");
+        User user = new User("Ana", "ana@email.com", "secret123", 15);
         Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer");
         UserBadge userBadge = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
 
@@ -75,4 +75,23 @@ public class UserBadgeTests {
 
     @Test
     void testValidationFail_UserNull() {
-        Badge badge = new Badge(UUID.random
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer");
+        UserBadge userBadge = new UserBadge(UUID.randomUUID(), null, badge, LocalDate.now());
+
+        Set<ConstraintViolation<UserBadge>> violations = validator.validate(userBadge);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("user")));
+    }
+
+    @Test
+    void testValidationFail_BadgeNull() {
+        User user = new User("Ana", "ana@email.com", "secret123", 10);
+        UserBadge userBadge = new UserBadge(UUID.randomUUID(), user, null, LocalDate.now());
+
+        Set<ConstraintViolation<UserBadge>> violations = validator.validate(userBadge);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("badge")));
+    }
+}
