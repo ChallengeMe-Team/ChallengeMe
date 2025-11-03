@@ -1,6 +1,7 @@
 package challengeme.backend.service;
 
 import challengeme.backend.model.*;
+import challengeme.backend.repository.RepositoryUserBadge;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
