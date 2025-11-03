@@ -1,7 +1,9 @@
 package challengeme.backend.controller;
 
 import challengeme.backend.exception.EntityNotFoundException;
-import challengeme.backend.model.*;
+import challengeme.backend.model.Badge;
+import challengeme.backend.model.User;
+import challengeme.backend.model.UserBadge;
 import challengeme.backend.service.UserBadgeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -33,8 +35,9 @@ public class UserBadgeControllerTests {
 
     @Test
     void testFindAll() throws Exception {
-        new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top");
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer", "Complete 10 challenges");
+
         UserBadge ub1 = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
         UserBadge ub2 = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
 
@@ -50,8 +53,8 @@ public class UserBadgeControllerTests {
     @Test
     void testFindUserBadgeById() throws Exception {
         UUID id = UUID.randomUUID();
-        new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top");
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer", "Complete 10 challenges");
         UserBadge userBadge = new UserBadge(id, user, badge, LocalDate.now());
 
         when(userBadgeService.findUserBadge(id)).thenReturn(userBadge);
@@ -59,7 +62,8 @@ public class UserBadgeControllerTests {
         mockMvc.perform(get("/userbadges/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.user.username").value("Ana"))
-                .andExpect(jsonPath("$.badge.name").value("Gold"));
+                .andExpect(jsonPath("$.badge.name").value("Gold"))
+                .andExpect(jsonPath("$.badge.criteria").value("Complete 10 challenges"));
     }
 
     @Test
@@ -75,8 +79,8 @@ public class UserBadgeControllerTests {
 
     @Test
     void testCreateUserBadge() throws Exception {
-        new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top");
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer", "Complete 10 challenges");
         UserBadge ub = new UserBadge(null, user, badge, LocalDate.now());
 
         mockMvc.perform(post("/userbadges")
@@ -90,8 +94,8 @@ public class UserBadgeControllerTests {
     @Test
     void testUpdateUserBadge() throws Exception {
         UUID id = UUID.randomUUID();
-        new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
-        Badge badge = new Badge(UUID.randomUUID(), "Silver", "Updated");
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Silver", "Updated badge", "Achieve 20 challenges");
         UserBadge ub = new UserBadge(id, user, badge, LocalDate.now());
 
         mockMvc.perform(put("/userbadges/{id}", id)
@@ -99,12 +103,13 @@ public class UserBadgeControllerTests {
                         .content(objectMapper.writeValueAsString(ub)))
                 .andExpect(status().isOk());
 
-        verify(userBadgeService, times(1)).updateUserBadge(any(UUID.class), any(UserBadge.class));
+        verify(userBadgeService, times(1)).updateUserBadge(eq(id), any(UserBadge.class));
     }
 
     @Test
     void testDeleteUserBadge() throws Exception {
         UUID id = UUID.randomUUID();
+
         mockMvc.perform(delete("/userbadges/{id}", id))
                 .andExpect(status().isNoContent());
 
