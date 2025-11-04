@@ -1,6 +1,6 @@
 package challengeme.backend.repository;
 
-import challengeme.backend.exception.EntityNotFoundException;
+import challengeme.backend.exception.UserBadgeNotFoundException;
 import challengeme.backend.model.Badge;
 import challengeme.backend.model.User;
 import challengeme.backend.model.UserBadge;
@@ -62,11 +62,11 @@ public class InMemoryRepositoryUserBadgeTests {
         repository.create(ub);
         repository.delete(ub.getId());
 
-        assertThrows(EntityNotFoundException.class, () -> repository.getUserBadge(ub.getId()));
+        assertThrows(UserBadgeNotFoundException.class, () -> repository.getUserBadge(ub.getId()));
     }
 
     @Test
     void testDeleteNonExistingThrows() {
-        assertThrows(EntityNotFoundException.class, () -> repository.delete(UUID.randomUUID()));
+        assertThrows(UserBadgeNotFoundException.class, () -> repository.delete(UUID.randomUUID()));
     }
 }

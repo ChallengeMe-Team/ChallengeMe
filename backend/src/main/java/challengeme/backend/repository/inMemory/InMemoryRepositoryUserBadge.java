@@ -1,6 +1,6 @@
 package challengeme.backend.repository.inMemory;
 
-import challengeme.backend.exception.EntityNotFoundException;
+import challengeme.backend.exception.UserBadgeNotFoundException;
 import challengeme.backend.model.UserBadge;
 import challengeme.backend.repository.RepositoryUserBadge;
 import org.springframework.stereotype.Repository;
@@ -24,7 +24,7 @@ public class InMemoryRepositoryUserBadge implements RepositoryUserBadge {
         return userBadges.stream()
                 .filter(ub -> ub.getId().equals(id))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("UserBadge with id " + id + " not found"));
+                .orElseThrow(() -> new UserBadgeNotFoundException("UserBadge with id " + id + " not found"));
     }
 
     @Override
@@ -37,7 +37,7 @@ public class InMemoryRepositoryUserBadge implements RepositoryUserBadge {
     public void delete(UUID id) {
         boolean removed = userBadges.removeIf(ub -> ub.getId().equals(id));
         if (!removed) {
-            throw new EntityNotFoundException("UserBadge with id " + id + " not found");
+            throw new UserBadgeNotFoundException("UserBadge with id " + id + " not found");
         }
     }
 
@@ -52,6 +52,6 @@ public class InMemoryRepositoryUserBadge implements RepositoryUserBadge {
                     existing.setDateAwarded(userBadge.getDateAwarded());
                     return existing;
                 })
-                .orElseThrow(() -> new EntityNotFoundException("UserBadge with id " + userBadge.getId() + " not found"));
+                .orElseThrow(() -> new UserBadgeNotFoundException("UserBadge with id " + userBadge.getId() + " not found"));
     }
 }

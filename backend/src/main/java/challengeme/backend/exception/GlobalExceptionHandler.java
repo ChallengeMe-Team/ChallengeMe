@@ -24,8 +24,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<?> handleEntityNotFound(EntityNotFoundException ex) {
+    @ExceptionHandler(UserBadgeNotFoundException.class)
+    public ResponseEntity<?> handleEntityNotFound(UserBadgeNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of(
                         "status", 404,

@@ -1,6 +1,6 @@
 package challengeme.backend.controller;
 
-import challengeme.backend.exception.EntityNotFoundException;
+import challengeme.backend.exception.UserBadgeNotFoundException;
 import challengeme.backend.model.Badge;
 import challengeme.backend.model.User;
 import challengeme.backend.model.UserBadge;
@@ -70,7 +70,7 @@ public class UserBadgeControllerTests {
     void testFindUserBadgeNotFound() throws Exception {
         UUID id = UUID.randomUUID();
         when(userBadgeService.findUserBadge(id))
-                .thenThrow(new EntityNotFoundException("UserBadge with id " + id + " not found"));
+                .thenThrow(new UserBadgeNotFoundException("UserBadge with id " + id + " not found"));
 
         mockMvc.perform(get("/userbadges/{id}", id))
                 .andExpect(status().isNotFound())

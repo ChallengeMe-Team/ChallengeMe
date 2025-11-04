@@ -2,6 +2,7 @@ package challengeme.backend.service;
 
 import challengeme.backend.model.UserBadge;
 import challengeme.backend.repository.RepositoryUserBadge;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.UUID;
 public class UserBadgeService {
 
     private final RepositoryUserBadge repositoryUserBadge;
-
+    @Autowired
     public UserBadgeService(RepositoryUserBadge repositoryUserBadge) {
         this.repositoryUserBadge = repositoryUserBadge;
     }
@@ -35,8 +36,9 @@ public class UserBadgeService {
         repositoryUserBadge.delete(id);
     }
 
-    public void updateUserBadge(UUID id, UserBadge userBadge) {
+    public UserBadge updateUserBadge(UUID id, UserBadge userBadge) {
         userBadge.setId(id);
         repositoryUserBadge.update(userBadge);
+        return userBadge;
     }
 }
