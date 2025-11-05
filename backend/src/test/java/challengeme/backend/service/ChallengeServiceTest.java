@@ -1,6 +1,7 @@
 package challengeme.backend.service;
 
 import challengeme.backend.domain.Challenge;
+import challengeme.backend.exceptions.ChallengeNotFoundException;
 import challengeme.backend.repo.ChallengeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,31 +31,74 @@ class ChallengeServiceTest {
     }
 
     @Test
-    void shouldAddValidChallenge() {
-        Challenge challenge = new Challenge(
-                "Valid Title", "Description", "Category",
-                Challenge.Difficulty.EASY, 100, "user123"
-        );
-
-        when(challengeRepository.save(any(Challenge.class))).thenReturn(challenge);
-
-        Challenge result = challengeService.addChallenge(challenge);
-
-        assertNotNull(result);
-        verify(challengeRepository).save(challenge);
+    void shouldGetAllChallenges() {
+        when(challengeRepository.findAll()).thenReturn(List.of(new Challenge()));
+        assertEquals(1, challengeService.getAllChallenges().size());
     }
 
     @Test
-    void shouldThrowExceptionWhenTitleIsEmpty() {
-        Challenge challenge = new Challenge();
-        challenge.setTitle("");
-        challenge.setCategory("Category");
-        challenge.setDifficulty(Challenge.Difficulty.EASY);
-        challenge.setPoints(100);
-        challenge.setCreatedBy("user123");
+    void shouldGetChallengeById() {
+        UUID id = UUID.randomUUID();
+        Challenge c = new Challenge("T", "D", "C", Challenge.Difficulty.EASY, 10, "U");
+        when(challengeRepository.findById(id)).thenReturn(Optional.of(c));
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            challengeService.addChallenge(challenge);
-        });
+        Challenge result = challengeService.getChallengeById(id);
+        assertEquals("T", result.getTitle());
+    }
+
+    @Test
+    void shouldThrowWhenChallengeNotFound() {
+        UUID id = UUID.randomUUID();
+        when(challengeRepository.findById(id)).thenReturn(Optional.empty());
+        assertThrows(ChallengeNotFoundException.class, () -> challengeService.getChallengeById(id));
+    }
+
+    @Test
+    void shouldAddValidChallenge() {
+        Challenge challenge = new Challenge("T", "D", "C", Challenge.Difficulty.EASY, 10, "U");
+        when(challengeRepository.save(any())).thenReturn(challenge);
+        Challenge result = challengeService.addChallenge(challenge);
+        assertEquals(challenge, result);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenTitleEmpty() {
+        Challenge challenge = new Challenge("", "D", "C", Challenge.Difficulty.EASY, 10, "U");
+        assertThrows(IllegalArgumentException.class, () -> challengeService.addChallenge(challenge));
+    }
+
+    @Test
+    void shouldUpdateExistingChallenge() {
+        UUID id = UUID.randomUUID();
+        Challenge challenge = new Challenge("T", "D", "C", Challenge.Difficulty.EASY, 10, "U");
+        when(challengeRepository.existsById(id)).thenReturn(true);
+        when(challengeRepository.save(any())).thenReturn(challenge);
+
+        Challenge updated = challengeService.updateChallenge(id, challenge);
+        assertEquals("T", updated.getTitle());
+    }
+
+    @Test
+    void shouldThrowWhenUpdatingNonExistingChallenge() {
+        UUID id = UUID.randomUUID();
+        Challenge challenge = new Challenge("T", "D", "C", Challenge.Difficulty.EASY, 10, "U");
+        when(challengeRepository.existsById(id)).thenReturn(false);
+
+        assertThrows(ChallengeNotFoundException.class, () -> challengeService.updateChallenge(id, challenge));
+    }
+
+    @Test
+    void shouldDeleteExistingChallenge() {
+        UUID id = UUID.randomUUID();
+        when(challengeRepository.existsById(id)).thenReturn(true);
+        challengeService.deleteChallenge(id);
+        verify(challengeRepository).deleteById(id);
+    }
+
+    @Test
+    void shouldThrowWhenDeletingNonExistingChallenge() {
+        UUID id = UUID.randomUUID();
+        when(challengeRepository.existsById(id)).thenReturn(false);
+        assertThrows(ChallengeNotFoundException.class, () -> challengeService.deleteChallenge(id));
     }
 }

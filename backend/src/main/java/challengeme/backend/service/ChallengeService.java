@@ -3,15 +3,18 @@ package challengeme.backend.service;
 import challengeme.backend.domain.Challenge;
 import challengeme.backend.exceptions.ChallengeNotFoundException;
 import challengeme.backend.repo.ChallengeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+
 @Service
 public class ChallengeService {
     private final ChallengeRepository challengeRepository;
 
+    @Autowired
     public ChallengeService(ChallengeRepository challengeRepository) {
         this.challengeRepository = challengeRepository;
     }
@@ -32,7 +35,7 @@ public class ChallengeService {
 
     public Challenge updateChallenge(UUID id, Challenge challenge) {
         if(!challengeRepository.existsById(id)) {
-            throw new IllegalArgumentException("Challenge not found");
+            throw new ChallengeNotFoundException(id);
         }
         challenge.setId(id);
         validateChallenge(challenge);
@@ -41,7 +44,7 @@ public class ChallengeService {
 
     public void deleteChallenge(UUID id) {
         if(!challengeRepository.existsById(id)) {
-            throw new IllegalArgumentException("Challenge not found");
+            throw new ChallengeNotFoundException(id);
         }
         challengeRepository.deleteById(id);
     }

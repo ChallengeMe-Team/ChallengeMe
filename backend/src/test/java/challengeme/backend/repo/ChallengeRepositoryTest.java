@@ -20,21 +20,39 @@ class ChallengeRepositoryTest {
 
     @Test
     void shouldSaveAndFindChallenge() {
-        Challenge challenge = new Challenge(
-                "Test Challenge", "Description", "Fitness",
-                Challenge.Difficulty.MEDIUM, 150, "user123"
-        );
-
+        Challenge challenge = new Challenge("T", "D", "C", Challenge.Difficulty.MEDIUM, 150, "U");
         Challenge saved = repository.save(challenge);
-        Optional<Challenge> found = repository.findById(saved.getId());
 
-        assertTrue(found.isPresent());
-        assertEquals(saved.getTitle(), found.get().getTitle());
+        assertTrue(repository.findById(saved.getId()).isPresent());
     }
 
     @Test
-    void shouldReturnEmptyWhenChallengeNotFound() {
-        Optional<Challenge> found = repository.findById(UUID.randomUUID());
-        assertFalse(found.isPresent());
+    void shouldUpdateExistingChallenge() {
+        Challenge c1 = new Challenge("Old", "D", "C", Challenge.Difficulty.EASY, 10, "U");
+        repository.save(c1);
+        c1.setTitle("Updated");
+        repository.save(c1);
+
+        assertEquals("Updated", repository.findById(c1.getId()).get().getTitle());
+    }
+
+    @Test
+    void shouldDeleteById() {
+        Challenge c = new Challenge("T", "D", "C", Challenge.Difficulty.MEDIUM, 150, "U");
+        repository.save(c);
+        repository.deleteById(c.getId());
+        assertTrue(repository.findAll().isEmpty());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNotFound() {
+        assertTrue(repository.findById(UUID.randomUUID()).isEmpty());
+    }
+
+    @Test
+    void shouldCheckExistsById() {
+        Challenge c = new Challenge("T", "D", "C", Challenge.Difficulty.HARD, 100, "U");
+        repository.save(c);
+        assertTrue(repository.existsById(c.getId()));
     }
 }

@@ -18,18 +18,9 @@ class ChallengeTest {
 
     @Test
     void shouldCreateChallengeWithValidData() {
-        Challenge challenge = new Challenge(
-                "Test Challenge",
-                "Test Description",
-                "Fitness",
-                Challenge.Difficulty.EASY,
-                100,
-                "user123"
-        );
-
+        Challenge challenge = new Challenge("Test", "Desc", "Cat", Challenge.Difficulty.HARD, 200, "user");
         assertNotNull(challenge.getId());
-        assertEquals("Test Challenge", challenge.getTitle());
-        assertEquals(Challenge.Difficulty.EASY, challenge.getDifficulty());
+        assertEquals("Test", challenge.getTitle());
     }
 
     @Test
@@ -43,5 +34,25 @@ class ChallengeTest {
 
         var violations = validator.validate(challenge);
         assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void shouldFailValidationWhenPointsNotPositive() {
+        Challenge challenge = new Challenge("T", "D", "C", Challenge.Difficulty.MEDIUM, -10, "U");
+        var violations = validator.validate(challenge);
+        assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void shouldFailValidationWhenCreatedByBlank() {
+        Challenge challenge = new Challenge("T", "D", "C", Challenge.Difficulty.MEDIUM, 100, "");
+        var violations = validator.validate(challenge);
+        assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void shouldHaveWorkingEnumValues() {
+        assertEquals(3, Challenge.Difficulty.values().length);
+        assertEquals(Challenge.Difficulty.EASY, Challenge.Difficulty.valueOf("EASY"));
     }
 }

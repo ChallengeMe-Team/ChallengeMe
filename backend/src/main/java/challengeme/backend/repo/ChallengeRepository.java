@@ -9,34 +9,37 @@ import java.util.concurrent.ConcurrentHashMap;
 @Repository
 public class ChallengeRepository implements ChallengeRepoInterface{
 
-    private final Map<UUID, Challenge> storage = new ConcurrentHashMap<>();
+    private final List<Challenge> storage = new ArrayList<>();
 
     @Override
     public List<Challenge> findAll() {
-        return new ArrayList<>(storage.values());
+        return new ArrayList<>(storage);
     }
 
     @Override
     public Optional<Challenge> findById(UUID id) {
-        return Optional.ofNullable(storage.get(id));
+        return storage.stream().filter(challenge -> challenge.getId().equals(id)).findFirst();
     }
 
     @Override
     public Challenge save(Challenge challenge) {
-        if(challenge.getId() == null){
+        if (challenge.getId() == null) {
             challenge.setId(UUID.randomUUID());
+        } else {
+            // remove existing one if updating
+            deleteById(challenge.getId());
         }
-        storage.put(challenge.getId(), challenge);
+        storage.add(challenge);
         return challenge;
     }
 
     @Override
     public void deleteById(UUID id) {
-        storage.remove(id);
+        findById(id).ifPresent(storage::remove);
     }
 
     @Override
     public boolean existsById(UUID id) {
-        return storage.containsKey(id);
+        return findById(id).isPresent();
     }
 }
