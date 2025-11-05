@@ -1,6 +1,6 @@
 package challengeme.backend.service;
 
-import challengeme.backend.exception.ResourceNotFoundException;
+import challengeme.backend.exception.ChallengeUserNotFoundException;
 import challengeme.backend.model.ChallengeUser;
 import challengeme.backend.model.ChallengeUserStatus;
 import challengeme.backend.model.CreateChallengeUserRequest;
@@ -45,7 +45,7 @@ public class ChallengeUserService {
 
     public ChallengeUser getChallengeUserById(UUID id) {
         return challengeUserRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("ChallengeUser link not found with id: " + id));
+                .orElseThrow(() -> new ChallengeUserNotFoundException("ChallengeUser link not found with id: " + id));
     }
 
     public List<ChallengeUser> getChallengeUsersByUserId(UUID userId) {
@@ -69,7 +69,7 @@ public class ChallengeUserService {
     public void deleteChallengeUser(UUID id) {
         // Verifică dacă există înainte de a șterge
         if (challengeUserRepository.findById(id).isEmpty()) {
-            throw new ResourceNotFoundException("ChallengeUser link not found with id: " + id);
+            throw new ChallengeUserNotFoundException("ChallengeUser link not found with id: " + id);
         }
         challengeUserRepository.deleteById(id);
     }

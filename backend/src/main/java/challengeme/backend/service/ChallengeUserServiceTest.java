@@ -1,6 +1,6 @@
 package challengeme.backend.service;
 
-import challengeme.backend.exception.ResourceNotFoundException;
+import challengeme.backend.exception.ChallengeUserNotFoundException;
 import challengeme.backend.model.ChallengeUser;
 import challengeme.backend.model.ChallengeUserStatus;
 import challengeme.backend.model.CreateChallengeUserRequest;
@@ -100,7 +100,7 @@ class ChallengeUserServiceTest {
         UUID id = UUID.randomUUID();
         when(challengeUserRepository.findById(id)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+        ChallengeUserNotFoundException exception = assertThrows(ChallengeUserNotFoundException.class, () -> {
             challengeUserService.getChallengeUserById(id);
         });
 
@@ -179,7 +179,7 @@ class ChallengeUserServiceTest {
         UUID id = UUID.randomUUID();
         when(challengeUserRepository.findById(id)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+        ChallengeUserNotFoundException exception = assertThrows(ChallengeUserNotFoundException.class, () -> {
             challengeUserService.updateChallengeUserStatus(id, ChallengeUserStatus.COMPLETED);
         });
 
@@ -206,7 +206,7 @@ class ChallengeUserServiceTest {
         UUID id = UUID.randomUUID();
         when(challengeUserRepository.findById(id)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+        ChallengeUserNotFoundException exception = assertThrows(ChallengeUserNotFoundException.class, () -> {
             challengeUserService.deleteChallengeUser(id);
         });
 
