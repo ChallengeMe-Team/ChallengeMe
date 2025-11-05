@@ -28,16 +28,4 @@ public class GlobalExceptionHandler {
         error.put("timestamp", LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
-//        Map<String, Object> error = new HashMap<>();
-//        error.put("timestamp", LocalDateTime.now());
-//        // Collect all validation messages into one string
-//        String message = ex.getBindingResult().getFieldErrors().stream()
-//                .map(f -> f.getField() + ": " + f.getDefaultMessage())
-//                .reduce((a, b) -> a + "; " + b)
-//                .orElse("Invalid request");
-//        error.put("message", message);
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-//    }
 }
