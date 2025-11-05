@@ -50,6 +50,14 @@ dependencies {
 	// Lombok
 	compileOnly 'org.projectlombok:lombok:1.18.30'
 	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+	//Spring Boot validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	//Lombok
+	implementation 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
 }
 
 tasks.named('test') {
