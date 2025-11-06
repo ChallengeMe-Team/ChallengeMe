@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -20,7 +23,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Verifies real HTTP interaction with the running application context.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class UserBadgeControllerIntegrationTests {
+
+
 
     @LocalServerPort
     private int port;
@@ -71,7 +77,9 @@ public class UserBadgeControllerIntegrationTests {
         ResponseEntity<UserBadge> postResponse =
                 restTemplate.postForEntity(getBaseUrl(), userBadge, UserBadge.class);
 
+        assertNotNull(postResponse.getBody(), "Response body should not be null");
         UUID id = postResponse.getBody().getId();
+
 
         // Modify and PUT
         badge.setName("Platinum");
@@ -83,7 +91,9 @@ public class UserBadgeControllerIntegrationTests {
         HttpEntity<UserBadge> entity = new HttpEntity<>(userBadge, headers);
 
         ResponseEntity<UserBadge> putResponse =
-                restTemplate.exchange(getBaseUrl() + "/" + id, HttpMethod.PUT, entity, UserBadge.class);
+                restTemplate.exchange(getBaseUrl() + "/" + id, HttpMethod.PUT, entity,
+                        new ParameterizedTypeReference<UserBadge>() {});
+
 
         assertEquals(HttpStatus.OK, putResponse.getStatusCode());
         assertEquals("Platinum", putResponse.getBody().getBadge().getName());

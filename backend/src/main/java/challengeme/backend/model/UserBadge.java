@@ -4,9 +4,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-//de eliminat comentariile cand o sa dam merge
-//import challengeme.backend.model.User;
-//import challengeme.backend.model.Badge;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import challengeme.backend.model.User;
+import challengeme.backend.model.Badge;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -18,6 +18,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class UserBadge {
 
     /** Unique identifier for this user–badge relation. */

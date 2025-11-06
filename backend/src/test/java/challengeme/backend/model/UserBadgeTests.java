@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
 public class UserBadgeTests {
 
     private static Validator validator;

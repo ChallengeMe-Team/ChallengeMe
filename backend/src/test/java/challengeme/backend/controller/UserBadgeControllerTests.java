@@ -9,7 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -22,6 +24,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserBadgeController.class)
+@ActiveProfiles("test")
+@Import(challengeme.backend.config.TestSecurityConfig.class)
 public class UserBadgeControllerTests {
 
     @Autowired
@@ -43,7 +47,7 @@ public class UserBadgeControllerTests {
 
         when(userBadgeService.findAll()).thenReturn(List.of(ub1, ub2));
 
-        mockMvc.perform(get("/userbadges"))
+        mockMvc.perform(get("/api/userbadges"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
 
@@ -59,7 +63,7 @@ public class UserBadgeControllerTests {
 
         when(userBadgeService.findUserBadge(id)).thenReturn(userBadge);
 
-        mockMvc.perform(get("/userbadges/{id}", id))
+        mockMvc.perform(get("/api/userbadges/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.user.username").value("Ana"))
                 .andExpect(jsonPath("$.badge.name").value("Gold"))
@@ -72,7 +76,7 @@ public class UserBadgeControllerTests {
         when(userBadgeService.findUserBadge(id))
                 .thenThrow(new UserBadgeNotFoundException("UserBadge with id " + id + " not found"));
 
-        mockMvc.perform(get("/userbadges/{id}", id))
+        mockMvc.perform(get("/api/userbadges/{id}", id))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("UserBadge with id " + id + " not found"));
     }
@@ -83,7 +87,7 @@ public class UserBadgeControllerTests {
         Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer", "Complete 10 challenges");
         UserBadge ub = new UserBadge(null, user, badge, LocalDate.now());
 
-        mockMvc.perform(post("/userbadges")
+        mockMvc.perform(post("/api/userbadges")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(ub)))
                 .andExpect(status().isCreated());
@@ -98,7 +102,7 @@ public class UserBadgeControllerTests {
         Badge badge = new Badge(UUID.randomUUID(), "Silver", "Updated badge", "Achieve 20 challenges");
         UserBadge ub = new UserBadge(id, user, badge, LocalDate.now());
 
-        mockMvc.perform(put("/userbadges/{id}", id)
+        mockMvc.perform(put("/api/userbadges/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(ub)))
                 .andExpect(status().isOk());
@@ -110,7 +114,7 @@ public class UserBadgeControllerTests {
     void testDeleteUserBadge() throws Exception {
         UUID id = UUID.randomUUID();
 
-        mockMvc.perform(delete("/userbadges/{id}", id))
+        mockMvc.perform(delete("/api/userbadges/{id}", id))
                 .andExpect(status().isNoContent());
 
         verify(userBadgeService, times(1)).deleteUserBadge(id);

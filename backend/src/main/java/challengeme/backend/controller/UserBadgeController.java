@@ -4,6 +4,7 @@ import challengeme.backend.model.UserBadge;
 import challengeme.backend.service.UserBadgeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,11 +44,15 @@ public class UserBadgeController {
     }
 
     // PUT (update)
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserBadge> updateUserBadge(@PathVariable UUID id, @Valid @RequestBody UserBadge userBadge) {
         UserBadge updated = userBadgeService.updateUserBadge(id, userBadge);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(updated);
     }
+
+
 
     // DELETE
     @DeleteMapping("/{id}")
