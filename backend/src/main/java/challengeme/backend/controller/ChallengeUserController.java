@@ -4,6 +4,7 @@ import challengeme.backend.model.ChallengeUser;
 import challengeme.backend.model.CreateChallengeUserRequest;
 import challengeme.backend.model.UpdateChallengeStatusRequest;
 import challengeme.backend.service.ChallengeUserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,19 +13,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Controller-ul REST pentru gestionarea legăturilor User-Challenge.
- */
+@CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/api/v1/user-challenges") // prefix bun pentru API
+@RequestMapping("/api/user-challenges")
 @RequiredArgsConstructor
 public class ChallengeUserController {
 
     private final ChallengeUserService challengeUserService;
 
     @PostMapping
-    public ResponseEntity<ChallengeUser> createChallengeUserLink(@RequestBody CreateChallengeUserRequest request) {
-        // Aici se poate adăuga validare pe request body cu @Valid
+    public ResponseEntity<ChallengeUser> createChallengeUserLink(@Valid @RequestBody CreateChallengeUserRequest request) {
         ChallengeUser createdLink = challengeUserService.createChallengeUser(request);
         return new ResponseEntity<>(createdLink, HttpStatus.CREATED);
     }
@@ -59,6 +57,6 @@ public class ChallengeUserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteChallengeUserLink(@PathVariable UUID id) {
         challengeUserService.deleteChallengeUser(id);
-        return ResponseEntity.noContent().build(); // HTTP 204 No Content
+        return ResponseEntity.noContent().build();
     }
 }

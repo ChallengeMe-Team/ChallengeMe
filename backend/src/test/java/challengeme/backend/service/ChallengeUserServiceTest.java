@@ -20,9 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Teste unitare pentru ChallengeUserService.
- */
 @ExtendWith(MockitoExtension.class)
 class ChallengeUserServiceTest {
 
@@ -67,7 +64,6 @@ class ChallengeUserServiceTest {
 
     @Test
     void testCreateChallengeUser_NullUserId_ThrowsException() {
-        // Given
         CreateChallengeUserRequest request = new CreateChallengeUserRequest();
         request.setUserId(null);
         request.setChallengeId(UUID.randomUUID());
