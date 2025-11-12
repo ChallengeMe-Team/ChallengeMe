@@ -4,79 +4,75 @@ import challengeme.backend.model.Notification;
 import challengeme.backend.repository.NotificationRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
- * FIȘIER MODIFICAT MASIV
- * S-a refactorizat complet pentru a folosi List în loc de Map,
- * conform cerințelor din review.
+ * FIȘIER MODIFICAT
+ * Implementarea in-memory a repository-ului pentru notificări.
+ * Folosește un ArrayList standard, protejat de blocuri 'synchronized'
+ * pentru a fi thread-safe.
  */
-@Repository
+@Repository("inMemoryNotificationRepository")
 public class InMemoryNotificationRepository implements NotificationRepository {
 
-    // S-a schimbat din Map în List, conform cerințelor
-    private final List<Notification> database = new CopyOnWriteArrayList<>();
+    /**
+     * S-a schimbat din CopyOnWriteArrayList în ArrayList simplu.
+     * Accesul la această listă trebuie acum să fie sincronizat.
+     */
+    private final List<Notification> database = new ArrayList<>();
 
     @Override
     public Notification save(Notification notification) {
-        // Logica de salvare s-a schimbat:
-        // Verificăm dacă există deja pentru a face update, altfel adăugăm
-
-        // Căutăm un index
-        int index = -1;
-        for (int i = 0; i < database.size(); i++) {
-            if (database.get(i).getId().equals(notification.getId())) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index != -1) {
-            // Update: înlocuim elementul de la index
-            database.set(index, notification);
-        } else {
-            // Create: adăugăm elementul nou
+        // Blocam lista pe durata scrierii
+        synchronized (database) {
             database.add(notification);
+            return notification;
         }
-        return notification;
-    }
-
-    @Override
-    public Optional<Notification> findById(UUID id) {
-        // Căutare prin stream în listă
-        return database.stream()
-                .filter(n -> n.getId().equals(id))
-                .findFirst();
     }
 
     @Override
     public List<Notification> findAll() {
-        // Returnăm o copie a listei
-        return List.copyOf(database);
+        // Blocam lista pe durata citirii pentru a crea o copie sigură
+        synchronized (database) {
+            // Returnăm o copie a listei, nu lista originală
+            return new ArrayList<>(database);
+        }
+    }
+
+    @Override
+    public Optional<Notification> findById(UUID id) {
+        // Blocam lista pe durata citirii/căutării
+        synchronized (database) {
+            return database.stream()
+                    .filter(notification -> notification.getId().equals(id))
+                    .findFirst();
+        }
     }
 
     @Override
     public List<Notification> findByUserId(UUID userId) {
-        // Căutare prin stream și filtrare
-        return database.stream()
-                .filter(n -> n.getUserId().equals(userId))
-                .collect(Collectors.toList());
+        // Blocam lista pe durata citirii/filtrării
+        synchronized (database) {
+            return database.stream()
+                    .filter(notification -> notification.getUserId().equals(userId))
+                    .collect(Collectors.toList()); // .toList() creează o listă nouă, sigură
+        }
     }
 
     @Override
     public void deleteById(UUID id) {
-        // Ștergere folosind removeIf, care e thread-safe pentru CopyOnWriteArrayList
-        database.removeIf(n -> n.getId().equals(id));
+        // Blocam lista pe durata ștergerii
+        synchronized (database) {
+            database.removeIf(notification -> notification.getId().equals(id));
+        }
     }
 
     @Override
     public boolean existsById(UUID id) {
-        // Căutare prin stream
-        return database.stream()
-                .anyMatch(n -> n.getId().equals(id));
+        return false;
     }
 }
