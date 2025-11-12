@@ -1,8 +1,16 @@
 package challengeme.backend.model;
 
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Objects;
 import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 
 public class Leaderboard {
     private UUID id;
@@ -10,19 +18,12 @@ public class Leaderboard {
     private int totalPoints;
     private int rank;
 
-    public Leaderboard() {}
+
     public Leaderboard(UUID id, User user, int totalPoints) {
         this.id = id; this.user = user; this.totalPoints = totalPoints;
     }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-    public int getTotalPoints() { return totalPoints; }
-    public void setTotalPoints(int totalPoints) { this.totalPoints = totalPoints; }
-    public int getRank() { return rank; }
-    public void setRank(int rank) { this.rank = rank; }
+
 
     @Override public boolean equals(Object o) {
         if (this == o) return true;

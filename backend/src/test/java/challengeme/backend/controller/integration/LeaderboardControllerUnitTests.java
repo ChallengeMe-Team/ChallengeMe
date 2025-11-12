@@ -1,6 +1,8 @@
 package challengeme.backend.controller.integration;
 
 import challengeme.backend.model.User;
+import challengeme.backend.service.LeaderboardService;
+import challengeme.backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +18,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @org.springframework.test.context.ActiveProfiles("test")
-public class LeaderboardControllerUnitTests {
+class LeaderboardControllerUnitTests {
 
     @LocalServerPort
     private int port;
@@ -27,96 +28,89 @@ public class LeaderboardControllerUnitTests {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    private String baseLbUrl;
-    private String baseUsersUrl;
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private LeaderboardService leaderboardService;
+
+    private String baseUrl;
 
     @BeforeEach
     void setup() {
-        baseLbUrl    = "http://localhost:" + port + "/api/leaderboard";
-        baseUsersUrl = "http://localhost:" + port + "/api/users";
+        baseUrl = "http://localhost:" + port + "/api/leaderboard";
     }
 
-    // ----------------- helpers -----------------
-    private UUID createUserAndReturnId(String name) {
-        // Stilul tău: User(String username, String email, String password, Integer points)
-        User user = new User(name, name + "@email.com", "secret12", 0);
-        ResponseEntity<User> post = restTemplate.postForEntity(baseUsersUrl, user, User.class);
-        assertThat(post.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        return Objects.requireNonNull(post.getBody()).getId();
-    }
 
-    private ResponseEntity<Map> postLeaderboard(UUID userId, int points) {
-        Map<String, Object> body = Map.of("userId", userId.toString(), "totalPoints", points);
-        return restTemplate.postForEntity(baseLbUrl, body, Map.class);
-    }
-
-    // ----------------- tests -----------------
-
-    @Test
-    void create_and_get_sorted_should_work() {
-        UUID userId = createUserAndReturnId("ana");
-
-        // POST /api/leaderboard
-        ResponseEntity<Map> createResp = postLeaderboard(userId, 120);
-        assertThat(createResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(createResp.getBody()).isNotNull();
-        assertThat(createResp.getBody().get("totalPoints")).isEqualTo(120);
-
-        // GET /api/leaderboard/sorted
-        ResponseEntity<List> sortedResp = restTemplate.getForEntity(baseLbUrl + "/sorted", List.class);
-        assertThat(sortedResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(sortedResp.getBody()).isNotNull();
-
-        Map first = (Map) sortedResp.getBody().get(0);
-        assertThat(first.get("totalPoints")).isEqualTo(120);
-        assertThat(first.get("rank")).isEqualTo(1);
+    private UUID createUser(String name) {
+        User u = new User(name, name + "@email.com", "secret12", 0);
+        return userService.createUser(u).getId();
     }
 
     @Test
-    void update_should_change_points_and_rank() {
-        UUID u1 = createUserAndReturnId("ana");
-        UUID u2 = createUserAndReturnId("mihai");
-
-        // seed 2 entries
-        postLeaderboard(u1, 50);
-        postLeaderboard(u2, 30);
+    void testCreateAndGetLeaderboardEntry() {
+        UUID userId = createUser("ana");
 
 
-        List listBefore = restTemplate.getForEntity(baseLbUrl, List.class).getBody();
-        assertThat(listBefore).isNotNull();
-        String toUpdateId = (String) ((Map) listBefore.get(1)).get("id");
+        Map<String, Object> body = Map.of("userId", userId.toString(), "totalPoints", 120);
+        ResponseEntity<Map> postResponse = restTemplate.postForEntity(baseUrl, body, Map.class);
+        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        String id = Objects.requireNonNull(postResponse.getBody()).get("id").toString();
+
+
+        ResponseEntity<Map> getResponse = restTemplate.getForEntity(baseUrl + "/" + id, Map.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getResponse.getBody().get("totalPoints")).isEqualTo(120);
+    }
+
+    @Test
+    void testUpdateLeaderboardEntry() {
+
+        UUID userId = createUser("mihai");
+        var created = leaderboardService.create(userId, 50); // ne dă id rapid
+
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, Object>> req = new HttpEntity<>(Map.of("totalPoints", 200), headers);
+        HttpEntity<Map<String, Object>> entity =
+                new HttpEntity<>(Map.of("totalPoints", 200), headers);
 
-        ResponseEntity<Map> updResp = restTemplate.exchange(
-                baseLbUrl + "/" + toUpdateId, HttpMethod.PUT, req, Map.class);
+        ResponseEntity<Map> putResponse = restTemplate.exchange(
+                baseUrl + "/" + created.getId(), HttpMethod.PUT, entity, Map.class);
 
-        assertThat(updResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(Objects.requireNonNull(updResp.getBody()).get("totalPoints")).isEqualTo(200);
+        assertThat(putResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(putResponse.getBody().get("totalPoints")).isEqualTo(200);
 
-        List sorted = restTemplate.getForEntity(baseLbUrl + "/sorted", List.class).getBody();
-        Map first = (Map) sorted.get(0);
-        assertThat(first.get("id")).isEqualTo(toUpdateId);
+
+        ResponseEntity<Map> getResponse =
+                restTemplate.getForEntity(baseUrl + "/" + created.getId(), Map.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getResponse.getBody().get("totalPoints")).isEqualTo(200);
+
+
+        ResponseEntity<List> sortedResponse =
+                restTemplate.getForEntity(baseUrl + "/sorted", List.class);
+        assertThat(sortedResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map first = (Map) sortedResponse.getBody().get(0);
+        assertThat(first.get("id")).isEqualTo(created.getId().toString());
         assertThat(first.get("rank")).isEqualTo(1);
     }
 
     @Test
-    void delete_should_return_204_and_remove_entry() {
-        UUID userId = createUserAndReturnId("daria");
+    void testDeleteLeaderboardEntry() {
+        UUID userId = createUser("daria");
+        var created = leaderboardService.create(userId, 10);
+        String id = created.getId().toString();
 
-        Map created = restTemplate.postForEntity(
-                baseLbUrl, Map.of("userId", userId.toString(), "totalPoints", 10), Map.class
-        ).getBody();
-        assertThat(created).isNotNull();
-        String id = (String) created.get("id");
+        ResponseEntity<Void> deleteResponse = restTemplate.exchange(
+                baseUrl + "/" + id, HttpMethod.DELETE, null, Void.class);
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        // DELETE /api/leaderboard/{id}
-        restTemplate.delete(baseLbUrl + "/" + id);
 
-        // GET all -> id-ul nu trebuie să mai fie prezent
-        List all = restTemplate.getForEntity(baseLbUrl, List.class).getBody();
-        assertThat(all).extracting("id").doesNotContain(id);
+        ResponseEntity<String> getResponse =
+                restTemplate.getForEntity(baseUrl + "/" + id, String.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
     }
 }
