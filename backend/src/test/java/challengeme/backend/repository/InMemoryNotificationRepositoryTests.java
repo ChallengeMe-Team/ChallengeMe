@@ -13,9 +13,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Teste unitare pentru InMemoryNotificationRepository.
- * Aceste teste ruleaza direct logica repository-ului
- * fara a folosi mock-uri.
+ * FIȘIER MODIFICAT
+ * Rescris complet pentru a testa noua logică a repository-ului bazată pe List, nu pe Map.
  */
 class InMemoryNotificationRepositoryTests {
 
@@ -23,77 +22,48 @@ class InMemoryNotificationRepositoryTests {
 
     @BeforeEach
     void setUp() {
-        // Cream o noua instanta a repository-ului inainte de fiecare test
-        // pentru a ne asigura ca testele sunt izolate (baza de date e goala)
         repository = new InMemoryNotificationRepository();
     }
 
-    @Test
-    void testSave_CreateNewNotification() {
-        Notification notification = new Notification();
-        notification.setUserId(UUID.randomUUID());
-        notification.setMessage("New Notification");
-        notification.setType(NotificationType.SYSTEM);
-
-        Notification saved = repository.save(notification);
-
-        assertNotNull(saved.getId());
-        assertNotNull(saved.getTimestamp());
-        assertFalse(saved.isRead());
-        assertEquals("New Notification", saved.getMessage());
-
-        // Verificam si daca exista in "baza de date"
-        Optional<Notification> found = repository.findById(saved.getId());
-        assertTrue(found.isPresent());
-        assertEquals(saved.getId(), found.get().getId());
+    private Notification createTestNotification(UUID userId) {
+        return new Notification(UUID.randomUUID(), userId, "Test", NotificationType.SYSTEM, null, false);
     }
 
     @Test
-    void testSave_UpdateExistingNotification() throws InterruptedException {
-        Notification notification = new Notification();
-        notification.setUserId(UUID.randomUUID());
-        notification.setMessage("Original Message");
-        notification.setType(NotificationType.CHALLENGE);
-
+    void testSave_CreateNew() {
+        Notification notification = createTestNotification(UUID.randomUUID());
         Notification saved = repository.save(notification);
-        var originalTimestamp = saved.getTimestamp();
 
-        // Asiguram o diferenta de timp
-        Thread.sleep(10);
+        assertEquals(notification, saved);
+        assertEquals(1, repository.findAll().size());
+        assertTrue(repository.existsById(notification.getId()));
+    }
 
-        saved.setRead(true);
-        saved.setMessage("Updated Message");
-        Notification updated = repository.save(saved);
+    @Test
+    void testSave_UpdateExisting() {
+        Notification notification = createTestNotification(UUID.randomUUID());
+        repository.save(notification); // Salvare inițială
 
-        assertEquals(saved.getId(), updated.getId());
+        notification.setMessage("Updated Message");
+        Notification updated = repository.save(notification); // Salvarea actualizării
+
+        assertEquals(1, repository.findAll().size());
         assertEquals("Updated Message", updated.getMessage());
-        assertTrue(updated.isRead());
-        // Timestamp-ul ar trebui sa fie actualizat la salvare
-        assertNotEquals(originalTimestamp, updated.getTimestamp());
+        // Verificăm că elementul din "baza de date" este cel actualizat
+        assertEquals(updated.getMessage(), repository.findById(notification.getId()).get().getMessage());
     }
 
     @Test
-    void testFindById_Found() {
-        Notification saved = createAndSaveTestNotification(UUID.randomUUID());
-        Optional<Notification> found = repository.findById(saved.getId());
+    void testFindById() {
+        Notification notification = createTestNotification(UUID.randomUUID());
+        repository.save(notification);
 
+        Optional<Notification> found = repository.findById(notification.getId());
         assertTrue(found.isPresent());
-        assertEquals(saved.getId(), found.get().getId());
-    }
+        assertEquals(notification.getId(), found.get().getId());
 
-    @Test
-    void testFindById_NotFound() {
-        Optional<Notification> found = repository.findById(UUID.randomUUID());
-        assertFalse(found.isPresent());
-    }
-
-    @Test
-    void testFindAll() {
-        createAndSaveTestNotification(UUID.randomUUID());
-        createAndSaveTestNotification(UUID.randomUUID());
-
-        List<Notification> all = repository.findAll();
-        assertEquals(2, all.size());
+        Optional<Notification> notFound = repository.findById(UUID.randomUUID());
+        assertTrue(notFound.isEmpty());
     }
 
     @Test
@@ -101,43 +71,42 @@ class InMemoryNotificationRepositoryTests {
         UUID userA = UUID.randomUUID();
         UUID userB = UUID.randomUUID();
 
-        createAndSaveTestNotification(userA);
-        createAndSaveTestNotification(userA);
-        createAndSaveTestNotification(userB);
+        repository.save(createTestNotification(userA));
+        repository.save(createTestNotification(userA));
+        repository.save(createTestNotification(userB));
 
         List<Notification> userANotifications = repository.findByUserId(userA);
-        List<Notification> userBNotifications = repository.findByUserId(userB);
-        List<Notification> userCNotifications = repository.findByUserId(UUID.randomUUID());
-
         assertEquals(2, userANotifications.size());
+
+        List<Notification> userBNotifications = repository.findByUserId(userB);
         assertEquals(1, userBNotifications.size());
+
+        List<Notification> userCNotifications = repository.findByUserId(UUID.randomUUID());
         assertEquals(0, userCNotifications.size());
     }
 
     @Test
     void testDeleteById() {
-        Notification saved = createAndSaveTestNotification(UUID.randomUUID());
-        UUID id = saved.getId();
+        Notification n1 = createTestNotification(UUID.randomUUID());
+        Notification n2 = createTestNotification(UUID.randomUUID());
+        repository.save(n1);
+        repository.save(n2);
 
-        assertTrue(repository.existsById(id));
-        repository.deleteById(id);
-        assertFalse(repository.existsById(id));
-        assertFalse(repository.findById(id).isPresent());
+        assertEquals(2, repository.findAll().size());
+
+        repository.deleteById(n1.getId());
+
+        assertEquals(1, repository.findAll().size());
+        assertFalse(repository.existsById(n1.getId()));
+        assertTrue(repository.existsById(n2.getId()));
     }
 
     @Test
     void testExistsById() {
-        Notification saved = createAndSaveTestNotification(UUID.randomUUID());
-        assertTrue(repository.existsById(saved.getId()));
-        assertFalse(repository.existsById(UUID.randomUUID()));
-    }
+        Notification notification = createTestNotification(UUID.randomUUID());
+        repository.save(notification);
 
-    // Metoda helper pentru a crea si salva rapid o notificare
-    private Notification createAndSaveTestNotification(UUID userId) {
-        Notification n = new Notification();
-        n.setUserId(userId);
-        n.setMessage("Test");
-        n.setType(NotificationType.BADGE);
-        return repository.save(n);
+        assertTrue(repository.existsById(notification.getId()));
+        assertFalse(repository.existsById(UUID.randomUUID()));
     }
 }

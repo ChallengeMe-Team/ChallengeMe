@@ -1,7 +1,6 @@
 package challengeme.backend.service;
 
-import challengeme.backend.dto.CreateNotificationDto;
-import challengeme.backend.dto.UpdateNotificationDto;
+import challengeme.backend.exception.NotificationNotFoundException;
 import challengeme.backend.model.Notification;
 import challengeme.backend.model.NotificationType;
 import challengeme.backend.repository.NotificationRepository;
@@ -11,8 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,8 +20,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Teste unitare pentru NotificationService.
- * (Versiune completa si corectata)
+ * FIȘIER MODIFICAT
+ * - Testează clasa concretă NotificationService (nu interfața).
+ * - Verifică dacă aruncă NotificationNotFoundException.
+ * - Lucrează direct cu modelul, fără DTO-uri.
  */
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
@@ -31,33 +32,40 @@ class NotificationServiceTest {
     private NotificationRepository notificationRepository;
 
     @InjectMocks
-    private NotificationServiceImpl notificationService;
-
-    // --- TESTE PENTRU METODELE GET ---
+    private NotificationService notificationService; // Clasa concretă
 
     @Test
-    void testGetAllNotifications() {
-        Notification n1 = new Notification(UUID.randomUUID(), UUID.randomUUID(), "Msg 1", NotificationType.SYSTEM, LocalDateTime.now(), false);
-        Notification n2 = new Notification(UUID.randomUUID(), UUID.randomUUID(), "Msg 2", NotificationType.BADGE, LocalDateTime.now(), false);
-        when(notificationRepository.findAll()).thenReturn(List.of(n1, n2));
+    void testCreateNotification() {
+        Notification notification = new Notification();
+        notification.setUserId(UUID.randomUUID());
+        notification.setMessage("Test");
+        notification.setType(NotificationType.SYSTEM);
 
-        List<Notification> result = notificationService.getAllNotifications();
+        // Când se apelează save, returnăm argumentul primit (care va fi modificat)
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertEquals(2, result.size());
-        verify(notificationRepository, times(1)).findAll();
+        Notification created = notificationService.createNotification(notification);
+
+        // Verificăm dacă serviciul a setat valorile default
+        assertNotNull(created.getId());
+        assertNotNull(created.getTimestamp());
+        assertFalse(created.isRead());
+        assertEquals("Test", created.getMessage());
+
+        // Verificăm că 'save' a fost apelat
+        verify(notificationRepository, times(1)).save(notification);
     }
 
     @Test
-    void testGetNotificationById_Found() {
+    void testGetNotificationById_Success() {
         UUID id = UUID.randomUUID();
-        Notification n = new Notification(id, UUID.randomUUID(), "Test", NotificationType.SYSTEM, LocalDateTime.now(), false);
-        when(notificationRepository.findById(id)).thenReturn(Optional.of(n));
+        Notification notification = new Notification(id, UUID.randomUUID(), "Test", NotificationType.SYSTEM, null, false);
+        when(notificationRepository.findById(id)).thenReturn(Optional.of(notification));
 
-        Optional<Notification> result = notificationService.getNotificationById(id);
+        Notification found = notificationService.getNotificationById(id);
 
-        assertTrue(result.isPresent());
-        assertEquals(id, result.get().getId());
-        verify(notificationRepository, times(1)).findById(id);
+        assertNotNull(found);
+        assertEquals(id, found.getId());
     }
 
     @Test
@@ -65,129 +73,59 @@ class NotificationServiceTest {
         UUID id = UUID.randomUUID();
         when(notificationRepository.findById(id)).thenReturn(Optional.empty());
 
-        Optional<Notification> result = notificationService.getNotificationById(id);
-
-        assertFalse(result.isPresent());
-        verify(notificationRepository, times(1)).findById(id);
+        // Verificăm dacă aruncă excepția corectă
+        assertThrows(NotificationNotFoundException.class, () -> {
+            notificationService.getNotificationById(id);
+        });
     }
 
     @Test
-    void testGetNotificationsByUserId() {
-        UUID userId = UUID.randomUUID();
-        Notification n1 = new Notification(UUID.randomUUID(), userId, "Msg 1", NotificationType.CHALLENGE, LocalDateTime.now(), false);
-        when(notificationRepository.findByUserId(userId)).thenReturn(List.of(n1));
+    void testUpdateNotificationStatus() {
+        UUID id = UUID.randomUUID();
+        // Notificarea inițială are isRead=false
+        Notification notification = new Notification(id, UUID.randomUUID(), "Test", NotificationType.SYSTEM, null, false);
 
-        List<Notification> result = notificationService.getNotificationsByUserId(userId);
+        when(notificationRepository.findById(id)).thenReturn(Optional.of(notification));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertEquals(1, result.size());
-        assertEquals(userId, result.get(0).getUserId());
-        verify(notificationRepository, times(1)).findByUserId(userId);
-    }
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("isRead", true);
 
-    // --- TESTE PENTRU CREATE, UPDATE, DELETE ---
+        Notification updated = notificationService.updateNotificationStatus(id, updates);
 
-    @Test
-    void testCreateNotification() {
-        CreateNotificationDto dto = new CreateNotificationDto();
-        dto.setUserId(UUID.randomUUID());
-        dto.setMessage("Test message");
-        dto.setType(NotificationType.CHALLENGE);
-
-        Notification savedNotification = new Notification(
-                UUID.randomUUID(),
-                dto.getUserId(),
-                dto.getMessage(),
-                dto.getType(),
-                LocalDateTime.now(),
-                false
-        );
-
-        when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
-
-        Notification result = notificationService.createNotification(dto);
-
-        assertNotNull(result);
-        assertEquals(savedNotification.getId(), result.getId());
-        assertEquals(dto.getMessage(), result.getMessage());
-        assertEquals(dto.getType(), result.getType());
-        assertFalse(result.isRead());
-        assertNotNull(result.getTimestamp());
-
-        verify(notificationRepository, times(1)).save(any(Notification.class));
-    }
-
-    @Test
-    void testUpdateNotificationStatus_Success() {
-        UUID notificationId = UUID.randomUUID();
-        UpdateNotificationDto dto = new UpdateNotificationDto();
-        dto.setIsRead(true);
-
-        Notification existingNotification = new Notification(
-                notificationId,
-                UUID.randomUUID(),
-                "Old message",
-                NotificationType.BADGE,
-                LocalDateTime.now(),
-                false
-        );
-
-        Notification updatedNotification = new Notification(
-                notificationId,
-                existingNotification.getUserId(),
-                existingNotification.getMessage(),
-                existingNotification.getType(),
-                LocalDateTime.now(),
-                true
-        );
-
-        when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(existingNotification));
-        when(notificationRepository.save(any(Notification.class))).thenReturn(updatedNotification);
-
-        Optional<Notification> result = notificationService.updateNotificationStatus(notificationId, dto);
-
-        assertTrue(result.isPresent());
-        assertEquals(notificationId, result.get().getId());
-        assertTrue(result.get().isRead());
-        verify(notificationRepository, times(1)).findById(notificationId);
-        verify(notificationRepository, times(1)).save(existingNotification);
-    }
-
-    @Test
-    void testUpdateNotificationStatus_NotFound() {
-        UUID notificationId = UUID.randomUUID();
-        UpdateNotificationDto dto = new UpdateNotificationDto();
-        dto.setIsRead(true);
-
-        when(notificationRepository.findById(notificationId)).thenReturn(Optional.empty());
-
-        Optional<Notification> result = notificationService.updateNotificationStatus(notificationId, dto);
-
-        assertFalse(result.isPresent());
-        verify(notificationRepository, times(1)).findById(notificationId);
-        verify(notificationRepository, never()).save(any(Notification.class));
+        // Verificăm că starea s-a actualizat
+        assertTrue(updated.isRead());
+        verify(notificationRepository, times(1)).save(notification);
     }
 
     @Test
     void testDeleteNotification_Success() {
-        UUID notificationId = UUID.randomUUID();
-        when(notificationRepository.existsById(notificationId)).thenReturn(true);
+        UUID id = UUID.randomUUID();
+        // Simulează că notificarea există
+        when(notificationRepository.existsById(id)).thenReturn(true);
+        doNothing().when(notificationRepository).deleteById(id);
 
-        boolean result = notificationService.deleteNotification(notificationId);
+        // Executăm metoda
+        assertDoesNotThrow(() -> {
+            notificationService.deleteNotification(id);
+        });
 
-        assertTrue(result);
-        verify(notificationRepository, times(1)).existsById(notificationId);
-        verify(notificationRepository, times(1)).deleteById(notificationId);
+        // Verificăm dacă a fost apelată ștergerea
+        verify(notificationRepository, times(1)).deleteById(id);
     }
 
     @Test
     void testDeleteNotification_NotFound() {
-        UUID notificationId = UUID.randomUUID();
-        when(notificationRepository.existsById(notificationId)).thenReturn(false);
+        UUID id = UUID.randomUUID();
+        // Simulează că notificarea NU există
+        when(notificationRepository.existsById(id)).thenReturn(false);
 
-        boolean result = notificationService.deleteNotification(notificationId);
+        // Verificăm dacă aruncă excepția
+        assertThrows(NotificationNotFoundException.class, () -> {
+            notificationService.deleteNotification(id);
+        });
 
-        assertFalse(result);
-        verify(notificationRepository, times(1)).existsById(notificationId);
-        verify(notificationRepository, never()).deleteById(notificationId);
+        // Verificăm că ștergerea NU a fost apelată
+        verify(notificationRepository, never()).deleteById(id);
     }
 }
