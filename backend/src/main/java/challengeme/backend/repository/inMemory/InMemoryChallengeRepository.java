@@ -1,13 +1,12 @@
-package challengeme.backend.repo;
+package challengeme.backend.repository.inMemory;
 
-import challengeme.backend.domain.Challenge;
+import challengeme.backend.model.Challenge;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-public class ChallengeRepository implements ChallengeRepoInterface{
+public class InMemoryChallengeRepository implements challengeme.backend.repository.ChallengeRepository {
 
     private final List<Challenge> storage = new ArrayList<>();
 

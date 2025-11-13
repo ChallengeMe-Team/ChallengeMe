@@ -1,0 +1,39 @@
+<div class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2 class="gradient-text">Create New Challenge</h2>
+      <button class="close-btn" (click)="cancel.emit()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <label>Challenge Title</label>
+      <input type="text" [(ngModel)]="challenge.title" placeholder="e.g., Walk 10,000 steps" />
+
+      <label>Description</label>
+      <textarea [(ngModel)]="challenge.description" placeholder="Describe your challenge..."></textarea>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label>Category</label>
+          <input type="text" [(ngModel)]="challenge.category" placeholder="e.g., Fitness" />
+        </div>
+
+        <div>
+          <label>Difficulty</label>
+          <select [(ngModel)]="challenge.difficulty">
+            <option value="">Select difficulty</option>
+            <option *ngFor="let diff of difficulties" [value]="diff">{{ diff }}</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Points Reward</label>
+      <input type="number" [(ngModel)]="challenge.points" />
+
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="cancel.emit()">Cancel</button>
+        <button class="create-btn" (click)="onSubmit()">Create Challenge</button>
+      </div>
+    </div>
+  </div>
+</div>

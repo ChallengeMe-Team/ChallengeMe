@@ -1,4 +1,4 @@
-package challengeme.backend.domain;
+package challengeme.backend.model;
 
 
 import jakarta.validation.constraints.NotBlank;

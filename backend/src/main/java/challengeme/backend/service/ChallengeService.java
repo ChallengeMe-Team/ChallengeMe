@@ -1,8 +1,8 @@
 package challengeme.backend.service;
 
-import challengeme.backend.domain.Challenge;
-import challengeme.backend.exceptions.ChallengeNotFoundException;
-import challengeme.backend.repo.ChallengeRepository;
+import challengeme.backend.model.Challenge;
+import challengeme.backend.exception.ChallengeNotFoundException;
+import challengeme.backend.repository.inMemory.InMemoryChallengeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,41 +12,41 @@ import java.util.UUID;
 
 @Service
 public class ChallengeService {
-    private final ChallengeRepository challengeRepository;
+    private final InMemoryChallengeRepository inMemoryChallengeRepository;
 
     @Autowired
-    public ChallengeService(ChallengeRepository challengeRepository) {
-        this.challengeRepository = challengeRepository;
+    public ChallengeService(InMemoryChallengeRepository inMemoryChallengeRepository) {
+        this.inMemoryChallengeRepository = inMemoryChallengeRepository;
     }
 
     public List<Challenge> getAllChallenges() {
-        return challengeRepository.findAll();
+        return inMemoryChallengeRepository.findAll();
     }
 
     public Challenge getChallengeById(UUID id) {
-        return challengeRepository.findById(id)
+        return inMemoryChallengeRepository.findById(id)
                 .orElseThrow(() -> new ChallengeNotFoundException(id));
     }
     
     public Challenge addChallenge(Challenge challenge) {
         validateChallenge(challenge);
-        return challengeRepository.save(challenge);
+        return inMemoryChallengeRepository.save(challenge);
     }
 
     public Challenge updateChallenge(UUID id, Challenge challenge) {
-        if(!challengeRepository.existsById(id)) {
+        if(!inMemoryChallengeRepository.existsById(id)) {
             throw new ChallengeNotFoundException(id);
         }
         challenge.setId(id);
         validateChallenge(challenge);
-        return challengeRepository.save(challenge);
+        return inMemoryChallengeRepository.save(challenge);
     }
 
     public void deleteChallenge(UUID id) {
-        if(!challengeRepository.existsById(id)) {
+        if(!inMemoryChallengeRepository.existsById(id)) {
             throw new ChallengeNotFoundException(id);
         }
-        challengeRepository.deleteById(id);
+        inMemoryChallengeRepository.deleteById(id);
     }
 
     private void validateChallenge(Challenge challenge) {

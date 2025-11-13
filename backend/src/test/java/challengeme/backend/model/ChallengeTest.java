@@ -1,4 +1,4 @@
-package challengeme.backend.domain;
+package challengeme.backend.model;
 
 import org.junit.jupiter.api.Test;
 import jakarta.validation.Validation;

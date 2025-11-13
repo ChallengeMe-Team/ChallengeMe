@@ -1,0 +1,10 @@
+<div
+  class="toast"
+  *ngIf="visible"
+  [class.success]="type === 'success'"
+  [class.error]="type === 'error'">
+  <div class="flex items-center gap-3">
+    <span class="text-2xl">{{ icon }}</span>
+    <p>{{ message }}</p>
+  </div>
+</div>

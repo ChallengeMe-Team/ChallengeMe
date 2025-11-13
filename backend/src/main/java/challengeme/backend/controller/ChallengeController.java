@@ -1,7 +1,7 @@
 package challengeme.backend.controller;
 
-import challengeme.backend.domain.Challenge;
-import challengeme.backend.exceptions.ChallengeNotFoundException;
+import challengeme.backend.model.Challenge;
+import challengeme.backend.exception.ChallengeNotFoundException;
 import challengeme.backend.service.ChallengeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

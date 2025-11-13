@@ -4,7 +4,7 @@ import challengeme.backend.exception.UserBadgeNotFoundException;
 import challengeme.backend.model.Badge;
 import challengeme.backend.model.User;
 import challengeme.backend.model.UserBadge;
-import challengeme.backend.repository.inMemory.InMemoryRepositoryUserBadge;
+import challengeme.backend.repository.inMemory.InMemoryUserBadgeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,13 +13,13 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class InMemoryRepositoryUserBadgeTests {
+public class UserBadgeInMemoryRepositoryTests {
 
-    private InMemoryRepositoryUserBadge repository;
+    private InMemoryUserBadgeRepository repository;
 
     @BeforeEach
     void setup() {
-        repository = new InMemoryRepositoryUserBadge();
+        repository = new InMemoryUserBadgeRepository();
     }
 
     @Test

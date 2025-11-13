@@ -1,21 +1,21 @@
-package challengeme.backend.repo;
+package challengeme.backend.repository;
 
-import challengeme.backend.domain.Challenge;
+import challengeme.backend.model.Challenge;
+import challengeme.backend.repository.inMemory.InMemoryChallengeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ChallengeRepositoryTest {
+class ChallengeInMemoryRepositoryTest {
 
-    private ChallengeRepository repository;
+    private InMemoryChallengeRepository repository;
 
     @BeforeEach
     void setUp() {
-        repository = new ChallengeRepository();
+        repository = new InMemoryChallengeRepository();
     }
 
     @Test
