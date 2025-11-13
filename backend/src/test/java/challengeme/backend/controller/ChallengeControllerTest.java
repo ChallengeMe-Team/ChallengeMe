@@ -1,8 +1,8 @@
 package challengeme.backend.controller;
 
-import challengeme.backend.domain.Challenge;
-import challengeme.backend.exceptions.ChallengeNotFoundException;
-import challengeme.backend.exceptions.GlobalExceptionHandler;
+import challengeme.backend.model.Challenge;
+import challengeme.backend.exception.ChallengeNotFoundException;
+import challengeme.backend.exception.GlobalExceptionHandler;
 import challengeme.backend.service.ChallengeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,1 +1,22 @@
-/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  background-color: #0b0716;
+  color: white;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.8);
+  }
+}
+.animate-glow {
+  animation: glow 2s infinite;
+}

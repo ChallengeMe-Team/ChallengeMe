@@ -2,12 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Frontend</title>
+  <title>Challenge Me</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
+
+<script>
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', (e) => {
+    cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+  });
+</script>
+
 <body>
-  <app-root></app-root>
+<div id="cursor" class="w-6 h-6 rounded-full bg-blue-400 fixed top-0 left-0 pointer-events-none opacity-70 mix-blend-difference"></div>
+<app-component></app-component>
 </body>
+
 </html>

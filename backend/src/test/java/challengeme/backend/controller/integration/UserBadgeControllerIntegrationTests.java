@@ -26,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 public class UserBadgeControllerIntegrationTests {
 
-
-
     @LocalServerPort
     private int port;
 

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public class InMemoryRepositoryUserBadge implements RepositoryUserBadge {
+public class InMemoryUserBadgeRepository implements RepositoryUserBadge {
 
     private final List<UserBadge> userBadges = new ArrayList<>();
 
