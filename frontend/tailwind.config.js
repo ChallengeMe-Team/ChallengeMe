@@ -6,8 +6,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Aici se mapeaza variabilele HSL la clasele Tailwind.
-        // Tailwind va genera automat: bg-background, text-background, border-background, etc.
+        // Maps HSL variables to Tailwind classes.
+        // Tailwind will generate automatically: bg-background, text-background, border-background, etc.
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: 'hsl(var(--card))',
