@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/leaderboard")
-@CrossOrigin(origins = "*", allowedHeaders = "*", maxAge = 3600) // E bine aici la Angular? Nu prea stiu :))
+@CrossOrigin(origins = "*", allowedHeaders = "*", maxAge = 3600)
 public class LeaderboardController {
 
     private final LeaderboardService service;
