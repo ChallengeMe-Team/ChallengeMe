@@ -1,0 +1,72 @@
+package challengeme.backend.repository;
+
+import challengeme.backend.exception.UserBadgeNotFoundException;
+import challengeme.backend.model.Badge;
+import challengeme.backend.model.User;
+import challengeme.backend.model.UserBadge;
+import challengeme.backend.repository.inMemory.InMemoryUserBadgeRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class UserBadgeInMemoryRepositoryTests {
+
+    private InMemoryUserBadgeRepository repository;
+
+    @BeforeEach
+    void setup() {
+        repository = new InMemoryUserBadgeRepository();
+    }
+
+    @Test
+    void testCreateAndFind() {
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
+        UserBadge ub = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
+
+        repository.create(ub);
+        UserBadge found = repository.getUserBadge(ub.getId());
+
+        assertEquals(ub, found);
+    }
+
+    @Test
+    void testUpdate() {
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
+        UserBadge ub = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
+        repository.create(ub);
+
+        // Update badge
+        Badge newBadge = new Badge(UUID.randomUUID(), "Silver", "Updated badge", "Achieve 20 challenges");
+        User updatedUser = new User(UUID.randomUUID(), "Ion", "ion@email.com", "newpass123", 15);
+        UserBadge updated = new UserBadge(ub.getId(), updatedUser, newBadge, LocalDate.now());
+        repository.update(updated);
+
+        UserBadge result = repository.getUserBadge(ub.getId());
+        assertEquals("Silver", result.getBadge().getName());
+        assertEquals("Ion", result.getUser().getUsername());
+        assertEquals("Achieve 20 challenges", result.getBadge().getCriteria());
+    }
+
+    @Test
+    void testDelete() {
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
+        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer badge", "Complete 10 challenges");
+        UserBadge ub = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
+
+        repository.create(ub);
+        repository.delete(ub.getId());
+
+        assertThrows(UserBadgeNotFoundException.class, () -> repository.getUserBadge(ub.getId()));
+    }
+
+    @Test
+    void testDeleteNonExistingThrows() {
+        assertThrows(UserBadgeNotFoundException.class, () -> repository.delete(UUID.randomUUID()));
+    }
+}

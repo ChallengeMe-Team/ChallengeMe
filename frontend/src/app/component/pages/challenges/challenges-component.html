@@ -1,0 +1,38 @@
+<section class="p-10 text-white space-y-12">
+
+  <h2 class="text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500 mb-8">
+    Explore Challenges
+  </h2>
+
+  <div *ngFor="let difficulty of difficultyKeys" class="space-y-6">
+    <h3 class="text-2xl font-semibold uppercase tracking-wide text-gray-300 border-b border-gray-700 pb-2">
+      {{ difficulty }} Challenges
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let challenge of getChallengesByDifficulty(difficulty)"
+           class="bg-[#1a1627] p-6 rounded-xl shadow-lg hover:shadow-purple-500/20 transition-transform hover:scale-105 relative">
+
+        <!-- Category badge -->
+        <span class="badge"
+              [ngClass]="{
+            'badge-fitness': challenge.category === 'Fitness',
+            'badge-education': challenge.category === 'Education',
+            'badge-coding': challenge.category === 'Coding'
+            }">
+            {{ challenge.category }}
+        </span>
+
+
+        <h4 class="font-bold text-xl mb-2">{{ challenge.title }}</h4>
+        <p class="text-gray-400 mb-6">{{ challenge.description }}</p>
+
+        <!-- Points -->
+        <div class="absolute bottom-4 right-4 text-sm font-semibold bg-gradient-to-r from-purple-400 to-blue-500 text-white px-3 py-1 rounded-full shadow-md">
+          {{ challenge.points }} pts
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
