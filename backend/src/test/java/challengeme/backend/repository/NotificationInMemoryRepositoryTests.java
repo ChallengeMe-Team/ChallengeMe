@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * FIȘIER MODIFICAT
  * Rescris complet pentru a testa noua logică a repository-ului bazată pe List, nu pe Map.
  */
-class InMemoryNotificationRepositoryTests {
+class NotificationInMemoryRepositoryTests {
 
     private InMemoryNotificationRepository repository;
 
