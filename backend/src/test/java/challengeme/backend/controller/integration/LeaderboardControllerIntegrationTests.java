@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @org.springframework.test.context.ActiveProfiles("test")
-class LeaderboardControllerUnitTests {
+class LeaderboardControllerIntegrationTests {
 
     @LocalServerPort
     private int port;

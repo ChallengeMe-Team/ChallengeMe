@@ -11,7 +11,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * FIȘIER MODIFICAT
  * Implementarea in-memory a repository-ului pentru notificări.
  * Folosește un ArrayList standard, protejat de blocuri 'synchronized'
  * pentru a fi thread-safe.
@@ -19,16 +18,20 @@ import java.util.stream.Collectors;
 @Repository("inMemoryNotificationRepository")
 public class InMemoryNotificationRepository implements NotificationRepository {
 
-    /**
-     * S-a schimbat din CopyOnWriteArrayList în ArrayList simplu.
-     * Accesul la această listă trebuie acum să fie sincronizat.
-     */
     private final List<Notification> database = new ArrayList<>();
 
     @Override
     public Notification save(Notification notification) {
-        // Blocam lista pe durata scrierii
         synchronized (database) {
+            // Dacă există deja, îl înlocuim
+            for (int i = 0; i < database.size(); i++) {
+                if (database.get(i).getId().equals(notification.getId())) {
+                    database.set(i, notification);
+                    return notification; // update
+                }
+            }
+
+            // Dacă nu există → adăugăm
             database.add(notification);
             return notification;
         }
@@ -73,6 +76,8 @@ public class InMemoryNotificationRepository implements NotificationRepository {
 
     @Override
     public boolean existsById(UUID id) {
-        return false;
+        synchronized (database) {
+            return database.stream().anyMatch(n -> n.getId().equals(id));
+        }
     }
 }

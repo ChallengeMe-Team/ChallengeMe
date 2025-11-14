@@ -1,6 +1,7 @@
 package challengeme.backend.controller;
 
 import challengeme.backend.controller.NotificationController;
+import challengeme.backend.exception.GlobalExceptionHandler;
 import challengeme.backend.exception.NotificationNotFoundException;
 import challengeme.backend.model.Notification;
 import challengeme.backend.model.NotificationType;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -31,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = NotificationController.class,
         excludeAutoConfiguration = SecurityAutoConfiguration.class) // Oprește Spring Security
+@Import(GlobalExceptionHandler.class)
 class NotificationControllerUnitTests {
 
     @Autowired

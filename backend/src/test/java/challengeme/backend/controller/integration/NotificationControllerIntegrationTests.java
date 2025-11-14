@@ -17,13 +17,15 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * FIȘIER NOU (Tipul B cerut în review)
  * Test de integrare care pornește întreaga aplicație (@SpringBootTest).
  * Folosește TestRestTemplate pentru a face cereri HTTP reale.
  * Folosește repository-ul in-memory real.
  * Include autentificare Basic Auth pentru a trece de Spring Security.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "spring.profiles.active=test"
+)
 class NotificationControllerIntegrationTests {
 
     @Autowired

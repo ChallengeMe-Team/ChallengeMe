@@ -66,6 +66,7 @@ public class LeaderboardService {
     public void delete(UUID id) {
         try {
             leaderboardRepo.delete(id);
+            recalcRanks();
         } catch (LeaderboardNotFoundException e) {
             throw new LeaderboardNotFoundException("Entry not found with id " + id);
         }
