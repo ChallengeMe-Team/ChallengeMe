@@ -3,112 +3,128 @@ package challengeme.backend.controller.integration;
 import challengeme.backend.model.Notification;
 import challengeme.backend.model.NotificationType;
 import challengeme.backend.repository.NotificationRepository;
+import challengeme.backend.dto.request.create.NotificationCreateRequest;
+import challengeme.backend.dto.request.update.NotificationUpdateRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Test de integrare care pornește întreaga aplicație (@SpringBootTest).
- * Folosește TestRestTemplate pentru a face cereri HTTP reale.
- * Folosește repository-ul in-memory real.
- * Include autentificare Basic Auth pentru a trece de Spring Security.
- */
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.profiles.active=test"
-)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+// Importăm configurația de securitate de test
+@Import(NotificationControllerIntegrationTests.TestSecurityConfig.class)
 class NotificationControllerIntegrationTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Autowired
-    private NotificationRepository notificationRepository; // Injectăm repo-ul real
+    private NotificationRepository repository;
+
+    @TestConfiguration
+    static class TestSecurityConfig {
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                    .csrf(csrf -> csrf.disable());
+            return http.build();
+        }
+    }
 
     @AfterEach
     void tearDown() {
-        // CRUCIAL: Curățăm repository-ul in-memory după fiecare test
-        notificationRepository.findAll().forEach(n -> notificationRepository.deleteById(n.getId()));
+        repository.findAll().forEach(n -> repository.deleteById(n.getId()));
     }
 
     @Test
     void testCreateAndGetNotification() {
         UUID userId = UUID.randomUUID();
-        Notification notification = new Notification(null, userId, "Integration Test", NotificationType.CHALLENGE, null, false);
 
-        // 1. Creare (POST)
-        ResponseEntity<Notification> createResponse = restTemplate
-                .withBasicAuth("testuser", "testpass") // Adaugă autentificare
-                .postForEntity(
-                        "/api/notifications",
-                        notification,
-                        Notification.class
-                );
+        NotificationCreateRequest request = new NotificationCreateRequest(
+                userId,
+                "Integration Test",
+                NotificationType.CHALLENGE
+        );
 
-        assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
-        assertNotNull(createResponse.getBody());
-        assertNotNull(createResponse.getBody().getId());
-        assertEquals("Integration Test", createResponse.getBody().getMessage());
-        assertFalse(createResponse.getBody().isRead()); // Verificăm default-ul setat de service
+        // POST
+        ResponseEntity<Notification> createResponse = restTemplate.postForEntity("/api/notifications", request, Notification.class);
 
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(createResponse.getBody()).isNotNull();
         UUID createdId = createResponse.getBody().getId();
 
-        // 2. Obținere (GET)
-        ResponseEntity<Notification> getResponse = restTemplate
-                .withBasicAuth("testuser", "testpass") // Adaugă autentificare
-                .getForEntity(
-                        "/api/notifications/{id}",
-                        Notification.class,
-                        createdId
-                );
+        // GET
+        ResponseEntity<Notification> getResponse = restTemplate.getForEntity("/api/notifications/{id}", Notification.class, createdId);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getResponse.getBody().getId()).isEqualTo(createdId);
+        assertThat(getResponse.getBody().getUserId()).isEqualTo(userId);
+    }
 
-        assertEquals(HttpStatus.OK, getResponse.getStatusCode());
-        assertNotNull(getResponse.getBody());
-        assertEquals(createdId, getResponse.getBody().getId());
+    @Test
+    void testUpdateNotification() {
+        UUID userId = UUID.randomUUID();
+
+        Notification initial = new Notification(null, userId, "Msg", NotificationType.SYSTEM, LocalDateTime.now(), false);
+        Notification saved = repository.save(initial);
+
+        NotificationUpdateRequest updateRequest = new NotificationUpdateRequest(true);
+
+        RequestEntity<NotificationUpdateRequest> requestEntity = RequestEntity
+                .patch("/api/notifications/{id}", saved.getId())
+                .body(updateRequest);
+
+        ResponseEntity<Void> patchResponse = restTemplate.exchange(requestEntity, Void.class);
+        assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        Notification updated = repository.findById(saved.getId()).orElseThrow();
+        assertThat(updated.isRead()).isTrue();
+    }
+
+    @Test
+    void testDeleteNotification() {
+        UUID userId = UUID.randomUUID();
+        Notification initial = new Notification(null, userId, "Msg", NotificationType.SYSTEM, LocalDateTime.now(), false);
+        Notification saved = repository.save(initial);
+
+        restTemplate.delete("/api/notifications/{id}", saved.getId());
+        assertThat(repository.findById(saved.getId())).isEmpty();
     }
 
     @Test
     void testGetNotification_NotFound() {
         UUID randomId = UUID.randomUUID();
-        ResponseEntity<Map> getResponse = restTemplate
-                .withBasicAuth("testuser", "testpass") // Adaugă autentificare
-                .getForEntity(
-                        "/api/notifications/{id}",
-                        Map.class, // Primim eroarea ca Map
-                        randomId
-                );
-
-        assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
-        assertNotNull(getResponse.getBody());
-        // Verificăm mesajul de eroare din GlobalExceptionHandler
-        assertTrue(getResponse.getBody().get("message").toString().contains("Notification not found"));
+        ResponseEntity<Map> response = restTemplate.getForEntity("/api/notifications/{id}", Map.class, randomId);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().get("message").toString()).contains("Notification not found");
     }
 
     @Test
     void testCreate_ValidationFails() {
-        // Trimitem un tip null, care încalcă @NotNull
-        Notification notification = new Notification(null, UUID.randomUUID(), "Test", null, null, false);
+        NotificationCreateRequest invalidRequest = new NotificationCreateRequest(null, "", null);
 
-        ResponseEntity<Map> createResponse = restTemplate
-                .withBasicAuth("testuser", "testpass") // Adaugă autentificare
-                .postForEntity(
-                        "/api/notifications",
-                        notification,
-                        Map.class // Primim eroarea ca Map
-                );
+        ResponseEntity<Map> response = restTemplate.postForEntity("/api/notifications", invalidRequest, Map.class);
 
-        assertEquals(HttpStatus.BAD_REQUEST, createResponse.getStatusCode());
-        assertNotNull(createResponse.getBody().get("errors"));
-        // Verificăm eroarea specifică de validare
-        assertTrue(createResponse.getBody().get("errors").toString().contains("NotificationType cannot be null"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+        String errorsString = response.getBody().get("errors").toString();
+
+        assertThat(errorsString).contains("message", "must not be blank");
+        assertThat(errorsString).contains("userId", "must not be null");
+        assertThat(errorsString).contains("type", "must not be null");
     }
 }

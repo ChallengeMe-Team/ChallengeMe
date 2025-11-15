@@ -1,44 +1,63 @@
 package challengeme.backend.service;
 
+import challengeme.backend.dto.request.update.UserBadgeUpdateRequest;
+import challengeme.backend.exception.UserBadgeNotFoundException;
+import challengeme.backend.model.Badge;
+import challengeme.backend.model.User;
 import challengeme.backend.model.UserBadge;
-import challengeme.backend.repository.RepositoryUserBadge;
+import challengeme.backend.repository.UserBadgeRepository;
+import challengeme.backend.repository.UserRepository;
+import challengeme.backend.repository.BadgeRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UserBadgeService {
 
-    private final RepositoryUserBadge repositoryUserBadge;
-    @Autowired
-    public UserBadgeService(RepositoryUserBadge repositoryUserBadge) {
-        this.repositoryUserBadge = repositoryUserBadge;
-    }
+    private final UserBadgeRepository repository;
+    private final UserRepository userRepository;
+    private final BadgeRepository badgeRepository;
+
 
     public List<UserBadge> findAll() {
-        return repositoryUserBadge.getAll();
+        return repository.findAll();
     }
 
     public UserBadge findUserBadge(UUID id) {
-        return repositoryUserBadge.getUserBadge(id);
+        return repository.findById(id)
+                .orElseThrow(() -> new UserBadgeNotFoundException("UserBadge not found with id: " + id));
     }
 
-    public UserBadge createUserBadge(UserBadge userBadge) {
-        if (userBadge.getId() == null) {
-            userBadge.setId(UUID.randomUUID());
+    public UserBadge createUserBadge(UUID userId, UUID badgeId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        Badge badge = badgeRepository.findById(badgeId)
+                .orElseThrow(() -> new RuntimeException("Badge not found with id: " + badgeId));
+
+        UserBadge userBadge = new UserBadge();
+        userBadge.setUser(user);
+        userBadge.setBadge(badge);
+        userBadge.setDateAwarded(LocalDate.now());
+
+        return repository.save(userBadge);
+    }
+
+    public UserBadge updateUserBadge(UUID id, UserBadgeUpdateRequest request) {
+        UserBadge existing = findUserBadge(id);
+        if (request.getDateAwarded() != null) {
+            existing.setDateAwarded(request.getDateAwarded());
         }
-        return repositoryUserBadge.create(userBadge);
+        return repository.save(existing);
     }
 
     public void deleteUserBadge(UUID id) {
-        repositoryUserBadge.delete(id);
-    }
-
-    public UserBadge updateUserBadge(UUID id, UserBadge userBadge) {
-        userBadge.setId(id);
-        repositoryUserBadge.update(userBadge);
-        return userBadge;
+        UserBadge existing = findUserBadge(id);
+        repository.delete(existing);
     }
 }

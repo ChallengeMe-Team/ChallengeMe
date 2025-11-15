@@ -1,163 +1,214 @@
 package challengeme.backend.controller;
 
+import challengeme.backend.dto.LeaderboardDTO;
+import challengeme.backend.dto.request.create.LeaderboardCreateRequest;
+import challengeme.backend.dto.request.update.LeaderboardUpdateRequest;
+import challengeme.backend.exception.GlobalExceptionHandler;
 import challengeme.backend.exception.LeaderboardNotFoundException;
+import challengeme.backend.mapper.LeaderboardMapper;
 import challengeme.backend.model.Leaderboard;
+import challengeme.backend.model.User;
 import challengeme.backend.service.LeaderboardService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.UUID;
-
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.hasSize;
 
-@WebMvcTest(LeaderboardController.class)
-@ActiveProfiles("test")
-@Import(challengeme.backend.config.TestSecurityConfig.class)
+//Unit tests cu MockMvc – testează controller-ul izolat, folosind mock pentru LeaderboardService.
+
+@ExtendWith(MockitoExtension.class)
 public class LeaderboardControllerUnitTests {
 
-    @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
+    @Mock
     private LeaderboardService leaderboardService;
 
-    @Test
-    void testGetAllLeaderboardEntries() throws Exception {
-        Leaderboard lb1 = new Leaderboard(UUID.randomUUID(), null, 100, 1);
-        Leaderboard lb2 = new Leaderboard(UUID.randomUUID(), null, 50, 2);
+    @Mock
+    private LeaderboardMapper leaderboardMapper;
 
-        when(leaderboardService.getAll()).thenReturn(List.of(lb1, lb2));
+    @InjectMocks
+    private LeaderboardController leaderboardController;
 
-        mockMvc.perform(get("/api/leaderboard"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+    private UUID userId;
+    private UUID leaderboardId;
+    private User user;
+    private Leaderboard leaderboard;
+    private LeaderboardDTO leaderboardDTO;
 
-        verify(leaderboardService, times(1)).getAll();
+    @BeforeEach
+    void setUp() {
+        objectMapper = new ObjectMapper();
+        mockMvc = MockMvcBuilders.standaloneSetup(leaderboardController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
+        userId = UUID.randomUUID();
+        leaderboardId = UUID.randomUUID();
+
+        user = mock(User.class);
+
+        leaderboard = new Leaderboard(leaderboardId, user, 100, 1);
+
+        leaderboardDTO = new LeaderboardDTO();
+        leaderboardDTO.setId(leaderboardId);
+        leaderboardDTO.setUserId(userId);
+        leaderboardDTO.setTotalPoints(100);
+        leaderboardDTO.setRank(1);
     }
 
     @Test
-    void testGetLeaderboardEntryById() throws Exception {
-        UUID id = UUID.randomUUID();
-        Leaderboard lb = new Leaderboard(id, null, 120, 1);
+    void testGetAllLeaderboardEntries() throws Exception {
+        when(leaderboardService.getAll()).thenReturn(List.of(leaderboard));
+        when(leaderboardMapper.toDTO(leaderboard)).thenReturn(leaderboardDTO);
 
-        when(leaderboardService.get(id)).thenReturn(lb);
-
-        mockMvc.perform(get("/api/leaderboard/{id}", id))
+        mockMvc.perform(get("/api/leaderboard"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.totalPoints").value(120));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is(leaderboardId.toString())));
+    }
+
+    @Test
+    void testGetLeaderboardById() throws Exception {
+        when(leaderboardService.get(leaderboardId)).thenReturn(leaderboard);
+        when(leaderboardMapper.toDTO(leaderboard)).thenReturn(leaderboardDTO);
+
+        mockMvc.perform(get("/api/leaderboard/{id}", leaderboardId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(leaderboardId.toString())))
+                .andExpect(jsonPath("$.totalPoints", is(100)));
+    }
+
+    @Test
+    void testGetLeaderboardById_NotFound() throws Exception {
+        when(leaderboardService.get(leaderboardId)).thenThrow(new LeaderboardNotFoundException(leaderboardId));
+
+        mockMvc.perform(get("/api/leaderboard/{id}", leaderboardId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Leaderboard entry not found with id: " + leaderboardId));
     }
 
     @Test
     void testCreateLeaderboardEntry() throws Exception {
-        UUID userId = UUID.randomUUID();
-        LeaderboardController.CreateRequest req = new LeaderboardController.CreateRequest();
-        req.userId = userId;
-        req.totalPoints = 200;
+        final int newPoints = 120;
 
-        Leaderboard created = new Leaderboard(UUID.randomUUID(), null, 200, 1);
-        when(leaderboardService.create(userId, 200)).thenReturn(created);
+        LeaderboardCreateRequest req = new LeaderboardCreateRequest();
+        req.setUserId(userId);
+        req.setTotalPoints(newPoints);
+
+        Leaderboard createdLeaderboard = new Leaderboard(UUID.randomUUID(), user, newPoints, 1);
+        LeaderboardDTO createdDTO = new LeaderboardDTO();
+        createdDTO.setId(createdLeaderboard.getId());
+        createdDTO.setUserId(userId);
+        createdDTO.setTotalPoints(newPoints);
+        createdDTO.setRank(1);
+
+        when(leaderboardService.create(userId, newPoints)).thenReturn(createdLeaderboard);
+        when(leaderboardMapper.toDTO(createdLeaderboard)).thenReturn(createdDTO);
 
         mockMvc.perform(post("/api/leaderboard")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.totalPoints").value(200));
+                .andExpect(jsonPath("$.id", is(createdLeaderboard.getId().toString())))
+                .andExpect(jsonPath("$.totalPoints", is(newPoints)));
 
-        verify(leaderboardService, times(1)).create(userId, 200);
+        verify(leaderboardService, times(1)).create(userId, newPoints);
     }
 
     @Test
     void testUpdateLeaderboardEntry() throws Exception {
-        UUID id = UUID.randomUUID();
-        LeaderboardController.UpdateRequest req = new LeaderboardController.UpdateRequest();
-        req.totalPoints = 300;
+        final int updatedPoints = 200;
 
-        Leaderboard updated = new Leaderboard(id, null, 300, 1);
-        when(leaderboardService.update(id, 300)).thenReturn(updated);
+        LeaderboardUpdateRequest req = new LeaderboardUpdateRequest();
+        req.setTotalPoints(updatedPoints);
 
-        mockMvc.perform(put("/api/leaderboard/{id}", id)
+        Leaderboard updatedLeaderboard = new Leaderboard(leaderboardId, user, updatedPoints, 1);
+        LeaderboardDTO updatedDTO = new LeaderboardDTO();
+        updatedDTO.setId(leaderboardId);
+        updatedDTO.setUserId(userId);
+        updatedDTO.setTotalPoints(updatedPoints);
+        updatedDTO.setRank(1);
+
+        when(leaderboardService.update(leaderboardId, req)).thenReturn(updatedLeaderboard);
+        when(leaderboardMapper.toDTO(updatedLeaderboard)).thenReturn(updatedDTO);
+
+        mockMvc.perform(put("/api/leaderboard/{id}", leaderboardId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalPoints").value(300));
+                .andExpect(jsonPath("$.totalPoints", is(updatedPoints)));
 
-        verify(leaderboardService, times(1)).update(id, 300);
-    }
-
-    @Test
-    void testDeleteLeaderboardEntry() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        doNothing().when(leaderboardService).delete(id);
-
-        mockMvc.perform(delete("/api/leaderboard/{id}", id))
-                .andExpect(status().isNoContent());
-
-        verify(leaderboardService, times(1)).delete(id);
-    }
-
-    @Test
-    void testGetLeaderboardEntryById_NotFound() throws Exception {
-        UUID id = UUID.randomUUID();
-        when(leaderboardService.get(id)).thenThrow(new LeaderboardNotFoundException("Not found"));
-
-        mockMvc.perform(get("/api/leaderboard/{id}", id))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Not found"));
+        verify(leaderboardService, times(1)).update(leaderboardId, req);
     }
 
     @Test
     void testUpdateLeaderboardEntry_NotFound() throws Exception {
-        UUID id = UUID.randomUUID();
-        LeaderboardController.UpdateRequest req = new LeaderboardController.UpdateRequest();
-        req.totalPoints = 200;
+        LeaderboardUpdateRequest req = new LeaderboardUpdateRequest();
+        req.setTotalPoints(200);
 
-        when(leaderboardService.update(id, 200))
-                .thenThrow(new LeaderboardNotFoundException("Not found"));
+        when(leaderboardService.update(leaderboardId, req))
+                .thenThrow(new LeaderboardNotFoundException(leaderboardId));
 
-        mockMvc.perform(put("/api/leaderboard/{id}", id)
+        mockMvc.perform(put("/api/leaderboard/{id}", leaderboardId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Not found"));
+                .andExpect(jsonPath("$.message").value("Leaderboard entry not found with id: " + leaderboardId));
+    }
+
+    @Test
+    void testDeleteLeaderboardEntry() throws Exception {
+        doNothing().when(leaderboardService).delete(leaderboardId);
+
+        mockMvc.perform(delete("/api/leaderboard/{id}", leaderboardId))
+                .andExpect(status().isNoContent());
+
+        verify(leaderboardService, times(1)).delete(leaderboardId);
     }
 
     @Test
     void testDeleteLeaderboardEntry_NotFound() throws Exception {
-        UUID id = UUID.randomUUID();
-        doThrow(new LeaderboardNotFoundException("Not found")).when(leaderboardService).delete(id);
+        doThrow(new LeaderboardNotFoundException(leaderboardId)).when(leaderboardService).delete(leaderboardId);
 
-        mockMvc.perform(delete("/api/leaderboard/{id}", id))
+        mockMvc.perform(delete("/api/leaderboard/{id}", leaderboardId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Not found"));
+                .andExpect(jsonPath("$.message").value("Leaderboard entry not found with id: " + leaderboardId));
     }
 
     @Test
     void testGetSortedLeaderboard() throws Exception {
-        Leaderboard lb1 = new Leaderboard(UUID.randomUUID(), null, 150, 1);
-        Leaderboard lb2 = new Leaderboard(UUID.randomUUID(), null, 120, 2);
+        Leaderboard lb2 = new Leaderboard(UUID.randomUUID(), user, 50, 2);
 
-        when(leaderboardService.getSorted()).thenReturn(List.of(lb1, lb2));
+        LeaderboardDTO lb2DTO = new LeaderboardDTO();
+        lb2DTO.setId(lb2.getId());
+        lb2DTO.setUserId(userId);
+        lb2DTO.setTotalPoints(50);
+        lb2DTO.setRank(2);
+
+
+        when(leaderboardService.getSorted()).thenReturn(List.of(leaderboard, lb2));
+        when(leaderboardMapper.toDTO(leaderboard)).thenReturn(leaderboardDTO);
+        when(leaderboardMapper.toDTO(lb2)).thenReturn(lb2DTO);
 
         mockMvc.perform(get("/api/leaderboard/sorted"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].totalPoints").value(150))
-                .andExpect(jsonPath("$[1].totalPoints").value(120));
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].totalPoints", is(100)))
+                .andExpect(jsonPath("$[1].totalPoints", is(50)));
     }
-
 }

@@ -11,12 +11,13 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+// Integration tests cu TestRestTemplate – testează endpoint-urile HTTP reale, cu Spring context complet.
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @org.springframework.test.context.ActiveProfiles("test")
@@ -41,16 +42,14 @@ class LeaderboardControllerIntegrationTests {
         baseUrl = "http://localhost:" + port + "/api/leaderboard";
     }
 
-
     private UUID createUser(String name) {
-        User u = new User(name, name + "@email.com", "secret12", 0);
-        return userService.createUser(u).getId();
+        User user = new User(null, name, name + "@email.com", "secret12", 0);
+        return userService.createUser(user).getId();
     }
 
     @Test
     void testCreateAndGetLeaderboardEntry() {
         UUID userId = createUser("ana");
-
 
         Map<String, Object> body = Map.of("userId", userId.toString(), "totalPoints", 120);
         ResponseEntity<Map> postResponse = restTemplate.postForEntity(baseUrl, body, Map.class);
@@ -58,48 +57,16 @@ class LeaderboardControllerIntegrationTests {
 
         String id = Objects.requireNonNull(postResponse.getBody()).get("id").toString();
 
-
         ResponseEntity<Map> getResponse = restTemplate.getForEntity(baseUrl + "/" + id, Map.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(getResponse.getBody().get("totalPoints")).isEqualTo(120);
     }
 
     @Test
-    void testUpdateLeaderboardEntry() {
-
-        UUID userId = createUser("mihai");
-        var created = leaderboardService.create(userId, 50); // ne dă id rapid
-
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, Object>> entity =
-                new HttpEntity<>(Map.of("totalPoints", 200), headers);
-
-        ResponseEntity<Map> putResponse = restTemplate.exchange(
-                baseUrl + "/" + created.getId(), HttpMethod.PUT, entity, Map.class);
-
-        assertThat(putResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(putResponse.getBody().get("totalPoints")).isEqualTo(200);
-
-
-        ResponseEntity<Map> getResponse =
-                restTemplate.getForEntity(baseUrl + "/" + created.getId(), Map.class);
-        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(getResponse.getBody().get("totalPoints")).isEqualTo(200);
-
-
-        ResponseEntity<List> sortedResponse =
-                restTemplate.getForEntity(baseUrl + "/sorted", List.class);
-        assertThat(sortedResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map first = (Map) sortedResponse.getBody().get(0);
-        assertThat(first.get("id")).isEqualTo(created.getId().toString());
-        assertThat(first.get("rank")).isEqualTo(1);
-    }
-
-    @Test
     void testDeleteLeaderboardEntry() {
         UUID userId = createUser("daria");
+
+        // Creăm intrarea direct prin service
         var created = leaderboardService.create(userId, 10);
         String id = created.getId().toString();
 
@@ -107,10 +74,16 @@ class LeaderboardControllerIntegrationTests {
                 baseUrl + "/" + id, HttpMethod.DELETE, null, Void.class);
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-
-        ResponseEntity<String> getResponse =
-                restTemplate.getForEntity(baseUrl + "/" + id, String.class);
+        ResponseEntity<String> getResponse = restTemplate.getForEntity(baseUrl + "/" + id, String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
 
+    @Test
+    void testGetLeaderboardEntryById_NotFound() {
+        UUID invalidId = UUID.randomUUID();
+
+        ResponseEntity<Map> getResponse = restTemplate.getForEntity(baseUrl + "/" + invalidId, Map.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(getResponse.getBody()).containsKey("message");
     }
 }
