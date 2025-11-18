@@ -13,3 +13,4 @@ public interface ChallengeRepository {
     void deleteById(UUID id);
     boolean existsById(UUID id);
 }
+    
