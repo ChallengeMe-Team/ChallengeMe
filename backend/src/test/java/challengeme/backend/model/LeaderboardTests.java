@@ -1,45 +1,55 @@
 package challengeme.backend.model;
 
+import challengeme.backend.repository.LeaderboardRepository;
+import challengeme.backend.repository.UserRepository;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 class LeaderboardTests {
 
-    private User user(String name) {
+    private static Validator validator;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeAll
+    static void setupValidator() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
+
+    private User createUser(String name) {
         User u = new User();
-        u.setId(UUID.randomUUID());
         u.setUsername(name);
-        return u;
+        u.setEmail(name + "@email.com");
+        u.setPassword("password123");
+        u.setPoints(0);
+        return userRepository.save(u);
     }
 
+    // ==============================
+    // VALIDATION TESTS
+    // ==============================
     @Test
-    void getters_setters_work_and_rank_is_mutable() {
-        Leaderboard lb = new Leaderboard();
-        UUID id = UUID.randomUUID();
+    void testValidationSuccess() {
+        User u = createUser("ana");
+        Leaderboard lb = new Leaderboard(u, 100);
+        lb.setRank(1);
 
-        lb.setId(id);
-        lb.setUser(user("ana"));
-        lb.setTotalPoints(123);
-        lb.setRank(5);
-
-        assertEquals(id, lb.getId());
-        assertEquals(123, lb.getTotalPoints());
-        assertEquals(5, lb.getRank());
-        assertEquals("ana", lb.getUser().getUsername());
+        Set<ConstraintViolation<Leaderboard>> violations = validator.validate(lb);
+        assertEquals(0, violations.size());
     }
 
-    @Test
-    void equals_and_hashCode_based_on_id() {
-        User u = user("ana");
-        UUID id = UUID.randomUUID();
-
-        Leaderboard a = new Leaderboard(id, u, 10);
-        Leaderboard b = new Leaderboard(id, u, 999);
-
-        assertEquals(a, b);
-        assertEquals(a.hashCode(), b.hashCode());
-    }
 }

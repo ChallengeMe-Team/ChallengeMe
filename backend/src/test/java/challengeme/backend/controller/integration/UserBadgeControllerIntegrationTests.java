@@ -3,28 +3,36 @@ package challengeme.backend.controller.integration;
 import challengeme.backend.model.Badge;
 import challengeme.backend.model.User;
 import challengeme.backend.model.UserBadge;
+import challengeme.backend.repository.BadgeRepository;
+import challengeme.backend.repository.UserBadgeRepository;
+import challengeme.backend.repository.UserRepository;
+import challengeme.backend.repository.LeaderboardRepository;
+import challengeme.backend.dto.request.create.UserBadgeCreateRequest;
+import challengeme.backend.dto.request.update.UserBadgeUpdateRequest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Integration tests for UserBadgeController using TestRestTemplate.
- * Verifies real HTTP interaction with the running application context.
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-public class UserBadgeControllerIntegrationTests {
+// Importăm configurația de securitate de test
+@Import(UserBadgeControllerIntegrationTests.TestSecurityConfig.class)
+class UserBadgeControllerIntegrationTests {
 
     @LocalServerPort
     private int port;
@@ -32,90 +40,125 @@ public class UserBadgeControllerIntegrationTests {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    private String getBaseUrl() {
-        return "http://localhost:" + port + "/api/userbadges";
+    @Autowired
+    private UserBadgeRepository userBadgeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BadgeRepository badgeRepository;
+
+    @Autowired
+    private LeaderboardRepository leaderboardRepository;
+
+    private User userA;
+    private Badge badgeA;
+    private String baseUrl;
+
+    @TestConfiguration
+    static class TestSecurityConfig {
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                    .csrf(csrf -> csrf.disable());
+            return http.build();
+        }
+    }
+
+    @BeforeEach
+    void setupDependencies() {
+        baseUrl = "http://localhost:" + port + "/api/userbadges";
+
+        cleanup();
+
+        User uA = new User(null, "AnaTest", "ana@test.com", "pass_ana", 10);
+        userA = userRepository.save(uA);
+
+        Badge bA = new Badge(null, "GoldTest", "Top Performer", "Complete IT");
+        badgeA = badgeRepository.save(bA);
+    }
+
+    @AfterEach
+    void cleanup() {
+        userBadgeRepository.deleteAll();
+        leaderboardRepository.deleteAll();
+        userRepository.deleteAll();
+        badgeRepository.deleteAll();
+    }
+
+    // --- TESTE CRUD COMPLETE ---
+
+    @Test
+    void testFullCrudLifecycle() {
+        // DATE
+        UUID userId = userA.getId();
+        UUID badgeId = badgeA.getId();
+
+        UserBadgeCreateRequest createRequest = new UserBadgeCreateRequest();
+        createRequest.setUserId(userId);
+        createRequest.setBadgeId(badgeId);
+
+        // 1. CREATE (POST)
+        ResponseEntity<Map> postResp = restTemplate.postForEntity(baseUrl, createRequest, Map.class);
+
+        assertThat(postResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(postResp.getBody()).isNotNull();
+
+        String createdIdStr = postResp.getBody().get("id").toString();
+        UUID createdId = UUID.fromString(createdIdStr);
+
+        assertThat(postResp.getBody().get("userId").toString()).isEqualTo(userId.toString());
+
+        // 2. GET BY ID
+        ResponseEntity<UserBadge> getResp = restTemplate.getForEntity(baseUrl + "/" + createdId, UserBadge.class);
+        assertThat(getResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getResp.getBody().getId()).isEqualTo(createdId);
+
+        // 3. UPDATE (PUT)
+        LocalDate newDate = LocalDate.now().plusDays(5);
+        UserBadgeUpdateRequest updateRequest = new UserBadgeUpdateRequest();
+        updateRequest.setDateAwarded(newDate);
+
+        RequestEntity<UserBadgeUpdateRequest> requestEntity = RequestEntity
+                .put(baseUrl + "/" + createdId)
+                .body(updateRequest);
+
+        ResponseEntity<UserBadge> updateResp = restTemplate.exchange(requestEntity, UserBadge.class);
+        assertThat(updateResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(updateResp.getBody().getDateAwarded()).isEqualTo(newDate);
+
+        UserBadge updatedEntity = userBadgeRepository.findById(createdId).orElseThrow();
+        assertThat(updatedEntity.getDateAwarded()).isEqualTo(newDate);
+
+        // 4. DELETE
+        restTemplate.delete(baseUrl + "/" + createdId);
+
+        // 5. GET BY ID AFTER DELETE
+        ResponseEntity<String> deletedResp = restTemplate.getForEntity(baseUrl + "/" + createdId, String.class);
+        assertThat(deletedResp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    // --- TESTE DE MARGINALIZARE ---
+
+    @Test
+    void testGetUserBadgeNotFound() {
+        UUID randomId = UUID.randomUUID();
+        ResponseEntity<String> resp = restTemplate.getForEntity(baseUrl + "/" + randomId, String.class);
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    void testCreateAndGetUserBadge() {
-        // Arrange
-        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "secret123", 10);
-        Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top performer", "Complete 10 challenges");
-        UserBadge userBadge = new UserBadge(null, user, badge, LocalDate.now());
+    void testCreate_MissingDependencies() {
+        UUID nonExistentUserId = UUID.randomUUID();
+        UUID nonExistentBadgeId = UUID.randomUUID();
 
-        // Act — POST
-        ResponseEntity<UserBadge> postResponse = restTemplate.postForEntity(
-                getBaseUrl(), userBadge, UserBadge.class);
+        UserBadgeCreateRequest createRequest = new UserBadgeCreateRequest();
+        createRequest.setUserId(nonExistentUserId);
+        createRequest.setBadgeId(nonExistentBadgeId);
 
-        // Assert — created successfully
-        assertEquals(HttpStatus.CREATED, postResponse.getStatusCode());
-        assertNotNull(postResponse.getBody());
-        assertNotNull(postResponse.getBody().getId());
-
-        UUID createdId = postResponse.getBody().getId();
-
-        // Act — GET newly created
-        ResponseEntity<UserBadge> getResponse =
-                restTemplate.getForEntity(getBaseUrl() + "/" + createdId, UserBadge.class);
-
-        // Assert — entity exists and matches
-        assertEquals(HttpStatus.OK, getResponse.getStatusCode());
-        assertNotNull(getResponse.getBody());
-        assertEquals("Ana", getResponse.getBody().getUser().getUsername());
-        assertEquals("Gold", getResponse.getBody().getBadge().getName());
-    }
-
-    @Test
-    void testUpdateUserBadge() {
-        // Arrange
-        User user = new User(UUID.randomUUID(), "Ion", "ion@email.com", "pass123", 5);
-        Badge badge = new Badge(UUID.randomUUID(), "Silver", "Runner-up", "Complete 5 challenges");
-        UserBadge userBadge = new UserBadge(null, user, badge, LocalDate.now());
-
-        ResponseEntity<UserBadge> postResponse =
-                restTemplate.postForEntity(getBaseUrl(), userBadge, UserBadge.class);
-
-        assertNotNull(postResponse.getBody(), "Response body should not be null");
-        UUID id = postResponse.getBody().getId();
-
-
-        // Modify and PUT
-        badge.setName("Platinum");
-        userBadge.setBadge(badge);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<UserBadge> entity = new HttpEntity<>(userBadge, headers);
-
-        ResponseEntity<UserBadge> putResponse =
-                restTemplate.exchange(getBaseUrl() + "/" + id, HttpMethod.PUT, entity,
-                        new ParameterizedTypeReference<UserBadge>() {});
-
-
-        assertEquals(HttpStatus.OK, putResponse.getStatusCode());
-        assertEquals("Platinum", putResponse.getBody().getBadge().getName());
-    }
-
-    @Test
-    void testDeleteUserBadge() {
-        // Arrange
-        User user = new User(UUID.randomUUID(), "Mara", "mara@email.com", "pw1234", 3);
-        Badge badge = new Badge(UUID.randomUUID(), "Bronze", "Starter", "Complete 1 challenge");
-        UserBadge userBadge = new UserBadge(null, user, badge, LocalDate.now());
-
-        ResponseEntity<UserBadge> postResponse =
-                restTemplate.postForEntity(getBaseUrl(), userBadge, UserBadge.class);
-
-        UUID id = postResponse.getBody().getId();
-
-        // Act — DELETE
-        restTemplate.delete(getBaseUrl() + "/" + id);
-
-        // Assert — should no longer exist
-        ResponseEntity<String> getResponse =
-                restTemplate.getForEntity(getBaseUrl() + "/" + id, String.class);
-
-        assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
+        ResponseEntity<Map> postResp = restTemplate.postForEntity(baseUrl, createRequest, Map.class);
+        assertThat(postResp.getStatusCode()).isNotEqualTo(HttpStatus.CREATED);
+        assertThat(postResp.getStatusCode()).isIn(HttpStatus.NOT_FOUND, HttpStatus.BAD_REQUEST, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

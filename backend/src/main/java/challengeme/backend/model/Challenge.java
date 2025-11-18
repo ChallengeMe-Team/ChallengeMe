@@ -9,11 +9,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "challenges")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Challenge {
+
+    @Id
+    @GeneratedValue
     private UUID id;
 
     @NotBlank(message = "Title is required")
@@ -25,6 +31,7 @@ public class Challenge {
     private String category;
 
     @NotNull(message = "Difficulty must be specified")
+    @Enumerated(EnumType.STRING)
     private Difficulty difficulty;
 
     @Positive(message = "Points must be positive")
@@ -35,15 +42,5 @@ public class Challenge {
 
     public enum Difficulty {
         EASY, MEDIUM, HARD
-    }
-
-    public Challenge(String title, String description, String category, Difficulty difficulty, int points, String createdBy) {
-        this.id = UUID.randomUUID();
-        this.title = title;
-        this.description = description;
-        this.category = category;
-        this.difficulty = difficulty;
-        this.points = points;
-        this.createdBy = createdBy;
     }
 }

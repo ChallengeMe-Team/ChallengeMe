@@ -8,8 +8,5 @@ public class LeaderboardNotFoundException extends NotFoundException {
         super("Leaderboard entry not found with id: " + id);
     }
 
-    public LeaderboardNotFoundException(String message) {
-        super(message);
-    }
 }
 

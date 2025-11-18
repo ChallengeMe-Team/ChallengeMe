@@ -1,60 +1,55 @@
 package challengeme.backend.controller;
 
+import challengeme.backend.dto.LeaderboardDTO;
+import challengeme.backend.dto.request.create.LeaderboardCreateRequest;
+import challengeme.backend.dto.request.update.LeaderboardUpdateRequest;
+import challengeme.backend.mapper.LeaderboardMapper;
 import challengeme.backend.model.Leaderboard;
 import challengeme.backend.service.LeaderboardService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/leaderboard")
-@CrossOrigin(origins = "*", allowedHeaders = "*", maxAge = 3600)
+@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class LeaderboardController {
 
     private final LeaderboardService service;
-
-    public LeaderboardController(LeaderboardService service) {
-        this.service = service;
-    }
-
-
-    public static class CreateRequest {
-        public UUID userId;
-        public int totalPoints;
-    }
-    public static class UpdateRequest {
-        public Integer totalPoints;
-    }
+    private final LeaderboardMapper mapper;
 
     @PostMapping
-    public ResponseEntity<Leaderboard> create(@RequestBody CreateRequest req) {
-        Leaderboard created = service.create(req.userId, req.totalPoints);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<LeaderboardDTO> create(@RequestBody LeaderboardCreateRequest req) {
+        Leaderboard created = service.create(req.getUserId(), req.getTotalPoints());
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(created));
     }
 
     @GetMapping
-    public ResponseEntity<List<Leaderboard>> all() {
-        return ResponseEntity.ok(service.getAll());
+    public ResponseEntity<List<LeaderboardDTO>> all() {
+        return ResponseEntity.ok(service.getAll().stream().map(mapper::toDTO).collect(Collectors.toList()));
     }
 
     @GetMapping("/sorted")
-    public ResponseEntity<List<Leaderboard>> sorted() {
-        return ResponseEntity.ok(service.getSorted());
+    public ResponseEntity<List<LeaderboardDTO>> sorted() {
+        return ResponseEntity.ok(service.getSorted().stream().map(mapper::toDTO).collect(Collectors.toList()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Leaderboard> get(@PathVariable UUID id) {
-        return ResponseEntity.ok(service.get(id));
+    public ResponseEntity<LeaderboardDTO> get(@PathVariable UUID id) {
+        return ResponseEntity.ok(mapper.toDTO(service.get(id)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Leaderboard> update(@PathVariable UUID id,
-                                              @RequestBody UpdateRequest req) {
-        Leaderboard updated = service.update(id, req.totalPoints);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<LeaderboardDTO> update(@PathVariable UUID id,
+                                                 @RequestBody LeaderboardUpdateRequest req) {
+        Leaderboard updated = service.update(id, req);
+        return ResponseEntity.ok(mapper.toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
