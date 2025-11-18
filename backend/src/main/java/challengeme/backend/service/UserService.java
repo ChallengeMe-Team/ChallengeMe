@@ -1,44 +1,44 @@
 package challengeme.backend.service;
 
+import challengeme.backend.dto.request.update.UserUpdateRequest;
+import challengeme.backend.exception.UserNotFoundException;
+import challengeme.backend.mapper.UserMapper;
 import challengeme.backend.model.User;
 import challengeme.backend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-
-    @Autowired
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final UserMapper mapper;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     public User getUserById(UUID id) {
-        return userRepository.findById(id);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id" + id));
     }
 
     public User createUser(User user) {
-        if (user.getId() == null)
-            user.setId(UUID.randomUUID());
         return userRepository.save(user);
     }
 
     public void deleteUser(UUID id) {
-        userRepository.delete(id);
+        userRepository.deleteById(id);
     }
 
-    public User updateUser(UUID id, User user) {
-        User existing = userRepository.findById(id); // va arunca excepție dacă nu există
-        user.setId(existing.getId());
-        userRepository.update(user);
-        return user;
+    public User updateUser(UUID id, UserUpdateRequest request) {
+        User user = getUserById(id); // aruncă UserNotFoundException dacă nu există
+
+        mapper.updateEntity(request, user); // aplică update doar pe câmpurile trimise
+
+        return userRepository.save(user); // salvează și returnează
     }
 }

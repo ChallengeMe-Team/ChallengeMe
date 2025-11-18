@@ -1,20 +1,10 @@
 package challengeme.backend.repository;
 
 import challengeme.backend.model.Badge;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
 import java.util.UUID;
 
-public interface BadgeRepository {
-
-    List<Badge> findAll();
-
-    Badge findById(UUID id);
-
-    Badge save(Badge badge);
-
-    void delete(UUID id);
-
-    void update(Badge badge);
-
+public interface BadgeRepository extends JpaRepository<Badge, UUID> {
 }
+

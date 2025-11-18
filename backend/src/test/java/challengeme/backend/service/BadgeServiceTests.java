@@ -1,35 +1,39 @@
 package challengeme.backend.service;
 
+import challengeme.backend.dto.request.update.BadgeUpdateRequest;
 import challengeme.backend.exception.BadgeNotFoundException;
+import challengeme.backend.mapper.BadgeMapper;
 import challengeme.backend.model.Badge;
 import challengeme.backend.repository.BadgeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class BadgeServiceTests {
+class BadgeServiceTests {
 
     private BadgeRepository badgeRepository;
+    private BadgeMapper badgeMapper;
     private BadgeService badgeService;
 
     @BeforeEach
     void setup() {
-        badgeRepository = Mockito.mock(BadgeRepository.class);
-        badgeService = new BadgeService(badgeRepository);
+        badgeRepository = mock(BadgeRepository.class);
+        badgeMapper = mock(BadgeMapper.class);
+        badgeService = new BadgeService(badgeRepository, badgeMapper);
     }
 
     @Test
     void testGetAllBadges() {
         List<Badge> badges = Arrays.asList(
-                new Badge(UUID.randomUUID(), "Explorer", "Visited 5 locations", "Visit 5 locations"),
-                new Badge(UUID.randomUUID(), "Achiever", "Completed all tasks", "Complete all challenges")
+                new Badge(UUID.randomUUID(), "Explorer", "Desc1", "Criteria1"),
+                new Badge(UUID.randomUUID(), "Achiever", "Desc2", "Criteria2")
         );
 
         when(badgeRepository.findAll()).thenReturn(badges);
@@ -41,9 +45,9 @@ public class BadgeServiceTests {
     }
 
     @Test
-    void testGetBadgeById() {
-        Badge badge = new Badge(UUID.randomUUID(), "Explorer", "Visited 5 locations", "Visit 5 locations");
-        when(badgeRepository.findById(badge.getId())).thenReturn(badge);
+    void testGetBadgeByIdExists() {
+        Badge badge = new Badge(UUID.randomUUID(), "Explorer", "Desc", "Criteria");
+        when(badgeRepository.findById(badge.getId())).thenReturn(Optional.of(badge));
 
         Badge result = badgeService.getBadgeById(badge.getId());
         assertEquals(badge, result);
@@ -52,77 +56,83 @@ public class BadgeServiceTests {
     }
 
     @Test
-    void testCreateBadgeWithId() {
-        Badge badge = new Badge(UUID.randomUUID(), "Achiever", "Completed all tasks", "Complete all challenges");
+    void testGetBadgeByIdNotFound() {
+        UUID id = UUID.randomUUID();
+        when(badgeRepository.findById(id)).thenReturn(Optional.empty());
 
-        when(badgeRepository.save(badge)).thenReturn(badge);
+        assertThrows(BadgeNotFoundException.class, () -> badgeService.getBadgeById(id));
+
+        verify(badgeRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void testCreateBadge() {
+        Badge badge = new Badge(null, "New", "Desc", "Criteria");
+
+        when(badgeRepository.save(badge)).thenAnswer(invocation -> {
+            Badge b = invocation.getArgument(0);
+            b.setId(UUID.randomUUID());
+            return b;
+        });
 
         Badge created = badgeService.createBadge(badge);
-        assertEquals(badge, created);
+        assertNotNull(created.getId());
+        assertEquals("New", created.getName());
+
         verify(badgeRepository, times(1)).save(badge);
     }
 
     @Test
-    void testCreateBadgeWithoutId() {
-        Badge badge = new Badge(null, "Explorer", "Visited 5 locations", "Visit 5 locations");
-
-        when(badgeRepository.save(any(Badge.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Badge created = badgeService.createBadge(badge);
-        assertNotNull(created.getId());
-        verify(badgeRepository, times(1)).save(created);
-    }
-
-    @Test
-    void testDeleteBadge() {
+    void testUpdateBadgeExists() {
         UUID id = UUID.randomUUID();
-        doNothing().when(badgeRepository).delete(id);
+        Badge existing = new Badge(id, "Old", "DescOld", "CriteriaOld");
 
-        badgeService.deleteBadge(id);
+        BadgeUpdateRequest updateRequest = new BadgeUpdateRequest("Updated", "DescUpdated", "CriteriaUpdated");
 
-        verify(badgeRepository, times(1)).delete(id);
-    }
+        when(badgeRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(badgeRepository.save(existing)).thenReturn(existing); // save returnează entity-ul actualizat
 
-    @Test
-    void testDeleteBadgeNotFound() {
-        UUID id = UUID.randomUUID();
-        doThrow(new BadgeNotFoundException("Badge with id " + id + " not found"))
-                .when(badgeRepository).delete(id);
+        Badge updated = badgeService.updateBadge(id, updateRequest);
 
-        assertThrows(BadgeNotFoundException.class, () -> badgeService.deleteBadge(id));
-        verify(badgeRepository, times(1)).delete(id);
-    }
+        verify(badgeMapper, times(1)).updateEntity(updateRequest, existing);
 
-    @Test
-    void testUpdateBadge() {
-        UUID id = UUID.randomUUID();
-        Badge existingBadge = new Badge(id, "Explorer", "Visited 5 locations", "Visit 5 locations");
-        Badge updatedBadge = new Badge(null, "Explorer Updated", "Visited 10 locations", "Visit 10 locations");
-
-        when(badgeRepository.findById(id)).thenReturn(existingBadge);
-        doNothing().when(badgeRepository).update(any(Badge.class));
-
-        Badge result = badgeService.updateBadge(id, updatedBadge);
-
-        assertEquals(id, result.getId());
-        assertEquals("Explorer Updated", result.getName());
-        assertEquals("Visited 10 locations", result.getDescription());
-        assertEquals("Visit 10 locations", result.getCriteria());
-
-        verify(badgeRepository, times(1)).findById(id);
-        verify(badgeRepository, times(1)).update(updatedBadge);
+        assertEquals(id, updated.getId());
     }
 
     @Test
     void testUpdateBadgeNotFound() {
         UUID id = UUID.randomUUID();
-        Badge updatedBadge = new Badge(null, "NonExistent", "Does not exist", "No criteria");
+        BadgeUpdateRequest request = new BadgeUpdateRequest("NonExistent", "Desc", "Criteria");
 
-        when(badgeRepository.findById(id)).thenThrow(new BadgeNotFoundException("Badge with id " + id + " not found"));
+        when(badgeRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(BadgeNotFoundException.class, () -> badgeService.updateBadge(id, updatedBadge));
+        assertThrows(BadgeNotFoundException.class, () -> badgeService.updateBadge(id, request));
 
+        verify(badgeMapper, never()).updateEntity(any(), any());
+        verify(badgeRepository, never()).save(any());
+    }
+
+    @Test
+    void testDeleteBadgeExists() {
+        UUID id = UUID.randomUUID();
+        Badge existing = new Badge(id, "Test", "Desc", "Criteria");
+
+        when(badgeRepository.findById(id)).thenReturn(Optional.of(existing));
+        doNothing().when(badgeRepository).delete(existing);
+
+        badgeService.deleteBadge(id);
+
+        verify(badgeRepository, times(1)).delete(existing);
         verify(badgeRepository, times(1)).findById(id);
-        verify(badgeRepository, never()).update(updatedBadge);
+    }
+
+    @Test
+    void testDeleteBadgeNotFound() {
+        UUID id = UUID.randomUUID();
+        when(badgeRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(BadgeNotFoundException.class, () -> badgeService.deleteBadge(id));
+
+        verify(badgeRepository, never()).delete(any());
     }
 }

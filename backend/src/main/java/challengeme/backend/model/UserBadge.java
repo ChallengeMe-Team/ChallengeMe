@@ -1,5 +1,6 @@
 package challengeme.backend.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,27 +12,27 @@ import challengeme.backend.model.Badge;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/*
- * Represents an association between a User and a Badge.
- * Allows tracking which badges each user has earned and when.
- */
+@Entity
+@Table(name = "user_badges")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class UserBadge {
 
-    /** Unique identifier for this user–badge relation. */
+    @Id
+    @GeneratedValue
     private UUID id;
 
-    /** The user who has earned the badge. Must be provided. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     @NotNull(message = "User must be provided")
     private User user;
 
-    /** The badge awarded to the user. Must be provided. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "badge_id", nullable = false)
     @NotNull(message = "Badge must be provided")
     private Badge badge;
 
-    /** The date when the badge was awarded to the user. */
+    @Column(name = "date_awarded", nullable = false)
     private LocalDate dateAwarded = LocalDate.now();
 }
