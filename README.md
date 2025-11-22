@@ -238,7 +238,7 @@ For any subsequent request (e.g., [GET /api/challenges]()), the Frontend automat
 [Authorization: Bearer eyJhbGciOi...]()
 
 #### Persistance: 
-The token is stored in [localStorage]() to keep you logged in after refresh.
+The token is stored in localStorage to keep you logged in after refresh.
 
 ## 7️⃣ Git Workflow
 
