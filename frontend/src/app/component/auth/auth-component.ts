@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { finalize } from 'rxjs/operators';
 
-import { LoginFormComponent } from './login-form/login-form.component';
+import { LoginFormComponent } from './login-form/login-form-component';
+import { SignupFormComponent } from './signup-form/signup-form-component';
 import { AuthService } from '../../services/auth.service';
-import {SignupFormComponent} from './signup-form/singup-form.component';
 import { LucideAngularModule, LUCIDE_ICONS, LucideIconProvider, Loader2 } from 'lucide-angular';
-
 
 @Component({
   selector: 'app-auth-container',
@@ -22,11 +21,11 @@ import { LucideAngularModule, LUCIDE_ICONS, LucideIconProvider, Loader2 } from '
   providers: [
     { provide: LUCIDE_ICONS, useValue: new LucideIconProvider({ Loader2 }) }
   ],
-  templateUrl: './auth-container.component.html',
-  styleUrl: './auth-common.css', // Presupunem path-ul corect relativ
+  templateUrl: './auth-component.html',
+  styleUrl: './auth-component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AuthContainerComponent {
+export class AuthComponent {
   // Emite evenimente către AppComponent (părinte) pentru a afișa Toast-ul
   @Output() toastEvent = new EventEmitter<{ message: string, type: 'success' | 'error' }>();
   @Output() authSuccess = new EventEmitter<any>();
@@ -42,36 +41,51 @@ export class AuthContainerComponent {
 
   handleSignup(data: any) {
     this.isLoading.set(true);
+
     this.authService.signup(data).pipe(
       finalize(() => this.isLoading.set(false))
     ).subscribe({
-      next: (user) => {
-        this.toastEvent.emit({ message: `Cont creat! Bine ai venit, ${user.username}!`, type: 'success' });
+      next: () => {
+        // Succes: Backend-ul returneaza string simplu sau 200 OK
+        this.toastEvent.emit({ message: `Cont creat cu succes! Te poți autentifica.`, type: 'success' });
+        // Comutam automat pe modul Login
         this.isLoginMode.set(true);
       },
       error: (err) => {
-        const message = err.errors ? 'Verifică datele introduse. Username-ul sau email-ul pot fi deja folosite.' : (err.message || 'Eroare de server.');
-        this.toastEvent.emit({ message: `Înregistrare eșuată: ${message}`, type: 'error' });
+        // Gestionare erori (ex: Username taken)
+        // Verificam daca backend-ul a trimis un mesaj de eroare in body
+        const errorMessage = typeof err.error === 'string' ? err.error : 'Eroare la înregistrare. Verifică datele.';
+        this.toastEvent.emit({ message: errorMessage, type: 'error' });
       }
     });
   }
 
   handleLogin(credentials: any) {
     this.isLoading.set(true);
+
     this.authService.login(credentials).pipe(
       finalize(() => this.isLoading.set(false))
     ).subscribe({
-      next: (allUsers) => {
-        try {
-          const user = this.authService.simulateLoginCheck(credentials, allUsers);
-          this.toastEvent.emit({ message: `Autentificare reușită! Bine ai revenit!`, type: 'success' });
-          this.authSuccess.emit(user);
-        } catch (error: any) {
-          this.toastEvent.emit({ message: `Eșec autentificare: ${error.message}`, type: 'error' });
-        }
+      next: (response) => {
+        // Succes: Avem token si user
+        // response.user vine din AuthController modificat
+        const user = response.user;
+
+        this.toastEvent.emit({
+          message: `Autentificare reușită! Bine ai revenit, ${user.username}!`,
+          type: 'success'
+        });
+
+        // Emitem userul catre parinte (daca e nevoie de redirect sau alte actiuni)
+        this.authSuccess.emit(user);
       },
       error: (err) => {
-        this.toastEvent.emit({ message: `Eroare de server la login.`, type: 'error' });
+        // Eroare 401 sau altele
+        console.error('Login error:', err);
+        this.toastEvent.emit({
+          message: `Email sau parolă incorecte.`,
+          type: 'error'
+        });
       }
     });
   }

@@ -8,15 +8,18 @@ import challengeme.backend.exception.NotificationNotFoundException;
 import challengeme.backend.mapper.NotificationMapper;
 import challengeme.backend.model.Notification;
 import challengeme.backend.model.NotificationType;
+import challengeme.backend.security.AuthTokenFilter;
+import challengeme.backend.security.JwtUtils;
+import challengeme.backend.security.UserDetailsServiceImpl;
 import challengeme.backend.service.NotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,15 +28,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-//Unit tests cu MockMvc – testează controller-ul izolat, folosind mock pentru NotificationService.
+// Unit tests cu MockMvc – testează controller-ul izolat
 
 @WebMvcTest(controllers = NotificationController.class,
         excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@Import({GlobalExceptionHandler.class, NotificationControllerUnitTests.NotificationTestConfiguration.class})
+@AutoConfigureMockMvc(addFilters = false) // Dezactivăm filtrele de securitate pentru testele de logică
+@Import(GlobalExceptionHandler.class)
 class NotificationControllerUnitTests {
 
     @Autowired
@@ -42,25 +47,23 @@ class NotificationControllerUnitTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
+    @MockBean
     private NotificationService service;
 
-    @Autowired
+    @MockBean
     private NotificationMapper mapper;
 
-    @TestConfiguration
-    static class NotificationTestConfiguration {
+    // --- MOCK-URI DE SECURITATE (OBLIGATORII) ---
+    // WebMvcTest găsește AuthTokenFilter (fiind un Filter), care cere JwtUtils.
+    // Trebuie să le mockuim pentru ca ApplicationContext să pornească.
+    @MockBean
+    private JwtUtils jwtUtils;
 
-        @Bean
-        public NotificationService notificationService() {
-            return mock(NotificationService.class);
-        }
+    @MockBean
+    private UserDetailsServiceImpl userDetailsService;
 
-        @Bean
-        public NotificationMapper notificationMapper() {
-            return mock(NotificationMapper.class);
-        }
-    }
+    @MockBean
+    private AuthTokenFilter authTokenFilter;
 
     @Test
     void testCreateNotification_Success() throws Exception {
@@ -119,20 +122,19 @@ class NotificationControllerUnitTests {
         NotificationUpdateRequest request = new NotificationUpdateRequest(true);
 
         Notification existing = new Notification(id, UUID.randomUUID(), "Test", NotificationType.SYSTEM, LocalDateTime.now(), false);
-
         Notification updated = new Notification(id, existing.getUserId(), existing.getMessage(), existing.getType(), existing.getTimestamp(), true);
-
         NotificationDTO dto = new NotificationDTO(id, updated.getUserId(), updated.getMessage(), updated.getType(), updated.getTimestamp(), updated.isRead());
 
         when(service.updateNotification(eq(id), ArgumentMatchers.any(NotificationUpdateRequest.class))).thenReturn(updated);
         when(mapper.toDTO(updated)).thenReturn(dto);
 
+        // Mockuim void method updateEntity
         doAnswer(invocation -> {
             NotificationUpdateRequest req = invocation.getArgument(0);
             Notification n = invocation.getArgument(1);
             n.setRead(req.isRead());
             return null;
-        }).when(mapper).updateEntity(request, existing);
+        }).when(mapper).updateEntity(any(NotificationUpdateRequest.class), any(Notification.class));
 
         mockMvc.perform(patch("/api/notifications/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)

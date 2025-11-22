@@ -31,7 +31,7 @@ class UserBadgeJPARepositoryTests {
     @BeforeEach
     void setup() {
 
-        User uA = new User(null, "Ana", "ana@email.com", "secure_pass_A", 0);
+        User uA = new User(null, "Ana", "ana@email.com", "secure_pass_A", 0, "user");
         Badge bA = new Badge(null, "Gold", "Top performer badge", "Complete 10 challenges");
 
         userA = userRepository.save(uA);
@@ -91,7 +91,7 @@ class UserBadgeJPARepositoryTests {
 
         UserBadge ub1 = userBadgeRepository.save(createUserBadge(userA, badgeA, LocalDate.now()));
 
-        User uB = new User(null, "Ion", "ion@email.com", "secure_pass_B", 0);
+        User uB = new User(null, "Ion", "ion@email.com", "secure_pass_B", 0, "user");
         User userB = userRepository.save(uB);
 
         Badge bB = new Badge(null, "Silver", "Runner-up badge", "Complete 5 challenges");

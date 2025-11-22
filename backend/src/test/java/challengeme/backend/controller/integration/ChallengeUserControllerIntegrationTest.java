@@ -4,9 +4,7 @@ import challengeme.backend.BackendApplication;
 import challengeme.backend.model.Challenge;
 import challengeme.backend.model.ChallengeUserStatus;
 import challengeme.backend.model.User;
-import challengeme.backend.repository.ChallengeRepository;
-import challengeme.backend.repository.ChallengeUserRepository;
-import challengeme.backend.repository.UserRepository;
+import challengeme.backend.repository.*; // Importam toate repository-urile
 import challengeme.backend.dto.request.create.ChallengeUserCreateRequest;
 import challengeme.backend.dto.request.update.ChallengeUserUpdateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,11 +12,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -29,11 +27,13 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-//Integration tests cu TestRestTemplate – testează endpoint-urile HTTP reale, cu Spring context complet.
+
+// Integration tests cu TestRestTemplate – testează endpoint-urile HTTP reale, cu Spring context complet.
 
 @SpringBootTest(classes = BackendApplication.class)
-@EnableAutoConfiguration(exclude = SecurityAutoConfiguration.class)
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@TestPropertySource(properties = "spring.main.allow-bean-definition-overriding=true")
 public class ChallengeUserControllerIntegrationTest {
 
     @Autowired
@@ -44,8 +44,21 @@ public class ChallengeUserControllerIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private ChallengeRepository challengeRepository;
+
+    @Autowired
+    private LeaderboardRepository leaderboardRepository;
+
+    @Autowired
+    private UserBadgeRepository userBadgeRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private BadgeRepository badgeRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -55,11 +68,20 @@ public class ChallengeUserControllerIntegrationTest {
 
     @BeforeEach
     void setupDependencies() {
+        // 1. Curatam tabelele DEPENDENTE (Copii)
+        // Ordinea e critica: sterge intai ce depinde de User/Challenge
+        leaderboardRepository.deleteAll();      // Fix pentru eroarea ta actuala
+        userBadgeRepository.deleteAll();
+        notificationRepository.deleteAll();
         challengeUserRepository.deleteAll();
+
+        // 2. Curatam tabelele PRINCIPALE (Parinti)
         userRepository.deleteAll();
         challengeRepository.deleteAll();
+        badgeRepository.deleteAll();
 
-        User u = new User(null, "IntegrationTestUser", "itest@email.com", "secure_pass_it", 0);
+        // 3. Populare date de test
+        User u = new User(null, "IntegrationTestUser", "itest@email.com", "secure_pass_it", 0, "user");
         testUser = userRepository.save(u);
 
         Challenge c = new Challenge(null, "Integration Challenge", "Integration Desc", "IT", Challenge.Difficulty.EASY, 50, "ITCreator");
@@ -68,9 +90,15 @@ public class ChallengeUserControllerIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        // Repetam curatarea la final pentru a lasa DB-ul curat
+        leaderboardRepository.deleteAll();
+        userBadgeRepository.deleteAll();
+        notificationRepository.deleteAll();
         challengeUserRepository.deleteAll();
+
         userRepository.deleteAll();
         challengeRepository.deleteAll();
+        badgeRepository.deleteAll();
     }
 
     @Test
@@ -94,9 +122,9 @@ public class ChallengeUserControllerIntegrationTest {
 
         String responseJson = createResult.getResponse().getContentAsString();
         String newLinkIdStr = objectMapper.readTree(responseJson).get("id").asText();
-        UUID newLinkId = UUID.fromString(newLinkIdStr);
 
-        mockMvc.perform(get("/api/user-challenges/{id}", newLinkId))
+        // GET BY ID
+        mockMvc.perform(get("/api/user-challenges/{id}", newLinkIdStr))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(newLinkIdStr)));
 
@@ -111,7 +139,7 @@ public class ChallengeUserControllerIntegrationTest {
         ChallengeUserUpdateRequest updateRequest = new ChallengeUserUpdateRequest();
         updateRequest.setStatus(ChallengeUserStatus.COMPLETED);
 
-        mockMvc.perform(put("/api/user-challenges/{id}/status", newLinkId)
+        mockMvc.perform(put("/api/user-challenges/{id}/status", newLinkIdStr)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -119,11 +147,11 @@ public class ChallengeUserControllerIntegrationTest {
                 .andExpect(jsonPath("$.dateCompleted").isNotEmpty());
 
         // DELETE
-        mockMvc.perform(delete("/api/user-challenges/{id}", newLinkId))
+        mockMvc.perform(delete("/api/user-challenges/{id}", newLinkIdStr))
                 .andExpect(status().isNoContent());
 
         // GET BY ID AFTER DELETE
-        mockMvc.perform(get("/api/user-challenges/{id}", newLinkId))
+        mockMvc.perform(get("/api/user-challenges/{id}", newLinkIdStr))
                 .andExpect(status().isNotFound());
     }
 }

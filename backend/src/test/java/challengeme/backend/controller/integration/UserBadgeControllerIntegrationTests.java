@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -29,9 +31,12 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+// Integration tests cu TestRestTemplate – testează endpoint-urile HTTP reale, cu Spring context complet.
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-// Importăm configurația de securitate de test
-@Import(UserBadgeControllerIntegrationTests.TestSecurityConfig.class)
+@org.springframework.test.context.ActiveProfiles("test")
+@AutoConfigureMockMvc
+@TestPropertySource(properties = "spring.main.allow-bean-definition-overriding=true")
 class UserBadgeControllerIntegrationTests {
 
     @LocalServerPort
@@ -72,7 +77,7 @@ class UserBadgeControllerIntegrationTests {
 
         cleanup();
 
-        User uA = new User(null, "AnaTest", "ana@test.com", "pass_ana", 10);
+        User uA = new User(null, "AnaTest", "ana@test.com", "pass_ana", 10, "user");
         userA = userRepository.save(uA);
 
         Badge bA = new Badge(null, "GoldTest", "Top Performer", "Complete IT");

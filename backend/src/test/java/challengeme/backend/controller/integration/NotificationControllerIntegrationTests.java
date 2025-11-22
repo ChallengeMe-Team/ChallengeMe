@@ -8,16 +8,17 @@ import challengeme.backend.dto.request.update.NotificationUpdateRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -25,9 +26,13 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
+// Integration tests cu TestRestTemplate – testează endpoint-urile HTTP reale, cu Spring context complet.
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-// Importăm configurația de securitate de test
-@Import(NotificationControllerIntegrationTests.TestSecurityConfig.class)
+@org.springframework.test.context.ActiveProfiles("test")
+@AutoConfigureMockMvc
+@TestPropertySource(properties = "spring.main.allow-bean-definition-overriding=true")
 class NotificationControllerIntegrationTests {
 
     @Autowired

@@ -40,7 +40,7 @@ class UserServiceTests {
 
     @Test
     void testCreateUser() {
-        User user = new User(userId, "Ana", "ana@email.com", "pass123", 10);
+        User user = new User(userId, "Ana", "ana@email.com", "pass123", 10, "user");
         when(userRepository.save(user)).thenReturn(user);
 
         User created = userService.createUser(user);
@@ -53,8 +53,8 @@ class UserServiceTests {
 
     @Test
     void testGetAllUsers() {
-        User u1 = new User(UUID.randomUUID(), "Ana", "ana@email.com", "pass123", 10);
-        User u2 = new User(UUID.randomUUID(), "Ion", "ion@email.com", "pass456", 5);
+        User u1 = new User(UUID.randomUUID(), "Ana", "ana@email.com", "pass123", 10, "user");
+        User u2 = new User(UUID.randomUUID(), "Ion", "ion@email.com", "pass456", 5, "user");
 
         when(userRepository.findAll()).thenReturn(Arrays.asList(u1, u2));
 
@@ -68,7 +68,7 @@ class UserServiceTests {
 
     @Test
     void testGetUserById_Success() {
-        User user = new User(userId, "Ana", "ana@email.com", "pass123", 10);
+        User user = new User(userId, "Ana", "ana@email.com", "pass123", 10, "user");
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         User result = userService.getUserById(userId);
@@ -89,7 +89,7 @@ class UserServiceTests {
 
     @Test
     void testUpdateUser_Success() {
-        User existing = new User(userId, "Ana", "ana@email.com", "pass123", 10);
+        User existing = new User(userId, "Ana", "ana@email.com", "pass123", 10, "user");
         UserUpdateRequest request = new UserUpdateRequest("AnaUpdated", "new@email.com", "newpass", 20);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existing));

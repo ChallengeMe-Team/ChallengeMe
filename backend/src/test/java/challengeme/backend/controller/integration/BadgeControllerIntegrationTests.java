@@ -12,16 +12,20 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource; // Re-aducem acest import
 
 import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-//Integration tests cu TestRestTemplate – testează endpoint-urile HTTP reale, cu Spring context complet.
+
+// Integration tests cu TestRestTemplate – testează endpoint-urile HTTP reale, cu Spring context complet.
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+// Această linie este critică pentru a permite TestSecurityConfig să coexiste sau să înlocuiască SecurityConfig
+@TestPropertySource(properties = "spring.main.allow-bean-definition-overriding=true")
 public class BadgeControllerIntegrationTests {
 
     @LocalServerPort
@@ -56,6 +60,7 @@ public class BadgeControllerIntegrationTests {
 
     @Test
     void testUpdateBadge() {
+        // Creăm un badge folosind service-ul direct
         BadgeCreateRequest createRequest = new BadgeCreateRequest("Achiever", "Completed all tasks", "Complete all challenges");
         Badge saved = badgeService.createBadge(new Badge(null, createRequest.name(), createRequest.description(), createRequest.criteria()));
 
@@ -64,6 +69,7 @@ public class BadgeControllerIntegrationTests {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<BadgeUpdateRequest> entity = new HttpEntity<>(updateRequest, headers);
 
+        // Facem update prin HTTP
         ResponseEntity<Badge> putResponse = restTemplate.exchange(
                 baseUrl + "/" + saved.getId(),
                 HttpMethod.PUT,

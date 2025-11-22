@@ -22,8 +22,8 @@ class UserJPARepositoryTests {
 
     @BeforeEach
     void setup() {
-        userA = new User(null, "Ana", "ana@email.com", "pass123", 10);
-        userB = new User(null, "Ion", "ion@email.com", "pass456", 5);
+        userA = new User(null, "Ana", "ana@email.com", "pass123", 10, "user");
+        userB = new User(null, "Ion", "ion@email.com", "pass456", 5, "user");
     }
 
     @Test

@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from './component/navbar-component/navbar-component';
+import { NavbarComponent } from './component/navbar/navbar-component';
 import { HomeComponent } from './component/pages/home/home-component';
 import { ChallengesComponent } from './component/pages/challenges/challenges-component';
 import { LeaderboardComponent } from './component/pages/leaderboard/leaderboard-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
-import {AuthContainerComponent} from './component/auth/auth-container.component';
+import {AuthComponent} from './component/auth/auth-component';
 
 
 type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth';
@@ -20,7 +20,7 @@ type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth';
     LeaderboardComponent,
     CommonModule,
     ChallengeFormComponent,
-    ToastComponent, AuthContainerComponent
+    ToastComponent, AuthComponent
   ],
   templateUrl: './app-component.html',
   styleUrls: ['./app-component.css'],

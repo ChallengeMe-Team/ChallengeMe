@@ -49,7 +49,7 @@ class UserBadgeServiceTests {
 
     @Test
     void testCreateUserBadge_Success() {
-        User user = new User(userId, "Ana", "ana@email.com", "secret", 10);
+        User user = new User(userId, "Ana", "ana@email.com", "secret", 10, "user");
         Badge badge = new Badge(badgeId, "Gold", "Top badge", "Complete 10 challenges");
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -85,7 +85,7 @@ class UserBadgeServiceTests {
 
     @Test
     void testCreateUserBadge_BadgeNotFound() {
-        User user = new User(userId, "Ana", "ana@email.com", "secret", 10);
+        User user = new User(userId, "Ana", "ana@email.com", "secret", 10, "user");
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(badgeRepository.findById(badgeId)).thenReturn(Optional.empty());
 

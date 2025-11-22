@@ -38,8 +38,8 @@ class LeaderboardServiceTests {
     void setup() {
         MockitoAnnotations.openMocks(this);
 
-        user1 = new User(UUID.randomUUID(), "ana", "ana@email.com", "pass", 0);
-        user2 = new User(UUID.randomUUID(), "mihai", "mihai@email.com", "pass", 0);
+        user1 = new User(UUID.randomUUID(), "ana", "ana@email.com", "pass", 0, "user");
+        user2 = new User(UUID.randomUUID(), "mihai", "mihai@email.com", "pass", 0, "user");
     }
 
     // --- CREATE ---
