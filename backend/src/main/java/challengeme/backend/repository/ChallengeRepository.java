@@ -7,3 +7,4 @@ import java.util.UUID;
 
 public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
 }
+    
