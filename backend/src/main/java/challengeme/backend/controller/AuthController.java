@@ -99,6 +99,9 @@ public class AuthController {
         }
 
         String username = authentication.getName();
+        if (username == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Error: User not found."));
