@@ -1,19 +1,26 @@
 package challengeme.backend.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
 
 import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "users")
 public class User {
 
+    @Id
+    @GeneratedValue
     private UUID id;
 
     @NotBlank(message = "Username is required")
@@ -29,12 +36,4 @@ public class User {
     private String password;
 
     private Integer points;
-
-    public User(String username, String email, String password, Integer points) {
-        this.id = UUID.randomUUID();
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.points = points == null ? 0 : points;
-    }
 }

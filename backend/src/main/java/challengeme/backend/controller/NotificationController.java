@@ -1,5 +1,9 @@
 package challengeme.backend.controller;
 
+import challengeme.backend.dto.NotificationDTO;
+import challengeme.backend.dto.request.create.NotificationCreateRequest;
+import challengeme.backend.dto.request.update.NotificationUpdateRequest;
+import challengeme.backend.mapper.NotificationMapper;
 import challengeme.backend.model.Notification;
 import challengeme.backend.service.NotificationService;
 import jakarta.validation.Valid;
@@ -13,65 +17,48 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * FIȘIER MODIFICAT MASIV
- * - Calea de bază este acum /api/notifications
- * - S-a adăugat @CrossOrigin(origins = "*")
- * - S-a adăugat @RequiredArgsConstructor (nu mai folosește @Autowired)
- * - Nu mai folosește DTO-uri, lucrează direct cu Modelul
- * - Logica de verificare a fost simplificată (se bazează pe excepțiile din service)
- */
+
 @RestController
-@RequestMapping("/api/notifications") // Cale actualizată
+@RequestMapping("/api/notifications")
 @RequiredArgsConstructor // Pentru injecție
 @CrossOrigin(origins = "*") // Pentru CORS
 public class NotificationController {
 
-    private final NotificationService notificationService;
+    private final NotificationService service;
+    private final NotificationMapper mapper;
 
     @PostMapping
-    public ResponseEntity<Notification> createNotification(@Valid @RequestBody Notification notification) {
-        // Primește direct modelul, nu un DTO
-        Notification createdNotification = notificationService.createNotification(notification);
-
-        URI location = ServletUriComponentsBuilder
-                .fromPath("/api/notifications/{id}") // Cale actualizată
-                .buildAndExpand(createdNotification.getId())
-                .toUri();
-
-        return ResponseEntity.created(location).body(createdNotification);
+    public ResponseEntity<NotificationDTO> create(@Valid @RequestBody NotificationCreateRequest request) {
+        Notification saved = service.createNotification(request);
+        URI location = URI.create("/api/notifications/" + saved.getId());
+        return ResponseEntity.created(location).body(mapper.toDTO(saved));
     }
 
     @GetMapping
-    public ResponseEntity<List<Notification>> getAllNotifications() {
-        List<Notification> notifications = notificationService.getAllNotifications();
-        return ResponseEntity.ok(notifications);
+    public List<NotificationDTO> getAll() {
+        return service.getAllNotifications().stream().map(mapper::toDTO).toList();
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Notification>> getNotificationsByUserId(@PathVariable UUID userId) {
-        List<Notification> notifications = notificationService.getNotificationsByUserId(userId);
-        return ResponseEntity.ok(notifications);
+    public List<NotificationDTO> getByUser(@PathVariable UUID userId) {
+        return service.getNotificationsByUserId(userId).stream().map(mapper::toDTO).toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Notification> getNotificationById(@PathVariable UUID id) {
-        // Logica e mai simplă: serviciul va arunca excepție dacă nu-l găsește
-        Notification notification = notificationService.getNotificationById(id);
-        return ResponseEntity.ok(notification);
+    public ResponseEntity<NotificationDTO> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(mapper.toDTO(service.getNotificationById(id)));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Notification> updateNotificationStatus(@PathVariable UUID id, @RequestBody Map<String, Object> updates) {
-        // Am înlocuit UpdateNotificationDto cu un Map generic pentru update parțial
-        Notification updatedNotification = notificationService.updateNotificationStatus(id, updates);
-        return ResponseEntity.ok(updatedNotification);
+    public ResponseEntity<NotificationDTO> update(@PathVariable UUID id,
+                                                  @RequestBody NotificationUpdateRequest request) {
+        Notification updated = service.updateNotification(id, request);
+        return ResponseEntity.ok(mapper.toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteNotification(@PathVariable UUID id) {
-        // Logica e mai simplă: serviciul aruncă excepție dacă nu găsește
-        notificationService.deleteNotification(id);
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        service.deleteNotification(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -6,9 +6,10 @@ import { ChallengesComponent } from './component/pages/challenges/challenges-com
 import { LeaderboardComponent } from './component/pages/leaderboard/leaderboard-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
+import {AuthContainerComponent} from './component/auth/auth-container.component';
 
 
-type Page = 'home' | 'challenges' | 'leaderboard' | 'create';
+type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth';
 
 @Component({
   selector: 'app-component',
@@ -19,14 +20,14 @@ type Page = 'home' | 'challenges' | 'leaderboard' | 'create';
     LeaderboardComponent,
     CommonModule,
     ChallengeFormComponent,
-    ToastComponent
+    ToastComponent, AuthContainerComponent
   ],
   templateUrl: './app-component.html',
   styleUrls: ['./app-component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-  currentPage: Page = 'home';
+  currentPage: Page = 'auth';
   isFormVisible = false;
 
   toastVisible = false;

@@ -6,9 +6,9 @@ plugins {
 
 group = 'challengeMe'
 version = '0.0.1-SNAPSHOT'
+description = 'backend'
 sourceCompatibility = '21'
 targetCompatibility = '21'
-description = 'backend'
 
 java {
 	toolchain {
@@ -21,10 +21,10 @@ repositories {
 }
 
 dependencies {
-	// Spring Boot Web
+	// Spring Web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// Spring Boot Security
+	// Spring Security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	// Spring Data JPA
@@ -33,39 +33,21 @@ dependencies {
 	// Validation
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+	// PostgreSQL Driver
+	runtimeOnly 'org.postgresql:postgresql'
+
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
-	// H2 Database (in-memory, pentru testare)
-	runtimeOnly 'com.h2database:h2'
-
-	// Spring Boot DevTools (optional)
+	// DevTools (optional)
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
+	// Testing
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	// Jakarta Validation API
-	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
-
-	// Hibernate Validator (implementation)
-	implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
-
-	// Expression Language dependency
-	implementation 'org.glassfish:jakarta.el:4.0.2'
-
-	// Lombok
-	compileOnly 'org.projectlombok:lombok:1.18.30'
-	annotationProcessor 'org.projectlombok:lombok:1.18.30'
-
-	//Spring Boot validation
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-	//Lombok
-	implementation 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-
+	//Baza de date in-memory H2 peste testele JPA
+	testImplementation 'com.h2database:h2'
 }
-
 
 tasks.named('test') {
 	useJUnitPlatform()

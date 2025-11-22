@@ -1,0 +1,57 @@
+label {
+  display: block;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+  color: #ccc;
+}
+
+input {
+  width: 100%;
+  background: #0f172a;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 12px;
+  color: white;
+  outline: none;
+  transition: border-color 0.2s;
+}
+input:focus {
+  border-color: #9333ea;
+}
+
+.gradient-text-button {
+  background: linear-gradient(135deg, #a78bfa 0%, #3b82f6 100%);
+  border: none;
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+.gradient-text-button:hover:not([disabled]) {
+  transform: scale(1.02);
+  filter: brightness(1.15);
+}
+
+.gradient-text-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: scale(1);
+}
+
+.gradient-text-title {
+  background: linear-gradient(90deg, #9333ea, #3b82f6);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.card-shadow {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 10px rgba(147, 51, 234, 0.2);
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}

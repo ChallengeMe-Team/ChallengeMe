@@ -1,19 +1,27 @@
 package challengeme.backend.model;
 
+import challengeme.backend.repository.UserRepository;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 public class UserTests {
+
     private static Validator validator;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @BeforeAll
     static void setupValidator() {
@@ -21,17 +29,18 @@ public class UserTests {
         validator = factory.getValidator();
     }
 
+    // ================================
+    // VALIDATION + GETTER / SETTER TESTS
+    // ================================
+
     @Test
     void testUserGettersSetters() {
-        UUID id = UUID.randomUUID();
         User user = new User();
-        user.setId(id);
         user.setUsername("Ana");
         user.setEmail("ana@email.com");
         user.setPassword("secret123");
         user.setPoints(10);
 
-        assertEquals(id, user.getId());
         assertEquals("Ana", user.getUsername());
         assertEquals("ana@email.com", user.getEmail());
         assertEquals("secret123", user.getPassword());
@@ -40,10 +49,8 @@ public class UserTests {
 
     @Test
     void testUserAllArgsConstructor() {
-        UUID id = UUID.randomUUID();
-        User user = new User(id, "Ion", "ion@email.com", "pass1234", 5);
+        User user = new User(null, "Ion", "ion@email.com", "pass1234", 5);
 
-        assertEquals(id, user.getId());
         assertEquals("Ion", user.getUsername());
         assertEquals("ion@email.com", user.getEmail());
         assertEquals("pass1234", user.getPassword());
@@ -51,19 +58,12 @@ public class UserTests {
     }
 
     @Test
-    void testUserPartialConstructor() {
-        User user = new User("Maria", "maria@email.com", "password", null);
-
-        assertNotNull(user.getId());
-        assertEquals("Maria", user.getUsername());
-        assertEquals("maria@email.com", user.getEmail());
-        assertEquals("password", user.getPassword());
-        assertEquals(0, user.getPoints()); // points set to 0 by constructor
-    }
-
-    @Test
     void testUserValidationSuccess() {
-        User user = new User("Ana", "ana@email.com", "secret123", 10);
+        User user = new User();
+        user.setUsername("Ana");
+        user.setEmail("ana@email.com");
+        user.setPassword("secret123");
+        user.setPoints(10);
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertEquals(0, violations.size());
@@ -71,7 +71,11 @@ public class UserTests {
 
     @Test
     void testUserValidationFail_UsernameBlank() {
-        User user = new User("", "ana@email.com", "secret123", 0);
+        User user = new User();
+        user.setUsername("");
+        user.setEmail("ana@email.com");
+        user.setPassword("secret123");
+        user.setPoints(0);
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
@@ -81,7 +85,11 @@ public class UserTests {
 
     @Test
     void testUserValidationFail_UsernameTooShort() {
-        User user = new User("Al", "ana@email.com", "secret123", 0);
+        User user = new User();
+        user.setUsername("Al");
+        user.setEmail("ana@email.com");
+        user.setPassword("secret123");
+        user.setPoints(0);
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
@@ -91,7 +99,11 @@ public class UserTests {
 
     @Test
     void testUserValidationFail_EmailInvalid() {
-        User user = new User("Ana", "not-an-email", "secret123", 0);
+        User user = new User();
+        user.setUsername("Ana");
+        user.setEmail("not-an-email");
+        user.setPassword("secret123");
+        user.setPoints(0);
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
@@ -101,7 +113,11 @@ public class UserTests {
 
     @Test
     void testUserValidationFail_PasswordBlank() {
-        User user = new User("Ana", "ana@email.com", "", 0);
+        User user = new User();
+        user.setUsername("Ana");
+        user.setEmail("ana@email.com");
+        user.setPassword("");
+        user.setPoints(0);
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
@@ -111,11 +127,80 @@ public class UserTests {
 
     @Test
     void testUserValidationFail_PasswordTooShort() {
-        User user = new User("Ana", "ana@email.com", "123", 0);
+        User user = new User();
+        user.setUsername("Ana");
+        user.setEmail("ana@email.com");
+        user.setPassword("123");
+        user.setPoints(0);
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
         assertTrue(violations.stream()
                 .anyMatch(v -> v.getPropertyPath().toString().equals("password")));
+    }
+
+    // ================================
+    // JPA REPOSITORY TESTS
+    // ================================
+
+    @Test
+    void testSaveUserJpa() {
+        User user = new User();
+        user.setUsername("Ana");
+        user.setEmail("ana@email.com");
+        user.setPassword("secret123");
+        user.setPoints(10);
+
+        User saved = userRepository.save(user);
+
+        assertNotNull(saved.getId()); // UUID generat automat
+        assertEquals("Ana", saved.getUsername());
+        assertEquals(10, saved.getPoints());
+    }
+
+    @Test
+    void testFindUserByIdJpa() {
+        User user = new User();
+        user.setUsername("Ion");
+        user.setEmail("ion@email.com");
+        user.setPassword("pass123");
+        user.setPoints(5);
+
+        User saved = userRepository.save(user);
+
+        User found = userRepository.findById(saved.getId()).orElseThrow();
+        assertEquals("Ion", found.getUsername());
+    }
+
+    @Test
+    void testUpdateUserJpa() {
+        User user = new User();
+        user.setUsername("Maria");
+        user.setEmail("maria@email.com");
+        user.setPassword("password");
+        user.setPoints(2);
+
+        User saved = userRepository.save(user);
+
+        saved.setPoints(10);
+        User updated = userRepository.save(saved);
+
+        assertEquals(10, updated.getPoints());
+    }
+
+    @Test
+    void testDeleteUserJpa() {
+        User user = new User();
+        user.setUsername("Alex");
+        user.setEmail("alex@email.com");
+        user.setPassword("secret123");
+        user.setPoints(7);
+
+        User saved = userRepository.save(user);
+        UUID id = saved.getId();
+
+        userRepository.deleteById(id);
+
+        assertTrue(userRepository.findById(id).isEmpty());
     }
 }

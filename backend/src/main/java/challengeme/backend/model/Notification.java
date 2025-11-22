@@ -1,5 +1,6 @@
 package challengeme.backend.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,15 +10,15 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * FIȘIER MODIFICAT
- * S-au adăugat validările @NotBlank și @NotNull conform cerințelor.
- */
+@Entity
+@Table(name = "notifications")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Notification {
 
+    @Id
+    @GeneratedValue
     private UUID id;
 
     @NotNull
@@ -27,9 +28,11 @@ public class Notification {
     private String message;
 
     @NotNull(message = "NotificationType cannot be null")
+    @Enumerated(EnumType.STRING)
     private NotificationType type;
 
     private LocalDateTime timestamp;
 
     private boolean isRead;
+
 }
