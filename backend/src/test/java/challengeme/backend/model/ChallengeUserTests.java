@@ -42,7 +42,7 @@ public class ChallengeUserTests {
     // ================================
     @Test
     void testValidationSuccess() {
-        User user = new User(null, "User1", "user1@email.com", "password123", 0);
+        User user = new User(null, "User1", "user1@email.com", "password123", 0, "user");
         userRepository.save(user);
 
         Challenge challenge = new Challenge(null, "Title", "Desc", "Cat", Challenge.Difficulty.EASY, 10, "creator");
@@ -68,7 +68,7 @@ public class ChallengeUserTests {
 
     @Test
     void testValidationFail_ChallengeNull() {
-        User user = new User(null, "User2", "user2@email.com", "password123", 0);
+        User user = new User(null, "User2", "user2@email.com", "password123", 0, "user");
         userRepository.save(user);
 
         ChallengeUser cu = new ChallengeUser(null, user, null, ChallengeUserStatus.PENDING, LocalDate.now(), null);
@@ -83,7 +83,7 @@ public class ChallengeUserTests {
     // ================================
     @Test
     void testSaveAndRetrieveChallengeUser() {
-        User user = new User(null, "User3", "user3@email.com", "password123", 0);
+        User user = new User(null, "User3", "user3@email.com", "password123", 0, "user");
         userRepository.save(user);
 
         Challenge challenge = new Challenge(null, "Title3", "Desc3", "Cat", Challenge.Difficulty.MEDIUM, 20, "creator");
@@ -101,7 +101,7 @@ public class ChallengeUserTests {
 
     @Test
     void testUpdateChallengeUserStatusAndDates() {
-        User user = new User(null, "User4", "user4@email.com", "password123", 0);
+        User user = new User(null, "User4", "user4@email.com", "password123", 0, "user");
         userRepository.save(user);
 
         Challenge challenge = new Challenge(null, "Title4", "Desc4", "Cat", Challenge.Difficulty.HARD, 30, "creator");
@@ -122,7 +122,7 @@ public class ChallengeUserTests {
 
     @Test
     void testDeleteChallengeUser() {
-        User user = new User(null, "User5", "user5@email.com", "password123", 0);
+        User user = new User(null, "User5", "user5@email.com", "password123", 0, "user");
         userRepository.save(user);
 
         Challenge challenge = new Challenge(null, "Title5", "Desc5", "Cat", Challenge.Difficulty.EASY, 10, "creator");
@@ -140,7 +140,7 @@ public class ChallengeUserTests {
 
     @Test
     void testEqualsAndHashCodeBasedOnId() {
-        User user = new User(null, "User6", "user6@email.com", "password123", 0);
+        User user = new User(null, "User6", "user6@email.com", "password123", 0, "user");
         userRepository.save(user);
 
         Challenge challenge = new Challenge(null, "Title6", "Desc6", "Cat", Challenge.Difficulty.MEDIUM, 15, "creator");

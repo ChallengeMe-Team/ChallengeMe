@@ -5,19 +5,24 @@ import challengeme.backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+// Integration tests cu TestRestTemplate – testează endpoint-urile HTTP reale, cu Spring context complet.
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
+@org.springframework.test.context.ActiveProfiles("test")
+@AutoConfigureMockMvc
+@TestPropertySource(properties = "spring.main.allow-bean-definition-overriding=true")
 public class UserControllerIntegrationTests {
 
     @LocalServerPort
@@ -38,7 +43,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     void testCreateAndGetUser() {
-        User user = new User(null, "Ana", "ana@email.com", "pass123", 10);
+        User user = new User(null, "Ana", "ana@email.com", "pass123", 10, "user");
 
         // POST
         ResponseEntity<User> postResponse = restTemplate.postForEntity(baseUrl, user, User.class);
@@ -57,10 +62,10 @@ public class UserControllerIntegrationTests {
 
     @Test
     void testUpdateUser() {
-        User initial = new User(null, "Ion", "ion@email.com", "pass123", 5);
+        User initial = new User(null, "Ion", "ion@email.com", "pass123", 5, "user");
         User saved = userService.createUser(initial);
 
-        User updatedBody = new User(null, "IonUpdated", "ionupdated@email.com", "newpass", 10);
+        User updatedBody = new User(null, "IonUpdated", "ionupdated@email.com", "newpass", 10,"user");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -82,7 +87,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     void testDeleteUser() {
-        User user = new User(null, "Maria", "maria@email.com", "pass123", 8);
+        User user = new User(null, "Maria", "maria@email.com", "pass123", 8,"user");
         User saved = userService.createUser(user);
 
         // DELETE

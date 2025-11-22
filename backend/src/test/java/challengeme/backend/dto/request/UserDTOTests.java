@@ -10,7 +10,7 @@ class UserDTOTests {
     @Test
     void testDTO() {
         UUID id = UUID.randomUUID();
-        UserDTO dto = new UserDTO(id, "User", "user@email.com", 100);
+        UserDTO dto = new UserDTO(id, "User", "user@email.com", 100, "user");
 
         assertEquals(id, dto.getId());
         assertEquals("User", dto.getUsername());
