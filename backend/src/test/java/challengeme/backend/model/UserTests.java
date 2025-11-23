@@ -49,7 +49,7 @@ public class UserTests {
 
     @Test
     void testUserAllArgsConstructor() {
-        User user = new User(null, "Ion", "ion@email.com", "pass1234", 5);
+        User user = new User(UUID.randomUUID(), "Ion", "ion@email.com", "pass1234", 5, "user");
 
         assertEquals("Ion", user.getUsername());
         assertEquals("ion@email.com", user.getEmail());

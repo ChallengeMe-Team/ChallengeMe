@@ -213,7 +213,34 @@ ng serve --open
 ```
 ✅ Frontend runs on: http://localhost:4200
 
-## 6️⃣ Git Workflow
+## 6️⃣ Security & Authentication 
+
+The application is now secured with **JWT (JSON Web Token)**.
+
+### 🔑 Default Login Credentials
+
+After populating the database [data.sql](), you can login with:
+
+
+**Email**: [emilia@example.com]() (or any other user from the list)
+
+**Password**: [123456]()
+
+#### **_Note_**: If any changes are to be made in [data.sql](), please update the login credentials above
+
+### 🛡️ How it works
+
+#### Login: 
+Send POST to `/api/auth/login` with credentials. Receive a JWT Token.
+
+#### Protected Requests: 
+For any subsequent request (e.g., [GET /api/challenges]()), the Frontend automatically attaches the token in the header:
+[Authorization: Bearer eyJhbGciOi...]()
+
+#### Persistance: 
+The token is stored in localStorage to keep you logged in after refresh.
+
+## 7️⃣ Git Workflow
 
 - **Protected `main` branch** – do **not commit directly**.
 - Create a new branch for your work. Branch names **must start with the Jira story identifier**, e.g., `NR-1-feature-description`:

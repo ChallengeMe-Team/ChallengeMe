@@ -1,63 +1,82 @@
-import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, map, of, throwError } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap, catchError, of } from 'rxjs';
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  points: number;
-  password?: string; // Nu e trimis în DTO, dar necesar pentru simulare
-}
-
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
   private http = inject(HttpClient);
-  private apiUrl = environment.apiUrl + '/users'; // Endpoint-ul pentru Users
+  // URL-ul Backend-ului
+  private apiUrl = 'http://localhost:8080/api/auth';
 
-  // --- Signup (Înregistrare) ---
-  // Folosește POST /api/users pentru a crea un utilizator
-  signup(user: any): Observable<User> {
-    return this.http.post<User>(this.apiUrl, user).pipe(
-      catchError(this.handleError)
+  // Cheia pentru LocalStorage
+  private readonly TOKEN_KEY = 'auth-token';
+
+  // Signal pentru a tine minte userul curent in toata aplicatia (Reactive)
+  currentUser = signal<any>(null);
+
+  constructor() {
+    // La pornirea aplicatiei (refresh), incercam sa recuperam userul
+    this.fetchCurrentUser();
+  }
+
+  // --- LOGIN ---
+  login(credentials: { emailOrUsername: string; password: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
+      tap((response: any) => {
+        // Salvam token-ul primit in LocalStorage
+        if (response.token) {
+          localStorage.setItem(this.TOKEN_KEY, response.token);
+        }
+
+        // Actualizam userul in starea aplicatiei
+        // Backend-ul returneaza acum: { token: "...", user: { username: "...", role: "..." } }
+        if (response.user) {
+          this.currentUser.set(response.user);
+        }
+      })
     );
   }
 
-  // --- Login (Simulare simplă) ---
-  // Deoarece nu există un endpoint dedicat de Login, preluăm toți utilizatorii
-  // și simulăm verificarea credențialelor pe client (soluție temporară).
-  login(credentials: any): Observable<User[]> {
-    return this.http.get<User[]>(this.apiUrl).pipe(
-      catchError(this.handleError)
-    );
+  // --- SIGNUP ---
+  signup(user: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/signup`, user);
   }
 
-  // Funcție helper pentru a verifica credențialele simple
-  simulateLoginCheck(credentials: any, allUsers: User[]): User {
-    const user = allUsers.find(
-      u => (u.email === credentials.emailOrUsername || u.username === credentials.emailOrUsername)
-      // *Simulare Hack:* În mod normal am verifica parola criptată.
-      // Deoarece backend-ul (UserService) nu expune parola
-      // și nu putem cere toți userii cu parole, ne bazăm doar pe găsirea după username/email.
-      // Un endpoint dedicat de login ar rezolva asta.
-    );
-
-    if (user) {
-      return user;
-    }
-    throw new Error('Credențiale invalide.');
+  // --- LOGOUT ---
+  logout() {
+    localStorage.removeItem(this.TOKEN_KEY);
+    this.currentUser.set(null);
+    // Optional: Aici poti face redirect catre Home
+    // this.router.navigate(['/']);
   }
 
-  private handleError(error: HttpErrorResponse) {
-    // Extrage mesajul de eroare de la GlobalExceptionHandler din backend
-    if (error.error instanceof ErrorEvent) {
-      // Eroare de rețea
-      return throwError(() => new Error('A apărut o eroare de rețea.'));
-    } else {
-      // Eroare de server (4xx, 5xx)
-      const errorResponse = error.error || { message: 'Eroare necunoscută.', errors: null };
-      return throwError(() => errorResponse);
-    }
+  // --- UTILITARE ---
+  getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.getToken(); // Returneaza true daca exista token
+  }
+
+  // --- PERSISTENTA (REFRESH) ---
+  // Aceasta metoda este apelata in constructor pentru a verifica daca token-ul
+  // salvat este inca valid si pentru a recuceri datele userului.
+  private fetchCurrentUser() {
+    if (!this.getToken()) return;
+
+    this.http.get(`${this.apiUrl}/me`).pipe(
+      catchError(() => {
+        // Daca token-ul este expirat sau invalid (401), facem logout automat
+        this.logout();
+        return of(null);
+      })
+    ).subscribe((user) => {
+      if (user) {
+        this.currentUser.set(user);
+      }
+    });
   }
 }

@@ -6,10 +6,12 @@ import challengeme.backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.Map;
 import java.util.Objects;
@@ -21,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @org.springframework.test.context.ActiveProfiles("test")
+@AutoConfigureMockMvc
+@TestPropertySource(properties = "spring.main.allow-bean-definition-overriding=true")
 class LeaderboardControllerIntegrationTests {
 
     @LocalServerPort
@@ -43,7 +47,7 @@ class LeaderboardControllerIntegrationTests {
     }
 
     private UUID createUser(String name) {
-        User user = new User(null, name, name + "@email.com", "secret12", 0);
+        User user = new User(null, name, name + "@email.com", "secret12", 0, "user");
         return userService.createUser(user).getId();
     }
 

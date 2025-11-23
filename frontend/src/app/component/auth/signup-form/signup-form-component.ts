@@ -21,8 +21,8 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
   selector: 'app-signup-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './signup-form.component.html',
-  styleUrl: '../auth-common.css'
+  templateUrl: './signup-form-component.html',
+  styleUrl: '../auth-component.css'
 })
 export class SignupFormComponent {
   // Evenimente emise către componenta părinte (AuthContainer)
