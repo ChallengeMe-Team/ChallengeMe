@@ -15,7 +15,6 @@ import { LucideAngularModule, LUCIDE_ICONS, LucideIconProvider, Loader2 } from '
     CommonModule,
     LoginFormComponent,
     SignupFormComponent,
-    HttpClientModule,
     LucideAngularModule
   ],
   providers: [
