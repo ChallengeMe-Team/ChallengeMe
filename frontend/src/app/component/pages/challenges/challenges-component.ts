@@ -2,7 +2,6 @@ import {Component, OnInit, ChangeDetectorRef, inject, signal} from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { Challenge, Difficulty } from './challenge.model';
 import { ChallengeService } from '../../../services/challenge.service';
-import {ChallengeFormComponent} from '../../forms/challenge-form/challenge-form';
 
 @Component({
   selector: 'app-challenges',
