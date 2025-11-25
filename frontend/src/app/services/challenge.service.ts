@@ -14,7 +14,7 @@ export class ChallengeService {
 
   constructor() { }
 
-  // Metoda pentru a lua lista (folosită în tabel)
+  // Method to get the list (used in the table)
   getAllChallenges(): Observable<Challenge[]> {
     return this.http.get<Challenge[]>(this.apiUrl);
   }
