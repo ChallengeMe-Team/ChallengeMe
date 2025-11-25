@@ -5,7 +5,7 @@ import { LeaderboardComponent } from './component/pages/leaderboard/leaderboard-
 import { AuthComponent } from './component/auth/auth-component';
 
 export const routes: Routes = [
-  // 1. Când intri pe site, te trimite automat la /auth
+  // 1. When entering the site, automatically redirects to /auth
   { path: '', redirectTo: 'auth', pathMatch: 'full' },
 
   // 2. Definim ruta pentru Login
