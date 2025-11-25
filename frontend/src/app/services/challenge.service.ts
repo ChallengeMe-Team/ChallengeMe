@@ -9,7 +9,7 @@ import { Challenge } from '../component/pages/challenges/challenge.model';
 export class ChallengeService {
   private http = inject(HttpClient);
 
-  // URL-ul trebuie să fie complet către portul 8080 al backend-ului
+  // The URL must be complete and point to port 8080 of the backend
   private apiUrl = 'http://localhost:8080/api/challenges';
 
   constructor() { }
