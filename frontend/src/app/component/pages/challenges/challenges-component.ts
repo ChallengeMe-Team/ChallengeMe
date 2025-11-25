@@ -17,7 +17,7 @@ export class ChallengesComponent implements OnInit {
   challenges = signal<Challenge[]>([]);
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
 
-  // Stare pentru modal
+  // State for modal
   isCreateModalOpen = signal(false);
   isLoading = signal(false);
   errorMessage = signal('');
