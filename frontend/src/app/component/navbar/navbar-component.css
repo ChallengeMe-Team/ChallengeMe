@@ -6,16 +6,16 @@ nav {
   right: 0;
   height: 96px; /* h-24 equivalent */
   z-index: 50;
-  background-color: rgba(20, 18, 27, 0.95); /* Fundal închis semi-transparent */
+  background-color: rgba(20, 18, 27, 0.95); /* Semi-transparent dark background */
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px); /* Efect de sticlă */
+  backdrop-filter: blur(12px); /* Glass effect */
   display: flex;
   align-items: center;
   padding: 0 2rem;
 }
 
 /* --- Navigation Buttons (Home, Challenges, Leaderboard) --- */
-/* Stilul "de înainte": butoane cu gradient */
+/* Previous style: gradient buttons */
 .nav-btn {
   padding: 10px 24px;
   border-radius: 8px;
@@ -24,8 +24,8 @@ nav {
   font-size: 0.875rem;
   letter-spacing: 0.05em;
   transition: all 0.3s ease;
-  color: #9ca3af; /* gri inactiv */
-  background: transparent; /* fundal default */
+  color: #9ca3af; /* inactive gray */
+  background: transparent; /* default background */
   border: none;
   cursor: pointer;
   position: relative;
@@ -37,11 +37,11 @@ nav {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Clasa 'active' aplică gradientul mov-albastru */
+/* The 'active' class applies the purple-blue gradient */
 .nav-btn.active {
   background: linear-gradient(135deg, #9333ea 0%, #3b82f6 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3); /* umbra mov */
+  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3); /* purple shadow */
   transform: scale(1.05);
 }
 
@@ -72,7 +72,7 @@ nav {
 
 /* --- Dropdown Menu --- */
 .dropdown-menu {
-  background-color: #1e1b2e; /* Fundal meniu */
+  background-color: #1e1b2e; /* Menu background */
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   border-radius: 12px;
@@ -86,7 +86,7 @@ nav {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #e2e8f0; /* Text deschis */
+  color: #e2e8f0; /* Light text */
   font-size: 0.9rem;
   font-weight: 500;
   background: transparent;
@@ -96,7 +96,7 @@ nav {
 }
 
 .dropdown-item:hover {
-  background-color: rgba(147, 51, 234, 0.15); /* Tint mov la hover */
+  background-color: rgba(147, 51, 234, 0.15); /* Purple tint on hover */
   color: white;
 }
 
@@ -107,7 +107,7 @@ nav {
 
 .dropdown-item:hover lucide-icon {
   opacity: 1;
-  color: #a78bfa; /* Icon mov deschis la hover */
+  color: #a78bfa; /* Light purple icon on hover */
   transform: scale(1.1);
 }
 

@@ -1,6 +1,6 @@
-<nav> <!-- Clasele sunt acum in CSS -->
+<nav>
 
-  <!-- 1. STANGA: Buton Create Challenge -->
+  <!-- 1. LEFT: Create Challenge Button-->
   <div class="flex-shrink-0 z-10">
     <button (click)="onCreateChallenge()" class="btn-create">
       <lucide-icon [img]="icons.PlusCircle" class="w-5 h-5"></lucide-icon>
@@ -8,9 +8,8 @@
     </button>
   </div>
 
-  <!-- 2. CENTRU: Meniu Navigare -->
+  <!-- 2. CENTER: Navigation Menu -->
   <div class="absolute left-1/2 transform -translate-x-1/2 hidden md:flex items-center gap-4">
-    <!-- Aici era eroarea. Acum este simplificat: aplicam clasa 'active' daca pagina corespunde -->
     <button *ngFor="let link of navLinks"
             (click)="onNavigate(link.page)"
             class="nav-btn"
@@ -19,10 +18,10 @@
     </button>
   </div>
 
-  <!-- 3. DREAPTA: Profil User -->
+  <!-- 3. RIGHT: User Profile -->
   <div class="ml-auto relative z-10">
 
-    <!-- Zona care deschide meniul -->
+    <!-- Area that opens the menu-->
     <div (click)="toggleDropdown()"
          class="flex items-center gap-4 cursor-pointer p-2 rounded-xl border border-transparent transition select-none user-profile-container group">
 
@@ -47,7 +46,7 @@
       <lucide-icon [img]="icons.ChevronDown" class="w-5 h-5 text-gray-500 group-hover:text-white transition-transform duration-200" [class.rotate-180]="isDropdownOpen"></lucide-icon>
     </div>
 
-    <!-- Meniu Dropdown -->
+    <!-- Dropdown Menu -->
     <div *ngIf="isDropdownOpen"
          class="absolute right-0 top-full mt-2 w-64 dropdown-menu animate-fade-in origin-top-right">
 
@@ -80,7 +79,7 @@
       </div>
 
       <div class="border-t border-gray-700/50 p-2 mt-1">
-        <button (click)="onLogout()" class="dropdown-item" style="color: #f87171;"> <!-- Rosu deschis -->
+        <button (click)="onLogout()" class="dropdown-item" style="color: #f87171;">
           <lucide-icon [img]="icons.LogOut" class="w-4 h-4"></lucide-icon>
           Log Out
         </button>

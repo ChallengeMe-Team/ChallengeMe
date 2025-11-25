@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { LucideAngularModule, User, FileText, Users, Settings, LogOut, ChevronDown, PlusCircle, Menu } from 'lucide-angular';
 
-// Definim tipul Page aici pentru siguranță
+// Define the Page type here for safety/consistency
 type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth' | 'profile' | 'my-challenges' | 'friends' | 'settings';
 
 @Component({
@@ -22,20 +22,20 @@ export class NavbarComponent {
   private authService = inject(AuthService);
   private elementRef = inject(ElementRef);
 
-  // Iconite
+  // Icons
   readonly icons = { User, FileText, Users, Settings, LogOut, ChevronDown, PlusCircle, Menu };
 
   isDropdownOpen = false;
   isMenuOpen = false;
 
-  // Date utilizator din AuthService
+  // User data from AuthService
   user = this.authService.currentUser;
 
-  // Helpers pentru HTML
+  // Helpers for HTML template
   get username(): string { return this.user()?.username || 'Guest'; }
   get userPoints(): number { return this.user()?.points || 0; }
 
-  // AICI ERA LIPSA: Calculăm nivelul bazat pe puncte (ex: 100 xp = 1 nivel)
+  // Calculate level based on points (e.g., 100 xp = 1 level)
   get userLevel(): number {
     return Math.floor(this.userPoints / 100) + 1;
   }
@@ -48,7 +48,7 @@ export class NavbarComponent {
     { label: 'Leaderboard', page: 'leaderboard' }
   ];
 
-  // Actiuni
+  // Actions
   toggleDropdown() { this.isDropdownOpen = !this.isDropdownOpen; }
 
   onCreateChallenge() { this.createChallengeRequest.emit(); }
