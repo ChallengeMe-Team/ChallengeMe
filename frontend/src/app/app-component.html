@@ -5,32 +5,70 @@
   (createChallengeRequest)="openForm()">
 </app-navbar>
 
-<!-- Pagini -->
-<main class="p-8">
+<!-- Container Principal -->
+<main class="pt-24 p-8 min-h-screen bg-[#0f0e13] text-white">
+
+  <!-- 1. Home -->
   <app-home
     *ngIf="currentPage === 'home'"
     (startChallengeRequest)="openForm()"
     (exploreChallenges)="onNavigate('challenges')">
   </app-home>
 
+  <!-- 2. Challenges -->
   <app-challenges *ngIf="currentPage === 'challenges'"></app-challenges>
+
+  <!-- 3. Leaderboard -->
   <app-leaderboard *ngIf="currentPage === 'leaderboard'"></app-leaderboard>
+
+  <!-- 4. Auth (Login/Signup) -->
   <app-auth-container
     *ngIf="currentPage === 'auth'"
     (toastEvent)="showToast($event.message, $event.type)"
     (authSuccess)="onNavigate('home')"
   >
   </app-auth-container>
+
+  <!-- --- SECTIUNI NOI PENTRU PROFIL (Placeholder) --- -->
+
+  <div *ngIf="currentPage === 'profile'" class="max-w-4xl mx-auto mt-10 text-center">
+    <h2 class="text-3xl font-bold mb-4 text-purple-400">My Profile</h2>
+    <div class="bg-[#1a1a2e] p-6 rounded-xl border border-gray-700">
+      <p class="text-gray-300">Profile details and statistics will be displayed here.</p>
+    </div>
+  </div>
+
+  <div *ngIf="currentPage === 'my-challenges'" class="max-w-4xl mx-auto mt-10 text-center">
+    <h2 class="text-3xl font-bold mb-4 text-purple-400">My Created Challenges</h2>
+    <div class="bg-[#1a1a2e] p-6 rounded-xl border border-gray-700">
+      <p class="text-gray-300">List of challenges created by you.</p>
+    </div>
+  </div>
+
+  <div *ngIf="currentPage === 'friends'" class="max-w-4xl mx-auto mt-10 text-center">
+    <h2 class="text-3xl font-bold mb-4 text-purple-400">Friends List</h2>
+    <div class="bg-[#1a1a2e] p-6 rounded-xl border border-gray-700">
+      <p class="text-gray-300">Manage your friends connections here.</p>
+    </div>
+  </div>
+
+  <div *ngIf="currentPage === 'settings'" class="max-w-4xl mx-auto mt-10 text-center">
+    <h2 class="text-3xl font-bold mb-4 text-purple-400">Settings</h2>
+    <div class="bg-[#1a1a2e] p-6 rounded-xl border border-gray-700">
+      <p class="text-gray-300">Application preferences and account settings.</p>
+    </div>
+  </div>
+
 </main>
 
-<!-- Formular Create Challenge -->
+<!-- Formular Create Challenge (Modal) -->
 <app-challenge-form
   *ngIf="isFormVisible"
   (cancel)="closeForm()"
   (submitChallenge)="handleSubmit($event)">
 </app-challenge-form>
 
-<!-- Toast elegant -->
+<!-- Toast Notification -->
 <app-toast
   *ngIf="toastVisible"
   [message]="toastMessage"

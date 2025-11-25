@@ -1,44 +1,97 @@
-<nav class="flex justify-between items-center px-8 py-4 bg-[#14121b] shadow-md backdrop-blur-lg fixed top-0 left-0 right-0 z-50">
-  <!-- Logo -->
-  <div class="flex items-center space-x-2">
-    <span class="text-2xl font-bold text-white">
-      ChallengeMe
-    </span>
+<nav> <!-- Clasele sunt acum in CSS -->
+
+  <!-- 1. STANGA: Buton Create Challenge -->
+  <div class="flex-shrink-0 z-10">
+    <button (click)="onCreateChallenge()" class="btn-create">
+      <lucide-icon [img]="icons.PlusCircle" class="w-5 h-5"></lucide-icon>
+      <span>Create Challenge</span>
+    </button>
   </div>
 
-  <!-- Navigation buttons (centrate) -->
-  <div class="flex-1 flex justify-center space-x-4">
+  <!-- 2. CENTRU: Meniu Navigare -->
+  <div class="absolute left-1/2 transform -translate-x-1/2 hidden md:flex items-center gap-4">
+    <!-- Aici era eroarea. Acum este simplificat: aplicam clasa 'active' daca pagina corespunde -->
     <button *ngFor="let link of navLinks"
             (click)="onNavigate(link.page)"
-            [class.opacity-100]="currentPage === link.page"
-            [class.opacity-70]="currentPage !== link.page"
-            class="px-4 py-2 rounded-md text-white bg-gradient-to-r from-purple-600 via-indigo-700 to-blue-600 hover:from-purple-500 hover:to-blue-500 transition">
+            class="nav-btn"
+            [class.active]="currentPage === link.page">
       {{ link.label }}
     </button>
   </div>
 
-  <!-- Create Challenge cu stil special -->
-  <div>
-    <button (click)="onCreateChallenge()"
-            class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-400 text-white hover:scale-105 transition">
-      Create Challenge
-    </button>
+  <!-- 3. DREAPTA: Profil User -->
+  <div class="ml-auto relative z-10">
+
+    <!-- Zona care deschide meniul -->
+    <div (click)="toggleDropdown()"
+         class="flex items-center gap-4 cursor-pointer p-2 rounded-xl border border-transparent transition select-none user-profile-container group">
+
+      <!-- Text Info (Vertical) -->
+      <div class="hidden md:flex flex-col items-end">
+        <span class="text-white font-bold text-base group-hover:text-purple-300 transition">{{ username }}</span>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-gray-400 font-semibold uppercase tracking-wider">Lvl {{ userLevel || 1 }}</span>
+          <span class="text-yellow-400 font-bold bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/20">🏆 {{ userPoints }} XP</span>
+        </div>
+      </div>
+
+      <!-- Avatar -->
+      <div class="relative">
+        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg border-2 border-gray-700 group-hover:border-purple-500 transition">
+          {{ userInitials }}
+        </div>
+        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#14121b] rounded-full"></div>
+      </div>
+
+      <!-- Icon Dropdown -->
+      <lucide-icon [img]="icons.ChevronDown" class="w-5 h-5 text-gray-500 group-hover:text-white transition-transform duration-200" [class.rotate-180]="isDropdownOpen"></lucide-icon>
+    </div>
+
+    <!-- Meniu Dropdown -->
+    <div *ngIf="isDropdownOpen"
+         class="absolute right-0 top-full mt-2 w-64 dropdown-menu animate-fade-in origin-top-right">
+
+      <!-- Header Mobile Only -->
+      <div class="px-4 py-3 border-b border-gray-700/50 bg-gray-800/30 md:hidden">
+        <p class="text-white font-bold">{{ username }}</p>
+        <p class="text-xs text-yellow-400">🏆 {{ userPoints }} XP</p>
+      </div>
+
+      <div class="p-2 space-y-1">
+        <button (click)="onNavigate('profile')" class="dropdown-item">
+          <lucide-icon [img]="icons.User" class="w-4 h-4"></lucide-icon>
+          <span>My Profile</span>
+        </button>
+
+        <button (click)="onNavigate('my-challenges')" class="dropdown-item">
+          <lucide-icon [img]="icons.FileText" class="w-4 h-4"></lucide-icon>
+          <span>My Challenges</span>
+        </button>
+
+        <button (click)="onNavigate('friends')" class="dropdown-item">
+          <lucide-icon [img]="icons.Users" class="w-4 h-4"></lucide-icon>
+          <span>Friends</span>
+        </button>
+
+        <button (click)="onNavigate('settings')" class="dropdown-item">
+          <lucide-icon [img]="icons.Settings" class="w-4 h-4"></lucide-icon>
+          <span>Settings</span>
+        </button>
+      </div>
+
+      <div class="border-t border-gray-700/50 p-2 mt-1">
+        <button (click)="onLogout()" class="dropdown-item" style="color: #f87171;"> <!-- Rosu deschis -->
+          <lucide-icon [img]="icons.LogOut" class="w-4 h-4"></lucide-icon>
+          Log Out
+        </button>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Mobile hamburger -->
-  <button class="md:hidden absolute right-4 top-4" (click)="isMenuOpen = !isMenuOpen">
-    Menu
+  <!-- Mobile Menu Button -->
+  <button class="md:hidden ml-auto text-white p-2" (click)="isMenuOpen = !isMenuOpen">
+    <lucide-icon [img]="icons.Menu" class="w-7 h-7"></lucide-icon>
   </button>
 
-  <!-- Mobile menu -->
-  <div [class.hidden]="!isMenuOpen" class="absolute top-full left-0 w-full bg-[#14121b] md:hidden flex flex-col items-start p-4 space-y-2 z-40">
-    <button *ngFor="let link of navLinks"
-            (click)="onNavigate(link.page)"
-            class="w-full px-4 py-2 rounded-md text-white bg-gradient-to-r from-purple-600 via-indigo-700 to-blue-600 hover:from-purple-500 hover:to-blue-500 transition">
-      {{ link.label }}
-    </button>
-    <button (click)="onCreateChallenge()" class="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-400 text-white">
-      Create Challenge
-    </button>
-  </div>
 </nav>

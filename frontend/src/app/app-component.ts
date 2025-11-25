@@ -6,40 +6,48 @@ import { ChallengesComponent } from './component/pages/challenges/challenges-com
 import { LeaderboardComponent } from './component/pages/leaderboard/leaderboard-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
-import {AuthComponent} from './component/auth/auth-component';
+import { AuthComponent } from './component/auth/auth-component';
 
-
-type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth';
+// Definim tipul pentru paginile posibile
+type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth' | 'profile' | 'my-challenges' | 'friends' | 'settings';
 
 @Component({
-  selector: 'app-component',
+  selector: 'app-root', // Am păstrat app-root pentru a se potrivi cu index.html
   standalone: true,
-  imports: [NavbarComponent,
+  imports: [
+    CommonModule,
+    NavbarComponent,
     HomeComponent,
     ChallengesComponent,
     LeaderboardComponent,
-    CommonModule,
     ChallengeFormComponent,
-    ToastComponent, AuthComponent
+    ToastComponent,
+    AuthComponent
   ],
   templateUrl: './app-component.html',
   styleUrls: ['./app-component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-  currentPage: Page = 'auth';
+  currentPage: Page = 'auth'; // Pornim cu pagina de Auth
   isFormVisible = false;
 
   toastVisible = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
+  // Funcție pentru navigarea manuală (fără Router)
   onNavigate(page: Page) {
     this.currentPage = page;
   }
 
-  openForm() { this.isFormVisible = true; }
-  closeForm() { this.isFormVisible = false; }
+  openForm() {
+    this.isFormVisible = true;
+  }
+
+  closeForm() {
+    this.isFormVisible = false;
+  }
 
   handleSubmit(challenge: any) {
     console.log('Challenge created:', challenge);
