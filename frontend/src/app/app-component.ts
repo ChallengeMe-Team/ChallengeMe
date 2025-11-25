@@ -29,7 +29,7 @@ type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth' | 'profile
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-  currentPage: Page = 'auth'; // Pornim cu pagina de Auth
+  currentPage: Page = 'auth'; // Start with Auth page
   isFormVisible = false;
 
   toastVisible = false;
