@@ -1,37 +1,46 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-export enum Difficulty {
-  EASY = 'EASY',
-  MEDIUM = 'MEDIUM',
-  HARD = 'HARD'
-}
-
-interface Challenge {
-  title: string;
-  description: string;
-  category: string;
-  difficulty: Difficulty;
-  points: number;
-}
+import { HttpClientModule } from '@angular/common/http';
+import { Challenge, Difficulty } from './challenge.model';
+import { ChallengeService } from './challenge.service';
 
 @Component({
   selector: 'app-challenges',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HttpClientModule],
   templateUrl: './challenges-component.html',
-  styleUrls: ['./challenges-component.css']
+  styleUrls: ['./challenges-component.css'],
+  providers: [ChallengeService]
 })
-export class ChallengesComponent {
-  challenges: Challenge[] = [
-    { title: '30-Day Fitness Challenge', description: 'Complete daily exercises and track your progress.', category: 'Fitness', difficulty: Difficulty.EASY, points: 100 },
-    { title: 'Reading Challenge', description: 'Read one book per week and earn points.', category: 'Education', difficulty: Difficulty.MEDIUM, points: 200 },
-    { title: '60-Day Fitness Challenge', description: 'Complete daily exercises and track your progress.', category: 'Fitness', difficulty: Difficulty.MEDIUM, points: 200 },
-    { title: 'Coding Challenge', description: 'Solve algorithm tasks and improve your skills.', category: 'Coding', difficulty: Difficulty.HARD, points: 300 },
-  ];
+export class ChallengesComponent implements OnInit {
 
+  challenges: Challenge[] = [];
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
-  getChallengesByDifficulty(difficulty: Difficulty) {
+
+  constructor(
+    private challengeService: ChallengeService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.loadChallenges();
+  }
+
+  loadChallenges() {
+    this.challengeService.getAllChallenges().subscribe({
+      next: (data: Challenge[]) => {
+        this.challenges = data;
+        console.log('Challenges loaded successfully:', this.challenges);
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading challenges:', error);
+      }
+    });
+  }
+
+  getChallengesByDifficulty(difficulty: Difficulty): Challenge[] {
     return this.challenges.filter(c => c.difficulty === difficulty);
   }
 }
