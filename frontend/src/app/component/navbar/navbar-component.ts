@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-type Page = 'home' | 'challenges' | 'leaderboard' | 'create';
+type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth';
 
 @Component({
   selector: 'app-navbar',

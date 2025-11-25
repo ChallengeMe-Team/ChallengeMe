@@ -3,20 +3,25 @@ package challengeme.backend.controller;
 import challengeme.backend.dto.UserBadgeDTO;
 import challengeme.backend.dto.request.create.UserBadgeCreateRequest;
 import challengeme.backend.dto.request.update.UserBadgeUpdateRequest;
+import challengeme.backend.exception.GlobalExceptionHandler;
 import challengeme.backend.exception.UserBadgeNotFoundException;
 import challengeme.backend.mapper.UserBadgeMapper;
 import challengeme.backend.model.Badge;
 import challengeme.backend.model.User;
 import challengeme.backend.model.UserBadge;
+import challengeme.backend.security.AuthTokenFilter;
+import challengeme.backend.security.JwtUtils;
+import challengeme.backend.security.UserDetailsServiceImpl;
 import challengeme.backend.service.UserBadgeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -27,11 +32,12 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-//Unit tests cu MockMvc – testează controller-ul izolat, folosind mock pentru UserBadgeService.
+// Unit tests cu MockMvc – testează controller-ul izolat, folosind mock pentru UserBadgeService.
 
-@WebMvcTest(UserBadgeController.class)
-@ActiveProfiles("test")
-@Import(challengeme.backend.config.TestSecurityConfig.class)
+@WebMvcTest(controllers = UserBadgeController.class,
+        excludeAutoConfiguration = SecurityAutoConfiguration.class)
+@AutoConfigureMockMvc(addFilters = false) // Dezactivăm filtrele de securitate
+@Import(GlobalExceptionHandler.class)
 class UserBadgeControllerUnitTests {
 
     @Autowired
@@ -46,6 +52,16 @@ class UserBadgeControllerUnitTests {
     @MockBean
     private UserBadgeMapper mapper;
 
+    // --- MOCK-URI DE SECURITATE (OBLIGATORII PENTRU CONTEXT) ---
+    @MockBean
+    private JwtUtils jwtUtils;
+
+    @MockBean
+    private UserDetailsServiceImpl userDetailsService;
+
+    @MockBean
+    private AuthTokenFilter authTokenFilter;
+
     private UserBadgeDTO createDTO(UserBadge ub) {
         UserBadgeDTO dto = new UserBadgeDTO();
         dto.setId(ub.getId());
@@ -55,10 +71,9 @@ class UserBadgeControllerUnitTests {
         return dto;
     }
 
-
     @Test
     void testGetAllUserBadges() throws Exception {
-        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "pass", 10);
+        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "pass", 10, "user");
         Badge badge = new Badge(UUID.randomUUID(), "Gold", "Top", "Complete 10");
         UserBadge ub1 = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
         UserBadge ub2 = new UserBadge(UUID.randomUUID(), user, badge, LocalDate.now());
@@ -77,13 +92,12 @@ class UserBadgeControllerUnitTests {
         verify(service, times(1)).findAll();
     }
 
-
     @Test
     void testGetUserBadgeById_Success() throws Exception {
         UUID id = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         UUID badgeId = UUID.randomUUID();
-        User user = new User(userId, "Ana", "ana@email.com", "pass", 10);
+        User user = new User(userId, "Ana", "ana@email.com", "pass", 10, "user");
         Badge badge = new Badge(badgeId, "Gold", "Top", "Complete 10");
         UserBadge ub = new UserBadge(id, user, badge, LocalDate.now());
 
@@ -100,7 +114,6 @@ class UserBadgeControllerUnitTests {
 
         verify(service, times(1)).findUserBadge(id);
     }
-
 
     @Test
     void testGetUserBadgeById_NotFound() throws Exception {
@@ -125,7 +138,7 @@ class UserBadgeControllerUnitTests {
         req.setBadgeId(badgeId);
 
         UserBadge created = new UserBadge(createdId,
-                new User(userId, "Ana", "ana@email.com", "pass", 10),
+                new User(userId, "Ana", "ana@email.com", "pass", 10, "user"),
                 new Badge(badgeId, "Gold", "Top", "Complete 10"),
                 LocalDate.now()
         );
@@ -155,7 +168,7 @@ class UserBadgeControllerUnitTests {
         req.setDateAwarded(newDate);
 
         UserBadge updated = new UserBadge(id,
-                new User(UUID.randomUUID(), "Ana", "ana@email.com", "pass", 10),
+                new User(UUID.randomUUID(), "Ana", "ana@email.com", "pass", 10, "user"),
                 new Badge(UUID.randomUUID(), "Gold", "Top", "Complete 10"),
                 newDate
         );

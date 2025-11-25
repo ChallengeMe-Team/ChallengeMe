@@ -1,14 +1,15 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from './component/navbar-component/navbar-component';
+import { NavbarComponent } from './component/navbar/navbar-component';
 import { HomeComponent } from './component/pages/home/home-component';
 import { ChallengesComponent } from './component/pages/challenges/challenges-component';
 import { LeaderboardComponent } from './component/pages/leaderboard/leaderboard-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
+import {AuthComponent} from './component/auth/auth-component';
 
 
-type Page = 'home' | 'challenges' | 'leaderboard' | 'create';
+type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth';
 
 @Component({
   selector: 'app-component',
@@ -19,14 +20,14 @@ type Page = 'home' | 'challenges' | 'leaderboard' | 'create';
     LeaderboardComponent,
     CommonModule,
     ChallengeFormComponent,
-    ToastComponent
+    ToastComponent, AuthComponent
   ],
   templateUrl: './app-component.html',
   styleUrls: ['./app-component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-  currentPage: Page = 'home';
+  currentPage: Page = 'auth';
   isFormVisible = false;
 
   toastVisible = false;

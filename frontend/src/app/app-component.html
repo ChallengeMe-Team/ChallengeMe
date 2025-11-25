@@ -15,6 +15,12 @@
 
   <app-challenges *ngIf="currentPage === 'challenges'"></app-challenges>
   <app-leaderboard *ngIf="currentPage === 'leaderboard'"></app-leaderboard>
+  <app-auth-container
+    *ngIf="currentPage === 'auth'"
+    (toastEvent)="showToast($event.message, $event.type)"
+    (authSuccess)="onNavigate('home')"
+  >
+  </app-auth-container>
 </main>
 
 <!-- Formular Create Challenge -->

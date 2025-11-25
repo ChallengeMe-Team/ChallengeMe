@@ -50,7 +50,7 @@ class ChallengeUserServiceTests {
         UUID challengeId = UUID.randomUUID();
 
         // FIX: User constructor now takes UUID ID
-        User user = new User(userId, "TestUser", "test@email.com", "secure_pass", 0);
+        User user = new User(userId, "TestUser", "test@email.com", "secure_pass", 0, "user");
         // FIX: Assuming Challenge constructor now takes UUID ID
         Challenge challenge = new Challenge(challengeId, "Title", "Desc", "Cat", Challenge.Difficulty.EASY, 10, "Creator");
 
@@ -100,7 +100,7 @@ class ChallengeUserServiceTests {
         UUID userId = UUID.randomUUID();
         UUID challengeId = UUID.randomUUID();
 
-        User user = new User(userId, "TestUser", "test@email.com", "secure_pass", 0);
+        User user = new User(userId, "TestUser", "test@email.com", "secure_pass", 0, "user");
 
         ChallengeUserCreateRequest request = mock(ChallengeUserCreateRequest.class);
         when(request.getUserId()).thenReturn(userId);
@@ -118,7 +118,7 @@ class ChallengeUserServiceTests {
     @Test
     void testGetChallengeUserById_Success() {
         UUID id = UUID.randomUUID();
-        User mockUser = new User(UUID.randomUUID(), "U", "u@e.com", "p", 0);
+        User mockUser = new User(UUID.randomUUID(), "U", "u@e.com", "p", 0, "user");
         Challenge mockChallenge = new Challenge(UUID.randomUUID(), "C", "D", "Cat", Challenge.Difficulty.EASY, 1, "Cr");
 
         ChallengeUser cu = new ChallengeUser(id, mockUser, mockChallenge, ChallengeUserStatus.ACCEPTED, LocalDate.now(), null);
@@ -152,7 +152,7 @@ class ChallengeUserServiceTests {
     void testGetChallengeUsersByUserId() {
         UUID inputUserId = UUID.randomUUID();
 
-        User mockUser = new User(inputUserId, "Name", "email", "pass", 0);
+        User mockUser = new User(inputUserId, "Name", "email", "pass", 0, "user");
         ChallengeUser cu1 = new ChallengeUser(UUID.randomUUID(), mockUser, new Challenge(), ChallengeUserStatus.PENDING, null, null);
 
         when(challengeUserRepository.findByUserId(inputUserId)).thenReturn(List.of(cu1));
@@ -169,7 +169,7 @@ class ChallengeUserServiceTests {
     @Test
     void testUpdateChallengeUserStatus_ToAccepted() {
         UUID id = UUID.randomUUID();
-        User mockUser = new User(UUID.randomUUID(), "U", "u@e.com", "p", 0);
+        User mockUser = new User(UUID.randomUUID(), "U", "u@e.com", "p", 0, "user");
         Challenge mockChallenge = new Challenge(UUID.randomUUID(), "C", "D", "Cat", Challenge.Difficulty.EASY, 1, "Cr");
 
         ChallengeUser cu = new ChallengeUser(id, mockUser, mockChallenge, ChallengeUserStatus.PENDING, null, null);
@@ -188,7 +188,7 @@ class ChallengeUserServiceTests {
     @Test
     void testUpdateChallengeUserStatus_ToCompleted() {
         UUID id = UUID.randomUUID();
-        User mockUser = new User(UUID.randomUUID(), "U", "u@e.com", "p", 0);
+        User mockUser = new User(UUID.randomUUID(), "U", "u@e.com", "p", 0, "user");
         Challenge mockChallenge = new Challenge(UUID.randomUUID(), "C", "D", "Cat", Challenge.Difficulty.EASY, 1, "Cr");
 
         ChallengeUser cu = new ChallengeUser(id, mockUser, mockChallenge, ChallengeUserStatus.ACCEPTED, LocalDate.now().minusDays(1), null);

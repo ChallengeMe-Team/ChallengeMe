@@ -1,19 +1,7 @@
-import { Component } from '@angular/core';
+import {Component, OnInit, ChangeDetectorRef, inject, signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-export enum Difficulty {
-  EASY = 'EASY',
-  MEDIUM = 'MEDIUM',
-  HARD = 'HARD'
-}
-
-interface Challenge {
-  title: string;
-  description: string;
-  category: string;
-  difficulty: Difficulty;
-  points: number;
-}
+import { Challenge, Difficulty } from './challenge.model';
+import { ChallengeService } from '../../../services/challenge.service';
 
 @Component({
   selector: 'app-challenges',
@@ -22,16 +10,52 @@ interface Challenge {
   templateUrl: './challenges-component.html',
   styleUrls: ['./challenges-component.css']
 })
-export class ChallengesComponent {
-  challenges: Challenge[] = [
-    { title: '30-Day Fitness Challenge', description: 'Complete daily exercises and track your progress.', category: 'Fitness', difficulty: Difficulty.EASY, points: 100 },
-    { title: 'Reading Challenge', description: 'Read one book per week and earn points.', category: 'Education', difficulty: Difficulty.MEDIUM, points: 200 },
-    { title: '60-Day Fitness Challenge', description: 'Complete daily exercises and track your progress.', category: 'Fitness', difficulty: Difficulty.MEDIUM, points: 200 },
-    { title: 'Coding Challenge', description: 'Solve algorithm tasks and improve your skills.', category: 'Coding', difficulty: Difficulty.HARD, points: 300 },
-  ];
+export class ChallengesComponent implements OnInit {
+  private challengeService = inject(ChallengeService);
+  private cdr = inject(ChangeDetectorRef);
 
+  challenges = signal<Challenge[]>([]);
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
-  getChallengesByDifficulty(difficulty: Difficulty) {
-    return this.challenges.filter(c => c.difficulty === difficulty);
+
+  // State for modal
+  isCreateModalOpen = signal(false);
+  isLoading = signal(false);
+  errorMessage = signal('');
+
+  ngOnInit(): void {
+    this.loadChallenges();
+  }
+
+  loadChallenges() {
+    this.isLoading.set(true);
+    this.challengeService.getAllChallenges().subscribe({
+      next: (data) => {
+        this.challenges.set(data);
+        this.isLoading.set(false);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.errorMessage.set('Eroare la incarcarea datelor.');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  getChallengesByDifficulty(difficulty: Difficulty): Challenge[] {
+    return this.challenges().filter(c => c.difficulty === difficulty);
+  }
+
+  openCreateModal() {
+    this.isCreateModalOpen.set(true);
+  }
+
+  closeCreateModal() {
+    this.isCreateModalOpen.set(false);
+  }
+
+  onChallengeCreated() {
+    this.loadChallenges();
+    this.closeCreateModal();
   }
 }

@@ -32,8 +32,8 @@ class ChallengeUserJPARepositoryTests {
 
     @BeforeEach
     void setup() {
-        User u1 = new User(null, "user1", "user1@email.com", "pass123", 10);
-        User u2 = new User(null, "user2", "user2@email.com", "pass456", 5);
+        User u1 = new User(null, "user1", "user1@email.com", "pass123", 10, "user");
+        User u2 = new User(null, "user2", "user2@email.com", "pass456", 5, "user");
 
         Challenge c1 = new Challenge(null, "Challenge1", "Desc1", "Cat1", Challenge.Difficulty.EASY, 50, "creator1");
         Challenge c2 = new Challenge(null, "Challenge2", "Desc2", "Cat2", Challenge.Difficulty.MEDIUM, 100, "creator2");
