@@ -10,7 +10,6 @@ import java.util.UUID;
  */
 @Data
 public class CreateChallengeUserRequest {
-    // Validarea se poate adăuga aici cu @NotNull
     private UUID userId;
     private UUID challengeId;
 }

@@ -17,24 +17,18 @@ import java.util.UUID;
 public class ChallengeUserService {
 
     private final ChallengeUserRepository challengeUserRepository;
-    // Se pot injecta și UserService și ChallengeService aici pentru validare
-    // private final UserService userService;
-    // private final ChallengeService challengeService;
+
 
     public ChallengeUser createChallengeUser(CreateChallengeUserRequest request) {
         if (request.getUserId() == null || request.getChallengeId() == null) {
             throw new IllegalArgumentException("User ID and Challenge ID cannot be null");
         }
 
-        // Validare (simulată): Verifică dacă User-ul și Challenge-ul există
-        // În mod real, se apeleaza:
-        // userService.getUserById(request.getUserId());
-        // challengeService.getChallengeById(request.getChallengeId());
 
         ChallengeUser newChallengeUser = new ChallengeUser();
         newChallengeUser.setUserId(request.getUserId());
         newChallengeUser.setChallengeId(request.getChallengeId());
-        newChallengeUser.setStatus(ChallengeUserStatus.PENDING); // Status inițial
+        newChallengeUser.setStatus(ChallengeUserStatus.PENDING);
 
         return challengeUserRepository.save(newChallengeUser);
     }
@@ -59,7 +53,7 @@ public class ChallengeUserService {
             challengeUser.setDateAccepted(LocalDate.now());
         } else if (newStatus == ChallengeUserStatus.COMPLETED) {
             if (challengeUser.getDateAccepted() == null) {
-                challengeUser.setDateAccepted(LocalDate.now()); // Setează și data acceptării dacă e cazul
+                challengeUser.setDateAccepted(LocalDate.now());
             }
             challengeUser.setDateCompleted(LocalDate.now());
         }
@@ -67,7 +61,6 @@ public class ChallengeUserService {
     }
 
     public void deleteChallengeUser(UUID id) {
-        // Verifică dacă există înainte de a șterge
         if (challengeUserRepository.findById(id).isEmpty()) {
             throw new ChallengeUserNotFoundException("ChallengeUser link not found with id: " + id);
         }
