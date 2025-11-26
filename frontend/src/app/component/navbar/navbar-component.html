@@ -1,0 +1,44 @@
+<nav class="flex justify-between items-center px-8 py-4 bg-[#14121b] shadow-md backdrop-blur-lg fixed top-0 left-0 right-0 z-50">
+  <!-- Logo -->
+  <div class="flex items-center space-x-2">
+    <span class="text-2xl font-bold text-white">
+      ChallengeMe
+    </span>
+  </div>
+
+  <!-- Navigation buttons (centrate) -->
+  <div class="flex-1 flex justify-center space-x-4">
+    <button *ngFor="let link of navLinks"
+            (click)="onNavigate(link.page)"
+            [class.opacity-100]="currentPage === link.page"
+            [class.opacity-70]="currentPage !== link.page"
+            class="px-4 py-2 rounded-md text-white bg-gradient-to-r from-purple-600 via-indigo-700 to-blue-600 hover:from-purple-500 hover:to-blue-500 transition">
+      {{ link.label }}
+    </button>
+  </div>
+
+  <!-- Create Challenge cu stil special -->
+  <div>
+    <button (click)="onCreateChallenge()"
+            class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-400 text-white hover:scale-105 transition">
+      Create Challenge
+    </button>
+  </div>
+
+  <!-- Mobile hamburger -->
+  <button class="md:hidden absolute right-4 top-4" (click)="isMenuOpen = !isMenuOpen">
+    Menu
+  </button>
+
+  <!-- Mobile menu -->
+  <div [class.hidden]="!isMenuOpen" class="absolute top-full left-0 w-full bg-[#14121b] md:hidden flex flex-col items-start p-4 space-y-2 z-40">
+    <button *ngFor="let link of navLinks"
+            (click)="onNavigate(link.page)"
+            class="w-full px-4 py-2 rounded-md text-white bg-gradient-to-r from-purple-600 via-indigo-700 to-blue-600 hover:from-purple-500 hover:to-blue-500 transition">
+      {{ link.label }}
+    </button>
+    <button (click)="onCreateChallenge()" class="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-400 text-white">
+      Create Challenge
+    </button>
+  </div>
+</nav>

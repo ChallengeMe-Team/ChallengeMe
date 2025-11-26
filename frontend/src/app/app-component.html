@@ -1,0 +1,38 @@
+<!-- Navbar -->
+<app-navbar
+  [currentPage]="currentPage"
+  (navigateRequest)="onNavigate($event)"
+  (createChallengeRequest)="openForm()">
+</app-navbar>
+
+<!-- Pagini -->
+<main class="p-8">
+  <app-home
+    *ngIf="currentPage === 'home'"
+    (startChallengeRequest)="openForm()"
+    (exploreChallenges)="onNavigate('challenges')">
+  </app-home>
+
+  <app-challenges *ngIf="currentPage === 'challenges'"></app-challenges>
+  <app-leaderboard *ngIf="currentPage === 'leaderboard'"></app-leaderboard>
+  <app-auth-container
+    *ngIf="currentPage === 'auth'"
+    (toastEvent)="showToast($event.message, $event.type)"
+    (authSuccess)="onNavigate('home')"
+  >
+  </app-auth-container>
+</main>
+
+<!-- Formular Create Challenge -->
+<app-challenge-form
+  *ngIf="isFormVisible"
+  (cancel)="closeForm()"
+  (submitChallenge)="handleSubmit($event)">
+</app-challenge-form>
+
+<!-- Toast elegant -->
+<app-toast
+  *ngIf="toastVisible"
+  [message]="toastMessage"
+  [type]="toastType">
+</app-toast>

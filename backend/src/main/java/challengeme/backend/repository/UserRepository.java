@@ -1,19 +1,17 @@
 package challengeme.backend.repository;
 
 import challengeme.backend.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.*;
 
-public interface UserRepository {
+// Avem nevoie de căutare flexibilă pentru login
 
-    List<User> findAll();
+public interface UserRepository extends JpaRepository<User, UUID> {
+    Optional<User> findByUsername(String username);
+    Boolean existsByUsername(String username);
+    Boolean existsByEmail(String email);
 
-    User findById(UUID id);
-
-    User save(User user);
-
-    void delete(UUID id);
-
-    void update(User user);
-
+    // Pentru login cu email SAU username
+    Optional<User> findByUsernameOrEmail(String username, String email);
 }

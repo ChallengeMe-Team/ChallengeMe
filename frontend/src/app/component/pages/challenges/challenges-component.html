@@ -1,0 +1,54 @@
+<section class="p-10 text-white space-y-12">
+
+  <h2 class="text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500 mb-8">
+    Explore Challenges
+  </h2>
+
+  <div *ngFor="let difficulty of difficultyKeys" class="space-y-6">
+
+    <div *ngIf="getChallengesByDifficulty(difficulty).length > 0">
+
+      <h3 class="text-2xl font-semibold uppercase tracking-wide text-gray-300 border-b border-gray-700 pb-2">
+        {{ difficulty }} Challenges
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        <div *ngFor="let challenge of getChallengesByDifficulty(difficulty)"
+             class="bg-[#1a1627] p-6 rounded-xl shadow-lg hover:shadow-purple-500/20 transition-transform hover:scale-105 relative min-h-[200px]">
+
+          <span class="badge inline-block px-2 py-1 rounded text-xs font-bold mb-3"
+                [ngClass]="{
+              'badge-fitness bg-green-500/20 text-green-400': challenge.category === 'Fitness',
+              'badge-education bg-blue-500/20 text-blue-400': challenge.category === 'Education',
+              'badge-coding bg-yellow-500/20 text-yellow-400': challenge.category === 'Coding',
+              'bg-gray-700 text-gray-300': challenge.category !== 'Fitness' && challenge.category !== 'Education' && challenge.category !== 'Coding'
+              }">
+              {{ challenge.category }}
+          </span>
+
+          <h4 class="font-bold text-xl mb-2 text-white">{{ challenge.title }}</h4>
+
+          <p class="text-gray-400 mb-10 text-sm line-clamp-3">
+            {{ challenge.description }}
+          </p>
+
+          <div class="absolute bottom-4 left-6 right-4 flex justify-between items-end">
+             <span class="text-xs text-gray-500 italic">
+               by {{ challenge.createdBy }}
+             </span>
+
+            <div class="text-sm font-semibold bg-gradient-to-r from-purple-400 to-blue-500 text-white px-3 py-1 rounded-full shadow-md">
+              {{ challenge.points }} pts
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="challenges.length === 0" class="text-center text-gray-500 mt-10">
+    <p>Loading challenges or no challenges found...</p>
+  </div>
+
+</section>

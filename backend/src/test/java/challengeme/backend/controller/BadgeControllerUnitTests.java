@@ -1,7 +1,11 @@
 package challengeme.backend.controller;
 
-import challengeme.backend.exception.GlobalExceptionHandler;
+import challengeme.backend.dto.request.create.BadgeCreateRequest;
+import challengeme.backend.dto.request.update.BadgeUpdateRequest;
+import challengeme.backend.dto.BadgeDTO;
 import challengeme.backend.exception.BadgeNotFoundException;
+import challengeme.backend.exception.GlobalExceptionHandler;
+import challengeme.backend.mapper.BadgeMapper;
 import challengeme.backend.model.Badge;
 import challengeme.backend.service.BadgeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,9 +22,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+//Unit tests cu MockMvc – testează controller-ul izolat, folosind mock pentru BadgeService.
 
 @ExtendWith(MockitoExtension.class)
 public class BadgeControllerUnitTests {
@@ -31,117 +38,123 @@ public class BadgeControllerUnitTests {
     @Mock
     private BadgeService badgeService;
 
+    @Mock
+    private BadgeMapper badgeMapper;
+
     @InjectMocks
     private BadgeController badgeController;
 
+    private UUID badgeId;
+    private Badge badge;
+    private BadgeDTO badgeDTO;
+
     @BeforeEach
     void setup() {
+        badgeId = UUID.randomUUID();
+        badge = new Badge(badgeId, "Explorer", "Visited 5 locations", "Visit 5 locations");
+        badgeDTO = new BadgeDTO(badgeId, badge.getName(), badge.getDescription(), badge.getCriteria());
+
         mockMvc = MockMvcBuilders.standaloneSetup(badgeController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
 
-    // GET /api/badges
+    // --- GET ALL ---
     @Test
     void testGetAllBadges() throws Exception {
-        Badge badge1 = new Badge(UUID.randomUUID(), "Explorer", "Visited 5 locations", "Visit 5 locations");
-        Badge badge2 = new Badge(UUID.randomUUID(), "Achiever", "Completed all tasks", "Complete all challenges");
-
-        when(badgeService.getAllBadges()).thenReturn(List.of(badge1, badge2));
+        when(badgeService.getAllBadges()).thenReturn(List.of(badge));
+        when(badgeMapper.toDTO(badge)).thenReturn(badgeDTO);
 
         mockMvc.perform(get("/api/badges"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Explorer"))
-                .andExpect(jsonPath("$[1].name").value("Achiever"));
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("Explorer"));
 
-        verify(badgeService, times(1)).getAllBadges();
+        verify(badgeService).getAllBadges();
     }
 
-    // GET /api/badges/{id}
+    // --- GET BY ID ---
     @Test
-    void testGetBadgeById() throws Exception {
-        UUID id = UUID.randomUUID();
-        Badge badge = new Badge(id, "Explorer", "Visited 5 locations", "Visit 5 locations");
-        when(badgeService.getBadgeById(id)).thenReturn(badge);
+    void testGetBadgeById_Success() throws Exception {
+        when(badgeService.getBadgeById(badgeId)).thenReturn(badge);
+        when(badgeMapper.toDTO(badge)).thenReturn(badgeDTO);
 
-        mockMvc.perform(get("/api/badges/{id}", id))
+        mockMvc.perform(get("/api/badges/{id}", badgeId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Explorer"));
 
-        verify(badgeService, times(1)).getBadgeById(id);
+        verify(badgeService).getBadgeById(badgeId);
     }
 
     @Test
-    void testGetBadgeByIdNotFound() throws Exception {
-        UUID id = UUID.randomUUID();
-        when(badgeService.getBadgeById(id))
-                .thenThrow(new BadgeNotFoundException("Badge with id " + id + " not found"));
+    void testGetBadgeById_NotFound() throws Exception {
+        when(badgeService.getBadgeById(badgeId))
+                .thenThrow(new BadgeNotFoundException("Badge with id " + badgeId + " not found"));
 
-        mockMvc.perform(get("/api/badges/{id}", id))
+        mockMvc.perform(get("/api/badges/{id}", badgeId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Badge with id " + id + " not found"));
+                .andExpect(jsonPath("$.message").value("Badge with id " + badgeId + " not found"));
 
-        verify(badgeService, times(1)).getBadgeById(id);
+        verify(badgeService).getBadgeById(badgeId);
     }
 
-    // POST /api/badges
+    // --- CREATE ---
     @Test
     void testCreateBadge() throws Exception {
-        Badge badge = new Badge(null, "Explorer", "Visited 5 locations", "Visit 5 locations");
-        Badge created = new Badge(UUID.randomUUID(), badge.getName(), badge.getDescription(), badge.getCriteria());
+        BadgeCreateRequest request = new BadgeCreateRequest("Explorer", "Visited 5 locations", "Visit 5 locations");
 
-        when(badgeService.createBadge(any(Badge.class))).thenReturn(created);
+        when(badgeMapper.toEntity(any(BadgeCreateRequest.class))).thenReturn(badge);
+        when(badgeService.createBadge(badge)).thenReturn(badge);
+        when(badgeMapper.toDTO(badge)).thenReturn(badgeDTO);
 
         mockMvc.perform(post("/api/badges")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badge)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Explorer"));
 
-        verify(badgeService, times(1)).createBadge(any(Badge.class));
+        verify(badgeService).createBadge(badge);
     }
 
-    // PUT /api/badges/{id}
+    // --- UPDATE ---
     @Test
     void testUpdateBadge() throws Exception {
-        UUID id = UUID.randomUUID();
-        Badge badge = new Badge(null, "Explorer Updated", "Visited 10 locations", "Visit 10 locations");
-        Badge updated = new Badge(id, badge.getName(), badge.getDescription(), badge.getCriteria());
+        BadgeUpdateRequest request = new BadgeUpdateRequest("Explorer Updated", "Visited 10 locations", "Visit 10 locations");
+        Badge updatedBadge = new Badge(badgeId, request.name(), request.description(), request.criteria());
+        BadgeDTO updatedDTO = new BadgeDTO(badgeId, request.name(), request.description(), request.criteria());
 
-        when(badgeService.updateBadge(eq(id), any(Badge.class))).thenReturn(updated);
+        when(badgeService.updateBadge(eq(badgeId), any(BadgeUpdateRequest.class))).thenReturn(updatedBadge);
+        when(badgeMapper.toDTO(updatedBadge)).thenReturn(updatedDTO);
 
-        mockMvc.perform(put("/api/badges/{id}", id)
+        mockMvc.perform(put("/api/badges/{id}", badgeId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badge)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Explorer Updated"));
 
-        verify(badgeService, times(1)).updateBadge(eq(id), any(Badge.class));
+        verify(badgeService).updateBadge(eq(badgeId), any(BadgeUpdateRequest.class));
     }
 
-    // DELETE /api/badges/{id}
+    // --- DELETE ---
     @Test
-    void testDeleteBadge() throws Exception {
-        UUID id = UUID.randomUUID();
-        doNothing().when(badgeService).deleteBadge(id);
+    void testDeleteBadge_Success() throws Exception {
+        doNothing().when(badgeService).deleteBadge(badgeId);
 
-        mockMvc.perform(delete("/api/badges/{id}", id))
+        mockMvc.perform(delete("/api/badges/{id}", badgeId))
                 .andExpect(status().isNoContent());
 
-        verify(badgeService, times(1)).deleteBadge(id);
+        verify(badgeService).deleteBadge(badgeId);
     }
 
     @Test
-    void testDeleteBadgeNotFound() throws Exception {
-        UUID id = UUID.randomUUID();
-        doThrow(new BadgeNotFoundException("Badge with id " + id + " not found"))
-                .when(badgeService).deleteBadge(id);
+    void testDeleteBadge_NotFound() throws Exception {
+        doThrow(new BadgeNotFoundException("Badge with id " + badgeId + " not found"))
+                .when(badgeService).deleteBadge(badgeId);
 
-        mockMvc.perform(delete("/api/badges/{id}", id))
+        mockMvc.perform(delete("/api/badges/{id}", badgeId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Badge with id " + id + " not found"));
+                .andExpect(jsonPath("$.message").value("Badge with id " + badgeId + " not found"));
 
-        verify(badgeService, times(1)).deleteBadge(id);
+        verify(badgeService).deleteBadge(badgeId);
     }
 }

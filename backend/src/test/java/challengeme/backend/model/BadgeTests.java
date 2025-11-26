@@ -1,20 +1,27 @@
 package challengeme.backend.model;
 
+import challengeme.backend.repository.BadgeRepository;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 public class BadgeTests {
 
     private static Validator validator;
+
+    @Autowired
+    private BadgeRepository badgeRepository;
 
     @BeforeAll
     static void setupValidator() {
@@ -22,16 +29,17 @@ public class BadgeTests {
         validator = factory.getValidator();
     }
 
+    // ================================
+    // MODEL / VALIDATION TESTS
+    // ================================
+
     @Test
     void testBadgeGettersSetters() {
-        UUID id = UUID.randomUUID();
         Badge badge = new Badge();
-        badge.setId(id);
         badge.setName("Champion");
         badge.setDescription("Awarded for winning 10 challenges");
         badge.setCriteria("Win 10 challenges");
 
-        assertEquals(id, badge.getId());
         assertEquals("Champion", badge.getName());
         assertEquals("Awarded for winning 10 challenges", badge.getDescription());
         assertEquals("Win 10 challenges", badge.getCriteria());
@@ -39,10 +47,8 @@ public class BadgeTests {
 
     @Test
     void testBadgeAllArgsConstructor() {
-        UUID id = UUID.randomUUID();
-        Badge badge = new Badge(id, "Achiever", "Completed all tasks", "Complete all challenges");
+        Badge badge = new Badge(UUID.randomUUID(), "Achiever", "Completed all tasks", "Complete all challenges");
 
-        assertEquals(id, badge.getId());
         assertEquals("Achiever", badge.getName());
         assertEquals("Completed all tasks", badge.getDescription());
         assertEquals("Complete all challenges", badge.getCriteria());

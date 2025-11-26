@@ -1,47 +1,45 @@
 package challengeme.backend.service;
 
+import challengeme.backend.mapper.BadgeMapper;
 import challengeme.backend.model.Badge;
 import challengeme.backend.repository.BadgeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import challengeme.backend.dto.request.update.BadgeUpdateRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import challengeme.backend.exception.BadgeNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class BadgeService {
 
     private final BadgeRepository badgeRepository;
-
-    @Autowired
-    public BadgeService(BadgeRepository badgeRepository) {
-        this.badgeRepository = badgeRepository;
-    }
+    private final BadgeMapper mapper;
 
     public List<Badge> getAllBadges() {
         return badgeRepository.findAll();
     }
 
     public Badge getBadgeById(UUID id) {
-        return badgeRepository.findById(id);
+        return badgeRepository.findById(id)
+                .orElseThrow(() -> new BadgeNotFoundException("Badge with id " + id + " not found"));
     }
 
     public Badge createBadge(Badge badge) {
-        if(badge.getId() == null) {
-            badge.setId(UUID.randomUUID());
-        }
         return badgeRepository.save(badge);
     }
 
-    public void deleteBadge(UUID id) {
-        badgeRepository.delete(id);
+    public Badge updateBadge(UUID id, BadgeUpdateRequest request) {
+        Badge entity = getBadgeById(id); // aruncă BadgeNotFoundException dacă nu există
+        mapper.updateEntity(request, entity);
+        return badgeRepository.save(entity);
     }
 
-    public Badge updateBadge(UUID id, Badge badge) {
-        Badge existing = badgeRepository.findById(id);
-        badge.setId(existing.getId());
-        badgeRepository.update(badge);
-        return badge;
+    public void deleteBadge(UUID id) {
+        Badge entity = getBadgeById(id); // aruncă BadgeNotFoundException dacă nu există
+        badgeRepository.delete(entity);
     }
 
 }

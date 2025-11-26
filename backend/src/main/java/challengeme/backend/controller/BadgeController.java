@@ -1,8 +1,13 @@
 package challengeme.backend.controller;
 
+import challengeme.backend.dto.BadgeDTO;
+import challengeme.backend.dto.request.create.BadgeCreateRequest;
+import challengeme.backend.dto.request.update.BadgeUpdateRequest;
+import challengeme.backend.mapper.BadgeMapper;
 import challengeme.backend.model.Badge;
 import challengeme.backend.service.BadgeService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,37 +18,42 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/badges")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class BadgeController {
 
-    private final BadgeService badgeService;
-
-    public BadgeController(BadgeService badgeService) { this.badgeService = badgeService; }
+    private final BadgeService service;
+    private final BadgeMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<Badge>> getAllBadges() {
-        return ResponseEntity.ok(badgeService.getAllBadges());
+    public List<BadgeDTO> getAll() {
+        return service.getAllBadges()
+                .stream()
+                .map(mapper::toDTO)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Badge> getBadgeById(@PathVariable UUID id) {
-        return ResponseEntity.ok(badgeService.getBadgeById(id));
+    public ResponseEntity<BadgeDTO> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(mapper.toDTO(service.getBadgeById(id)));
     }
 
     @PostMapping
-    public ResponseEntity<Badge> createBadge(@Valid @RequestBody Badge badge) {
-        Badge created = badgeService.createBadge(badge);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<BadgeDTO> create(@Valid @RequestBody BadgeCreateRequest request) {
+        Badge entity = mapper.toEntity(request);
+        Badge saved = service.createBadge(entity);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Badge> updateBadge(@PathVariable UUID id, @Valid @RequestBody Badge badge) {
-        Badge updated = badgeService.updateBadge(id, badge);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<BadgeDTO> update(@PathVariable UUID id,
+                                           @Valid @RequestBody BadgeUpdateRequest request) {
+        Badge updated = service.updateBadge(id, request);
+        return ResponseEntity.ok(mapper.toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBadge(@PathVariable UUID id) {
-        badgeService.deleteBadge(id);
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        service.deleteBadge(id);
         return ResponseEntity.noContent().build();
     }
 

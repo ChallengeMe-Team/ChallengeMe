@@ -1,137 +1,125 @@
 package challengeme.backend.service;
 
+import challengeme.backend.dto.request.update.UserUpdateRequest;
 import challengeme.backend.exception.UserNotFoundException;
+import challengeme.backend.mapper.UserMapper;
 import challengeme.backend.model.User;
 import challengeme.backend.repository.UserRepository;
-import challengeme.backend.repository.inMemory.InMemoryUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class UserServiceTests {
+class UserServiceTests {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UserMapper userMapper;
+
+    @InjectMocks
     private UserService userService;
+
+    private UUID userId;
 
     @BeforeEach
     void setup() {
-        userRepository = Mockito.mock(UserRepository.class);
-        userService = new UserService(userRepository);
+        MockitoAnnotations.openMocks(this);
+        userId = UUID.randomUUID();
     }
 
-    @Test
-    void testGetAllUsers() {
-        List<User> users = Arrays.asList(
-                new User("Ana", "ana@email.com", "pass123", 10),
-                new User("Ion", "ion@email.com", "pass456", 5)
-        );
-
-        when(userRepository.findAll()).thenReturn(users);
-
-        List<User> result = userService.getAllUsers();
-        assertEquals(users, result);
-
-        verify(userRepository, times(1)).findAll();
-    }
+    // --- CREATE ---
 
     @Test
-    void testGetUserById() {
-        User user = new User("Ana", "ana@email.com", "pass123", 10);
-        when(userRepository.findById(user.getId())).thenReturn(user);
-
-        User result = userService.getUserById(user.getId());
-        assertEquals(user, result);
-
-        verify(userRepository, times(1)).findById(user.getId());
-    }
-
-    @Test
-    void testGetUserByIdNotFound() {
-        UUID id = UUID.randomUUID();
-        when(userRepository.findById(id))
-                .thenThrow(new UserNotFoundException("User with id " + id + " not found"));
-
-        assertThrows(UserNotFoundException.class, () -> userService.getUserById(id));
-        verify(userRepository, times(1)).findById(id);
-    }
-
-    @Test
-    void testCreateUserWithId() {
-        User user = new User(UUID.randomUUID(), "Ana", "ana@email.com", "pass123", 10);
-
+    void testCreateUser() {
+        User user = new User(userId, "Ana", "ana@email.com", "pass123", 10, "user");
         when(userRepository.save(user)).thenReturn(user);
 
         User created = userService.createUser(user);
+
         assertEquals(user, created);
-        verify(userRepository, times(1)).save(user);
+        verify(userRepository).save(user);
+    }
+
+    // --- READ ---
+
+    @Test
+    void testGetAllUsers() {
+        User u1 = new User(UUID.randomUUID(), "Ana", "ana@email.com", "pass123", 10, "user");
+        User u2 = new User(UUID.randomUUID(), "Ion", "ion@email.com", "pass456", 5, "user");
+
+        when(userRepository.findAll()).thenReturn(Arrays.asList(u1, u2));
+
+        List<User> result = userService.getAllUsers();
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(u1));
+        assertTrue(result.contains(u2));
+        verify(userRepository).findAll();
     }
 
     @Test
-    void testCreateUserWithoutId() {
-        User user = new User(null, "Ana", "ana@email.com", "pass123", 10);
+    void testGetUserById_Success() {
+        User user = new User(userId, "Ana", "ana@email.com", "pass123", 10, "user");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        User result = userService.getUserById(userId);
 
-        User created = userService.createUser(user);
-        assertNotNull(created.getId());
-        verify(userRepository, times(1)).save(created);
+        assertEquals(user, result);
+        verify(userRepository).findById(userId);
     }
 
     @Test
-    void testDeleteUser() {
-        UUID id = UUID.randomUUID();
+    void testGetUserById_NotFound() {
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        doNothing().when(userRepository).delete(id);
+        assertThrows(UserNotFoundException.class, () -> userService.getUserById(userId));
+        verify(userRepository).findById(userId);
+    }
 
-        userService.deleteUser(id);
-        verify(userRepository, times(1)).delete(id);
+    // --- UPDATE ---
+
+    @Test
+    void testUpdateUser_Success() {
+        User existing = new User(userId, "Ana", "ana@email.com", "pass123", 10, "user");
+        UserUpdateRequest request = new UserUpdateRequest("AnaUpdated", "new@email.com", "newpass", 20);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existing));
+        when(userRepository.save(existing)).thenReturn(existing);
+
+        User updated = userService.updateUser(userId, request);
+
+        verify(userMapper).updateEntity(request, existing);
+        verify(userRepository).save(existing);
+        assertEquals(existing, updated);
     }
 
     @Test
-    void testDeleteUserNotFound() {
-        UUID id = UUID.randomUUID();
+    void testUpdateUser_NotFound() {
+        UserUpdateRequest request = new UserUpdateRequest("AnaUpdated", null, null, null);
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        doThrow(new UserNotFoundException("User with id " + id + " not found"))
-                .when(userRepository).delete(id);
-
-        assertThrows(UserNotFoundException.class, () -> userService.deleteUser(id));
-        verify(userRepository, times(1)).delete(id);
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser(userId, request));
+        verify(userRepository).findById(userId);
+        verify(userRepository, never()).save(any());
+        verify(userMapper, never()).updateEntity(any(), any());
     }
 
-    @Test
-    void testUpdateUser() {
-        UUID id = UUID.randomUUID();
-        User existingUser = new User(id, "Ana", "ana@email.com", "pass123", 10);
-        User updatedUser = new User(id, "AnaUpdated", "anaupdated@email.com", "newpass123", 20);
-
-        when(userRepository.findById(id)).thenReturn(existingUser);
-
-        userService.updateUser(id, updatedUser);
-
-        verify(userRepository, times(1)).findById(id);
-        verify(userRepository, times(1)).update(updatedUser);
-    }
+    // --- DELETE ---
 
     @Test
-    void testUpdateUserNotFound() {
-        UUID id = UUID.randomUUID();
-        User updatedUser = new User(id, "AnaUpdated", "anaupdated@email.com", "newpass123", 20);
+    void testDeleteUser_Success() {
+        doNothing().when(userRepository).deleteById(userId);
 
-        when(userRepository.findById(id))
-                .thenThrow(new UserNotFoundException("User with id " + id + " not found"));
-
-        assertThrows(UserNotFoundException.class, () -> userService.updateUser(id, updatedUser));
-
-        verify(userRepository, times(1)).findById(id);
-        verify(userRepository, never()).update(updatedUser);
+        assertDoesNotThrow(() -> userService.deleteUser(userId));
+        verify(userRepository).deleteById(userId);
     }
 }
