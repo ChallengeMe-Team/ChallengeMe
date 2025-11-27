@@ -1,7 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-// 1. Importăm NavbarComponent SI tipul Page
 import { NavbarComponent, Page } from './component/navbar/navbar-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
@@ -27,8 +26,6 @@ export class AppComponent {
   private router = inject(Router);
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
-
-  // 2. Folosim tipul Page aici
   currentPage: Page = 'home';
   isFormVisible = false;
 
@@ -36,7 +33,6 @@ export class AppComponent {
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
-  // 3. Și aici în semnătura funcției
   onNavigate(page: Page) {
     this.currentPage = page;
 

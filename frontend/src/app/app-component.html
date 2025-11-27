@@ -14,7 +14,6 @@
   [class.items-center]="!isLoggedIn()"
   [class.justify-center]="!isLoggedIn()">
 
-  <!-- Aici Angular încarcă pagina potrivită (Home, Login, etc.) -->
   <router-outlet (activate)="onActivate($event)"></router-outlet>
 
 </main>
