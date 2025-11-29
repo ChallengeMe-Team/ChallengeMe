@@ -23,7 +23,7 @@ class UserCreateRequestTests {
 
     @Test
     void testValidUserCreateRequest() {
-        UserCreateRequest dto = new UserCreateRequest("Ana", "ana@email.com", "secret123");
+        UserCreateRequest dto = new UserCreateRequest("Ana", "ana@email.com", "Password_123");
         Set<ConstraintViolation<UserCreateRequest>> violations = validator.validate(dto);
         assertTrue(violations.isEmpty());
     }
@@ -32,13 +32,13 @@ class UserCreateRequestTests {
     void testInvalidUserCreateRequest() {
         UserCreateRequest dto = new UserCreateRequest("", "not-an-email", "");
         Set<ConstraintViolation<UserCreateRequest>> violations = validator.validate(dto);
-        assertEquals(3, violations.size());
+        assertEquals(5, violations.size());
     }
 
     @Test
     void testPasswordValidation_Success() {
         // Parolă validă: 6 chars, Upper, Lower, Digit, Special
-        UserCreateRequest request = new UserCreateRequest("user", "test@email.com", "Pass123!");
+        UserCreateRequest request = new UserCreateRequest("user", "test@email.com", "Password_123");
 
         Set<ConstraintViolation<UserCreateRequest>> violations = validator.validate(request);
         assertTrue(violations.isEmpty(), "Valid password should not have violations");
