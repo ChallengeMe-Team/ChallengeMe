@@ -1,5 +1,6 @@
 <!-- Navbar -->
 <app-navbar
+  *ngIf="isLoggedIn()"
   [currentPage]="currentPage"
   (navigateRequest)="onNavigate($event)"
   (createChallengeRequest)="openForm()">
@@ -62,6 +63,19 @@
 </main>
 
 <!-- Formular Create Challenge (Modal) -->
+<!-- Pagini -->
+<main
+  [class.pt-20]="isLoggedIn()"
+  [class.h-screen]="!isLoggedIn()"
+  [class.flex]="!isLoggedIn()"
+  [class.items-center]="!isLoggedIn()"
+  [class.justify-center]="!isLoggedIn()">
+
+  <router-outlet (activate)="onActivate($event)"></router-outlet>
+
+</main>
+
+<!-- Formular Create Challenge (Global) -->
 <app-challenge-form
   *ngIf="isFormVisible"
   (cancel)="closeForm()"

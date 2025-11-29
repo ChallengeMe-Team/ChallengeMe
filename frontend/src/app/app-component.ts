@@ -1,15 +1,15 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from './component/navbar/navbar-component';
-import { HomeComponent } from './component/pages/home/home-component';
-import { ChallengesComponent } from './component/pages/challenges/challenges-component';
-import { LeaderboardComponent } from './component/pages/leaderboard/leaderboard-component';
+import { Router, RouterModule } from '@angular/router';
+import { NavbarComponent, Page } from './component/navbar/navbar-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
 import { AuthComponent } from './component/auth/auth-component';
 
 // Definim tipul pentru paginile posibile
 type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth' | 'profile' | 'my-challenges' | 'friends' | 'settings';
+import { AuthService } from './services/auth.service';
+import { AuthComponent } from './component/auth/auth-component';
 
 @Component({
   selector: 'app-root', // Am păstrat app-root pentru a se potrivi cu index.html
@@ -29,7 +29,11 @@ type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth' | 'profile
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-  currentPage: Page = 'auth'; // Start with Auth page
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  isLoggedIn = computed(() => !!this.authService.currentUser());
+  currentPage: Page = 'home';
   isFormVisible = false;
 
   toastVisible = false;
@@ -39,6 +43,14 @@ export class AppComponent {
   // Funcție pentru navigarea manuală (fără Router)
   onNavigate(page: Page) {
     this.currentPage = page;
+
+    if (page === 'home') this.router.navigate(['/']);
+    else if (page === 'challenges') this.router.navigate(['/challenges']);
+    else if (page === 'leaderboard') this.router.navigate(['/leaderboard']);
+    else if (page === 'auth') {
+      this.authService.logout();
+      this.router.navigate(['/auth']);
+    }
   }
 
   openForm() {
@@ -60,5 +72,16 @@ export class AppComponent {
     this.toastType = type;
     this.toastVisible = true;
     setTimeout(() => this.toastVisible = false, 3000);
+  }
+
+  onActivate(componentRef: any) {
+    if (componentRef instanceof AuthComponent) {
+      componentRef.toastEvent.subscribe((event: { message: string; type: "success" | "error"; }) => {
+        this.showToast(event.message, event.type);
+      });
+      componentRef.authSuccess.subscribe(() => {
+        this.router.navigate(['/']);
+      });
+    }
   }
 }

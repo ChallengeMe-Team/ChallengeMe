@@ -34,15 +34,24 @@
     <label for="password">Parolă</label>
     <input id="password" type="password" formControlName="password" placeholder="Minim 6 caractere" />
 
-    @if (password?.touched && password?.invalid) {
+    <div *ngIf="password?.touched && password?.invalid">
       <div class="error-message">
-        @if (password?.errors?.['required']) {
+        <div *ngIf="password?.errors?.['required']">
           Parola este obligatorie.
-        } @else if (password?.errors?.['minlength']) {
+        </div>
+        <div *ngIf="password?.errors?.['pattern']">
+          Parola trebuie să conțină:
+          <br> • Minim 6 caractere
+          <br> • O literă mare (A-Z)
+          <br> • O literă mică (a-z)
+          <br> • O cifră (0-9)
+          <br> • Un simbol special (!#$%).
+        </div>
+        <div *ngIf="password?.errors?.['minlength']">
           Parola trebuie să aibă minim 6 caractere.
-        }
+        </div>
       </div>
-    }
+    </div>
   </div>
 
   <div>

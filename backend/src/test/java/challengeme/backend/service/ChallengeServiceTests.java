@@ -9,6 +9,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -137,5 +141,31 @@ class ChallengeServiceTests {
 
         verify(repository, times(1)).existsById(id);
         verify(repository, never()).deleteById(any());
+    }
+
+    @Test
+    void updateChallenge_shouldReturn403_whenUserNotOwner() {
+        UUID id = UUID.randomUUID();
+
+        Challenge challenge = new Challenge();
+        challenge.setId(id);
+        challenge.setCreatedBy("otherUser");
+
+        when(repository.findById(id)).thenReturn(Optional.of(challenge));
+
+        Authentication auth =
+                new UsernamePasswordAuthenticationToken("theUser", null);
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        ChallengeUpdateRequest req = new ChallengeUpdateRequest("Updated Title",
+                "Updated Description",
+                "Fitness",
+                Challenge.Difficulty.EASY,
+                50,
+                "doesNotMatter");
+
+        assertThrows(ResponseStatusException.class, () -> {
+            service.updateChallenge(id, req);
+        });
     }
 }

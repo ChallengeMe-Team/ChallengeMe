@@ -43,7 +43,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     void testCreateAndGetUser() {
-        User user = new User(null, "Ana", "ana@email.com", "pass123", 10, "user");
+        User user = new User(null, "Ana", "ana@email.com", "Password_123", 10, "user");
 
         // POST
         ResponseEntity<User> postResponse = restTemplate.postForEntity(baseUrl, user, User.class);
@@ -62,10 +62,10 @@ public class UserControllerIntegrationTests {
 
     @Test
     void testUpdateUser() {
-        User initial = new User(null, "Ion", "ion@email.com", "pass123", 5, "user");
+        User initial = new User(null, "Ion", "ion@email.com", "Password_123", 5, "user");
         User saved = userService.createUser(initial);
 
-        User updatedBody = new User(null, "IonUpdated", "ionupdated@email.com", "newpass", 10,"user");
+        User updatedBody = new User(null, "IonUpdated", "ionupdated@email.com", "NewPassword_123", 10,"user");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -87,7 +87,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     void testDeleteUser() {
-        User user = new User(null, "Maria", "maria@email.com", "pass123", 8,"user");
+        User user = new User(null, "Maria", "maria@email.com", "Password_123", 8,"user");
         User saved = userService.createUser(user);
 
         // DELETE

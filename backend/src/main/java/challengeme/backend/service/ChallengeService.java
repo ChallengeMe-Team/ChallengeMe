@@ -6,7 +6,10 @@ import challengeme.backend.model.Challenge;
 import challengeme.backend.exception.ChallengeNotFoundException;
 import challengeme.backend.repository.ChallengeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +37,13 @@ public class ChallengeService {
 
     public Challenge updateChallenge(UUID id, ChallengeUpdateRequest request) {
         Challenge entity = getChallengeById(id);
+
+        // --- Ownership Check ---
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        if (!entity.getCreatedBy().equals(currentUser)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only edit your own challenges.");
+        }
         mapper.updateEntity(request, entity);
         return repository.save(entity);
     }

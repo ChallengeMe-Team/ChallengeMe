@@ -103,7 +103,7 @@ class AuthControllerUnitTests {
     @Test
     void testSignup_Success() throws Exception {
         // Arrange
-        UserCreateRequest request = new UserCreateRequest("newUser", "new@email.com", "password123");
+        UserCreateRequest request = new UserCreateRequest("newUser", "new@email.com", "Password_123");
 
         // Simulăm că username-ul și email-ul NU există
         when(userRepository.existsByUsername("newUser")).thenReturn(false);
@@ -115,7 +115,11 @@ class AuthControllerUnitTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("User registered successfully!"));
+                .andExpect(jsonPath("$.message").value("User registered successfully!"));mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print()) // <--- ADAUGĂ ASTA
+                .andExpect(status().isOk());
     }
 
 }
