@@ -10,7 +10,7 @@ import {ToastComponent} from '../../../shared/toast/toast-component';
 @Component({
   selector: 'app-challenges',
   standalone: true,
-  imports: [CommonModule, ChallengeFormComponent, ToastComponent],
+  imports: [CommonModule, ToastComponent, ChallengeFormComponent],
   templateUrl: './challenges-component.html',
   styleUrls: ['./challenges-component.css']
 })

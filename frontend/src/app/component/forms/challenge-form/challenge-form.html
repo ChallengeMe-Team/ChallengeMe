@@ -32,7 +32,9 @@
 
       <div class="modal-actions">
         <button class="cancel-btn" (click)="cancel.emit()">Cancel</button>
-        <button class="create-btn" (click)="onSubmit()">Create Challenge</button>
+        <button class="create-btn" (click)="onSubmit()">
+          {{ mode === 'edit' ? 'Save Changes' : 'Create Challenge' }}
+        </button>
       </div>
     </div>
   </div>

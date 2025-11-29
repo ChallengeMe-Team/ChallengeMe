@@ -1,28 +1,22 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
-import { NavbarComponent, Page } from './component/navbar/navbar-component';
+import { Router, RouterOutlet } from '@angular/router';
+import { NavbarComponent } from './component/navbar/navbar-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
 import { AuthComponent } from './component/auth/auth-component';
-
-// Definim tipul pentru paginile posibile
-type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth' | 'profile' | 'my-challenges' | 'friends' | 'settings';
 import { AuthService } from './services/auth.service';
-import { AuthComponent } from './component/auth/auth-component';
+
 
 @Component({
-  selector: 'app-root', // Am păstrat app-root pentru a se potrivi cu index.html
+  selector: 'app-root',
   standalone: true,
   imports: [
     CommonModule,
     NavbarComponent,
-    HomeComponent,
-    ChallengesComponent,
-    LeaderboardComponent,
     ChallengeFormComponent,
     ToastComponent,
-    AuthComponent
+    RouterOutlet
   ],
   templateUrl: './app-component.html',
   styleUrls: ['./app-component.css'],
@@ -33,25 +27,11 @@ export class AppComponent {
   private router = inject(Router);
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
-  currentPage: Page = 'home';
-  isFormVisible = false;
 
+  isFormVisible = false;
   toastVisible = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
-
-  // Funcție pentru navigarea manuală (fără Router)
-  onNavigate(page: Page) {
-    this.currentPage = page;
-
-    if (page === 'home') this.router.navigate(['/']);
-    else if (page === 'challenges') this.router.navigate(['/challenges']);
-    else if (page === 'leaderboard') this.router.navigate(['/leaderboard']);
-    else if (page === 'auth') {
-      this.authService.logout();
-      this.router.navigate(['/auth']);
-    }
-  }
 
   openForm() {
     this.isFormVisible = true;
@@ -76,12 +56,18 @@ export class AppComponent {
 
   onActivate(componentRef: any) {
     if (componentRef instanceof AuthComponent) {
-      componentRef.toastEvent.subscribe((event: { message: string; type: "success" | "error"; }) => {
-        this.showToast(event.message, event.type);
-      });
-      componentRef.authSuccess.subscribe(() => {
-        this.router.navigate(['/']);
-      });
+      if (componentRef.toastEvent) {
+        componentRef.toastEvent.subscribe((event: { message: string; type: "success" | "error"; }) => {
+          this.showToast(event.message, event.type);
+        });
+      }
+
+      if (componentRef.authSuccess) {
+        componentRef.authSuccess.subscribe(() => {
+          // După login, rutăm către Home
+          this.router.navigate(['/']);
+        });
+      }
     }
   }
 }

@@ -54,8 +54,25 @@
 
 </section>
 
+<app-challenge-form
+  *ngIf="isEditModalOpen()"
+  [mode]="'edit'"
+  [challengeData]="editChallenge()"
+  (cancel)="isEditModalOpen.set(false)"
+  (submitChallenge)="onChallengeUpdated($event)">
+</app-challenge-form>
+
+<app-challenge-form
+  *ngIf="isCreateModalOpen()"
+  [mode]="'create'"
+  (cancel)="closeCreateModal()"
+  (submitChallenge)="onChallengeCreated()">
+</app-challenge-form>
+
 <app-toast
   *ngIf="toastMessage()"
   [message]="toastMessage()!"
   [type]="toastType()">
 </app-toast>
+
+
