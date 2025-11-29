@@ -1,36 +1,31 @@
 <!-- Navbar -->
 <app-navbar
+  *ngIf="isLoggedIn()"
   [currentPage]="currentPage"
   (navigateRequest)="onNavigate($event)"
   (createChallengeRequest)="openForm()">
 </app-navbar>
 
 <!-- Pagini -->
-<main class="p-8">
-  <app-home
-    *ngIf="currentPage === 'home'"
-    (startChallengeRequest)="openForm()"
-    (exploreChallenges)="onNavigate('challenges')">
-  </app-home>
+<main
+  [class.pt-20]="isLoggedIn()"
+  [class.h-screen]="!isLoggedIn()"
+  [class.flex]="!isLoggedIn()"
+  [class.items-center]="!isLoggedIn()"
+  [class.justify-center]="!isLoggedIn()">
 
-  <app-challenges *ngIf="currentPage === 'challenges'"></app-challenges>
-  <app-leaderboard *ngIf="currentPage === 'leaderboard'"></app-leaderboard>
-  <app-auth-container
-    *ngIf="currentPage === 'auth'"
-    (toastEvent)="showToast($event.message, $event.type)"
-    (authSuccess)="onNavigate('home')"
-  >
-  </app-auth-container>
+  <router-outlet (activate)="onActivate($event)"></router-outlet>
+
 </main>
 
-<!-- Formular Create Challenge -->
+<!-- Formular Create Challenge (Global) -->
 <app-challenge-form
   *ngIf="isFormVisible"
   (cancel)="closeForm()"
   (submitChallenge)="handleSubmit($event)">
 </app-challenge-form>
 
-<!-- Toast elegant -->
+<!-- Toast Global pentru mesaje -->
 <app-toast
   *ngIf="toastVisible"
   [message]="toastMessage"

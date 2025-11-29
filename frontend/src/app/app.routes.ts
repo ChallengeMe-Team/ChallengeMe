@@ -1,15 +1,43 @@
-import { Routes } from '@angular/router';
-import { HomeComponent } from './component/pages/home/home-component';
-import { ChallengesComponent } from './component/pages/challenges/challenges-component';
-import { LeaderboardComponent } from './component/pages/leaderboard/leaderboard-component';
+import {Routes} from '@angular/router';
+import {HomeComponent} from './component/pages/home/home-component';
+import {ChallengesComponent} from './component/pages/challenges/challenges-component';
+import {LeaderboardComponent} from './component/pages/leaderboard/leaderboard-component';
 import {AuthComponent} from './component/auth/auth-component';
+import {authGuard} from './auth.guard';
+import {inject} from '@angular/core';
+import {AuthService} from './services/auth.service';
+import {Router} from '@angular/router';
 
+const guestGuard = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  if (authService.isLoggedIn()) {
+    return router.createUrlTree(['/']);
+  }
+  return true;
+};
 export const routes: Routes = [
-  { path: '', component: HomeComponent },      // pagina principală
-  { path: 'challenges', component: ChallengesComponent },
-  { path: 'leaderboard', component: LeaderboardComponent },
-  {path: 'auth', component: AuthComponent},
-  { path: '**', redirectTo: '' }                    // fallback pentru rute necunoscute
+  {
+    path: '',
+    component: HomeComponent,
+    canActivate: [authGuard] // Protejat
+  },
+  {
+    path: 'challenges',
+    component: ChallengesComponent,
+    canActivate: [authGuard] // Protejat
+  },
+  {
+    path: 'leaderboard',
+    component: LeaderboardComponent,
+    canActivate: [authGuard] // Protejat
+  },
+  {
+    path: 'auth',
+    component: AuthComponent,
+    canActivate: [guestGuard] // Accesibil doar dacă NU ești logat
+  },
+  {path: '**', redirectTo: ''} // Orice altă rută duce la Home (care va verifica authGuard)
 ];
 
 
