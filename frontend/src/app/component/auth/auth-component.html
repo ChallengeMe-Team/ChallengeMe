@@ -1,0 +1,39 @@
+<div class="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-4 pt-16">
+  <div class="w-full max-w-sm bg-[#1a1627] p-8 rounded-xl shadow-2xl card-shadow relative">
+
+    <h2 class="text-3xl font-extrabold text-center mb-6 gradient-text-title">
+      @if (isLoginMode()) {
+        Login
+      } @else {
+        Înregistrare
+      }
+    </h2>
+
+    @if (isLoading()) {
+      <div class="absolute inset-0 bg-[#1a1627] bg-opacity-95 flex flex-col items-center justify-center rounded-xl z-10">
+        <lucide-icon name="loader-2" class="w-8 h-8 text-indigo-400 animate-spin"></lucide-icon>
+        <p class="text-sm text-gray-400 mt-3">
+          @if (isLoginMode()) {
+            Verificare credențiale...
+          } @else {
+            Creare cont...
+          }
+        </p>
+      </div>
+    }
+
+    <div [class.opacity-50]="isLoading()">
+      @if (isLoginMode()) {
+        <app-login-form
+          (loginRequest)="handleLogin($event)"
+          (toggleMode)="toggleMode()"
+        />
+      } @else {
+        <app-signup-form
+          (signupRequest)="handleSignup($event)"
+          (toggleMode)="toggleMode()"
+        />
+      }
+    </div>
+  </div>
+</div>

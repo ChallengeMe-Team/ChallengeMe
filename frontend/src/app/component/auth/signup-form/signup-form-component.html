@@ -1,0 +1,69 @@
+<form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-3">
+
+  <div>
+    <label for="username">Username</label>
+    <input id="username" type="text" formControlName="username" placeholder="Alege un nume de utilizator" />
+
+    @if (username?.touched && username?.invalid) {
+      <div class="error-message">
+        @if (username?.errors?.['required']) {
+          Numele de utilizator este obligatoriu.
+        } @else if (username?.errors?.['minlength']) {
+          Numele trebuie să aibă minim 3 caractere.
+        }
+      </div>
+    }
+  </div>
+
+  <div>
+    <label for="email">Adresă Email</label>
+    <input id="email" type="email" formControlName="email" placeholder="Adresa ta de email" />
+
+    @if (email?.touched && email?.invalid) {
+      <div class="error-message">
+        @if (email?.errors?.['required']) {
+          Adresa de email este obligatorie.
+        } @else if (email?.errors?.['email']) {
+          Formatul adresei de email este invalid.
+        }
+      </div>
+    }
+  </div>
+
+  <div>
+    <label for="password">Parolă</label>
+    <input id="password" type="password" formControlName="password" placeholder="Minim 6 caractere" />
+
+    @if (password?.touched && password?.invalid) {
+      <div class="error-message">
+        @if (password?.errors?.['required']) {
+          Parola este obligatorie.
+        } @else if (password?.errors?.['minlength']) {
+          Parola trebuie să aibă minim 6 caractere.
+        }
+      </div>
+    }
+  </div>
+
+  <div>
+    <label for="passwordConfirmation">Confirmă Parola</label>
+    <input id="passwordConfirmation" type="password" formControlName="passwordConfirmation" placeholder="Reintrodu parola" />
+
+    @if (passwordConfirmation?.touched && (passwordConfirmation?.invalid || signupForm.errors?.['passwordMismatch'])) {
+      <div class="error-message">
+        @if (passwordConfirmation?.errors?.['required']) {
+          Confirmarea parolei este obligatorie.
+        } @else if (signupForm.errors?.['passwordMismatch']) {
+          Parolele nu se potrivesc.
+        }
+      </div>
+    }
+  </div>
+
+  <button type="submit"
+          [disabled]="signupForm.invalid"
+          class="w-full px-4 py-3 rounded-xl gradient-text-button mt-6 font-bold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+    Creează Cont
+  </button>
+
+</form>
