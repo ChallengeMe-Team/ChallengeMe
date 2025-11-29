@@ -35,8 +35,15 @@ export class SignupFormComponent {
   signupForm: FormGroup = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
-    passwordConfirmation: ['', Validators.required]
+    password: ['', [
+      Validators.required,
+      // ---------------------------------------------------------------------------------------------------
+      // Adăugăm noul validator de pattern (folosind același regex ca pe Backend, dar fără escapări Java)
+      // ---------------------------------------------------------------------------------------------------
+      // Regex: Min 6 chars, at least 1 Digit, 1 Lowercase, 1 Uppercase, 1 Symbol
+      Validators.pattern('^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()\\-_+=<>?/{}\\[\\]|:;\"\'.,~`]).{6,}$')
+    ]],
+    passwordConfirmation: ['', [Validators.required]],
   }, { validators: passwordMatchValidator });
 
   // Getteri pentru a accesa ușor controalele în HTML (evită erorile de tip 'private member')
