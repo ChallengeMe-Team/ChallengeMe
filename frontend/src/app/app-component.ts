@@ -4,18 +4,25 @@ import { Router, RouterModule } from '@angular/router';
 import { NavbarComponent, Page } from './component/navbar/navbar-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
+import { AuthComponent } from './component/auth/auth-component';
+
+// Definim tipul pentru paginile posibile
+type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth' | 'profile' | 'my-challenges' | 'friends' | 'settings';
 import { AuthService } from './services/auth.service';
 import { AuthComponent } from './component/auth/auth-component';
 
 @Component({
-  selector: 'app-component',
+  selector: 'app-root', // Am păstrat app-root pentru a se potrivi cu index.html
   standalone: true,
   imports: [
-    NavbarComponent,
     CommonModule,
+    NavbarComponent,
+    HomeComponent,
+    ChallengesComponent,
+    LeaderboardComponent,
     ChallengeFormComponent,
     ToastComponent,
-    RouterModule
+    AuthComponent
   ],
   templateUrl: './app-component.html',
   styleUrls: ['./app-component.css'],
@@ -33,6 +40,7 @@ export class AppComponent {
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
+  // Funcție pentru navigarea manuală (fără Router)
   onNavigate(page: Page) {
     this.currentPage = page;
 
@@ -45,8 +53,13 @@ export class AppComponent {
     }
   }
 
-  openForm() { this.isFormVisible = true; }
-  closeForm() { this.isFormVisible = false; }
+  openForm() {
+    this.isFormVisible = true;
+  }
+
+  closeForm() {
+    this.isFormVisible = false;
+  }
 
   handleSubmit(challenge: any) {
     console.log('Challenge created:', challenge);
