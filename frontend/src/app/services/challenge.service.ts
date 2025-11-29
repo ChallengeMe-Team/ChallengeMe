@@ -22,4 +22,9 @@ export class ChallengeService {
   createChallenge(challenge: any): Observable<Challenge> {
     return this.http.post<Challenge>(this.apiUrl, challenge);
   }
+
+  updateChallenge(id: string, data: any) {
+    return this.http.put(`${this.apiUrl}/${id}`, data);
+  }
+
 }
