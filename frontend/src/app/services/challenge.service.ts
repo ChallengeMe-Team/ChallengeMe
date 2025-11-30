@@ -27,4 +27,8 @@ export class ChallengeService {
     return this.http.put(`${this.apiUrl}/${id}`, data);
   }
 
+  deleteChallenge(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
 }

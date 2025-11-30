@@ -31,7 +31,8 @@ export class ChallengesComponent implements OnInit {
   editChallenge = signal<any | null>(null);
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
-
+  isDeleteModalOpen = signal(false);
+  challengeToDelete = signal<Challenge | null>(null);
 
 
   ngOnInit(): void {
@@ -101,5 +102,49 @@ export class ChallengesComponent implements OnInit {
       this.toastMessage.set(null);
     }, 3000);
   }
+  onRightClick(event: MouseEvent, challenge: Challenge) {
+    // 1. Oprim meniul browserului (Inspect, Save As, etc.)
+    event.preventDefault();
 
+    const user = this.auth.currentUser();
+
+    // 2. Verificam Ownership-ul
+    if (!user || user.username !== challenge.createdBy) {
+      // Cazul A: Nu esti proprietar -> Eroare Rosie
+      this.showToast("You can only delete challenges created by you.", "error");
+      return;
+    }
+
+    // Cazul B: Esti proprietar -> Deschidem fereastra de confirmare
+    this.challengeToDelete.set(challenge);
+    this.isDeleteModalOpen.set(true);
+  }
+  confirmDelete() {
+    const challenge = this.challengeToDelete();
+    if (!challenge) return;
+
+    // Apelam Backend-ul
+    this.challengeService.deleteChallenge(challenge.id).subscribe({
+      next: () => {
+        // Succes: Mesaj Verde + Scoatem din lista instant (fara reload la toata pagina)
+        this.showToast("Challenge deleted successfully.", "success");
+
+        // Actualizam lista locala (filtram elementul sters)
+        this.challenges.update(prev => prev.filter(c => c.id !== challenge.id));
+
+        // Inchidem modala
+        this.closeDeleteModal();
+      },
+      error: (err) => {
+        // Eroare (ex: Backend-ul zice 403 Forbidden daca cineva a "fentat" UI-ul)
+        console.error(err);
+        this.showToast("Error deleting challenge.", "error");
+        this.closeDeleteModal();
+      }
+    });
+  }
+  closeDeleteModal() {
+    this.isDeleteModalOpen.set(false);
+    this.challengeToDelete.set(null);
+  }
 }
