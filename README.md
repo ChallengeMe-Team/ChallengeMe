@@ -75,6 +75,22 @@ After starting the database, populate it with initial data so that everyone has 
 type D:\ChallengeMe\backend\data.sql | docker exec -i challengeme-db psql -U postgres -d challengeme
 ```
 
+#### 4️⃣ Database Verification & Management
+Use these commands to check if your database is correctly set up and running.
+
+
+```Bash
+#Check tables in the database: 
+# This lists all existing tables to ensure the schema was created.
+docker exec -it challengeme-db psql -U postgres -d challengeme -c "\dt"
+```
+
+```Bash
+#Check data in a specific table: 
+# For example, to view all registered users:
+docker exec -it challengeme-db psql -U postgres -d challengeme -c "SELECT * FROM us
+````
+
 ### 🟦 Alternative Option: Local PostgreSQL + pgAdmin 4
 If you prefer not to use Docker, install PostgreSQL manually.
 
@@ -224,7 +240,7 @@ After populating the database [data.sql](), you can login with:
 
 **Email**: [emilia@example.com]() (or any other user from the list)
 
-**Password**: [123456]()
+**Password**: [Password_123]()
 
 #### **_Note_**: If any changes are to be made in [data.sql](), please update the login credentials above
 
