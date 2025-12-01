@@ -15,7 +15,7 @@ import {ToastComponent} from '../../../shared/toast/toast-component';
   styleUrls: ['./challenges-component.css']
 })
 export class ChallengesComponent implements OnInit {
-  private challengeService = inject(ChallengeService);
+  public challengeService = inject(ChallengeService);
   private cdr = inject(ChangeDetectorRef);
   private auth = inject(AuthService);
 
@@ -24,7 +24,6 @@ export class ChallengesComponent implements OnInit {
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
 
   // State for modal
-  isCreateModalOpen = signal(false);
   isLoading = signal(false);
   errorMessage = signal('');
   isEditModalOpen = signal(false);
@@ -59,17 +58,31 @@ export class ChallengesComponent implements OnInit {
     return this.challenges().filter(c => c.difficulty === difficulty);
   }
 
-  openCreateModal() {
-    this.isCreateModalOpen.set(true);
-  }
-
   closeCreateModal() {
-    this.isCreateModalOpen.set(false);
+    this.challengeService.isCreateModalOpen.set(false);
   }
 
-  onChallengeCreated() {
-    this.loadChallenges();
-    this.closeCreateModal();
+  onCreateChallenge(formValues: any) {
+    const user = this.auth.currentUser();
+    const newChallenge = {
+      ...formValues,
+      createdBy: user ? user.username : 'Anonymous'
+    };
+
+    this.isLoading.set(true);
+
+    this.challengeService.createChallenge(newChallenge).subscribe({
+      next: (createdChallenge) => {
+        this.showToast("Challenge created successfully!", "success");
+        this.closeCreateModal();
+        this.loadChallenges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.showToast("Error creating challenge.", "error");
+        this.isLoading.set(false);
+      }
+    });
   }
   onChallengeDoubleClick(challenge: Challenge) {
     const user = this.auth.currentUser();

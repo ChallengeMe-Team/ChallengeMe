@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Challenge } from '../component/pages/challenges/challenge.model';
@@ -11,6 +11,8 @@ export class ChallengeService {
 
   // The URL must be complete and point to port 8080 of the backend
   private apiUrl = 'http://localhost:8080/api/challenges';
+
+  isCreateModalOpen = signal(false);
 
   constructor() { }
 
