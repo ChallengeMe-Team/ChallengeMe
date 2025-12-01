@@ -1,45 +1,45 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './component/navbar/navbar-component';
-import { HomeComponent } from './component/pages/home/home-component';
-import { ChallengesComponent } from './component/pages/challenges/challenges-component';
-import { LeaderboardComponent } from './component/pages/leaderboard/leaderboard-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
-import {AuthComponent} from './component/auth/auth-component';
+import { AuthComponent } from './component/auth/auth-component';
+import { AuthService } from './services/auth.service';
 
-
-type Page = 'home' | 'challenges' | 'leaderboard' | 'create' | 'auth';
 
 @Component({
-  selector: 'app-component',
+  selector: 'app-root',
   standalone: true,
-  imports: [NavbarComponent,
-    HomeComponent,
-    ChallengesComponent,
-    LeaderboardComponent,
+  imports: [
     CommonModule,
+    NavbarComponent,
     ChallengeFormComponent,
-    ToastComponent, AuthComponent
+    ToastComponent,
+    RouterOutlet
   ],
   templateUrl: './app-component.html',
   styleUrls: ['./app-component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-  currentPage: Page = 'auth';
-  isFormVisible = false;
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
+  isLoggedIn = computed(() => !!this.authService.currentUser());
+
+  isFormVisible = false;
   toastVisible = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
-  onNavigate(page: Page) {
-    this.currentPage = page;
+  openForm() {
+    this.isFormVisible = true;
   }
 
-  openForm() { this.isFormVisible = true; }
-  closeForm() { this.isFormVisible = false; }
+  closeForm() {
+    this.isFormVisible = false;
+  }
 
   handleSubmit(challenge: any) {
     console.log('Challenge created:', challenge);
@@ -52,5 +52,22 @@ export class AppComponent {
     this.toastType = type;
     this.toastVisible = true;
     setTimeout(() => this.toastVisible = false, 3000);
+  }
+
+  onActivate(componentRef: any) {
+    if (componentRef instanceof AuthComponent) {
+      if (componentRef.toastEvent) {
+        componentRef.toastEvent.subscribe((event: { message: string; type: "success" | "error"; }) => {
+          this.showToast(event.message, event.type);
+        });
+      }
+
+      if (componentRef.authSuccess) {
+        componentRef.authSuccess.subscribe(() => {
+          // După login, rutăm către Home
+          this.router.navigate(['/']);
+        });
+      }
+    }
   }
 }

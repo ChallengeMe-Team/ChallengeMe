@@ -1,7 +1,7 @@
 <div class="modal-overlay">
   <div class="modal-container">
     <div class="modal-header">
-      <h2 class="gradient-text">Create New Challenge</h2>
+      <h2 class="gradient-text">{{ mode === 'edit' ? 'Edit Challenge' : 'Create New Challenge' }}</h2>
       <button class="close-btn" (click)="cancel.emit()">×</button>
     </div>
 
@@ -32,7 +32,9 @@
 
       <div class="modal-actions">
         <button class="cancel-btn" (click)="cancel.emit()">Cancel</button>
-        <button class="create-btn" (click)="onSubmit()">Create Challenge</button>
+        <button class="create-btn" (click)="onSubmit()">
+          {{ mode === 'edit' ? 'Save Changes' : 'Create Challenge' }}
+        </button>
       </div>
     </div>
   </div>

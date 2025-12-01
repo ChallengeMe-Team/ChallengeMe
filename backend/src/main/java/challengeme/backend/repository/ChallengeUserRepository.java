@@ -10,6 +10,8 @@ import java.util.UUID;
 @Repository
 public interface ChallengeUserRepository extends JpaRepository<ChallengeUser, UUID> {
     List<ChallengeUser> findByUserId(UUID userId);
+
+    void deleteAllByChallengeId(UUID challengeId);
 }
 
 
