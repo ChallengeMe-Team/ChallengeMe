@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, Output, EventEmitter, inject, ElementRef, HostListener } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ChallengeService } from '../../services/challenge.service';
 import { LucideAngularModule, User, FileText, Users, Settings, LogOut, ChevronDown, PlusCircle, Menu } from 'lucide-angular';
 
 @Component({
@@ -13,9 +14,9 @@ import { LucideAngularModule, User, FileText, Users, Settings, LogOut, ChevronDo
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NavbarComponent {
-  @Output() createChallengeRequest = new EventEmitter<void>();
 
   private authService = inject(AuthService);
+  private challengeService = inject(ChallengeService);
   private elementRef = inject(ElementRef);
   private router = inject(Router);
 
@@ -44,7 +45,8 @@ export class NavbarComponent {
   toggleDropdown() { this.isDropdownOpen = !this.isDropdownOpen; }
 
   onCreateChallenge() {
-    this.createChallengeRequest.emit();
+    this.challengeService.isCreateModalOpen.set(true);
+    this.router.navigate(['/challenges']);
     this.isMenuOpen = false;
   }
 

@@ -64,10 +64,10 @@
 </app-challenge-form>
 
 <app-challenge-form
-  *ngIf="isCreateModalOpen()"
+  *ngIf="challengeService.isCreateModalOpen()"
   [mode]="'create'"
-  (cancel)="closeCreateModal()"
-  (submitChallenge)="onChallengeCreated()">
+  (cancel)="challengeService.isCreateModalOpen.set(false)"
+  (submitChallenge)="onCreateChallenge($event)">
 </app-challenge-form>
 
 <app-toast
