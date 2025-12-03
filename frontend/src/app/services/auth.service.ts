@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, tap, catchError, of } from 'rxjs';
 
 @Injectable({
@@ -7,6 +8,7 @@ import { Observable, tap, catchError, of } from 'rxjs';
 })
 export class AuthService {
   private http = inject(HttpClient);
+  private router = inject(Router);
   // URL-ul Backend-ului
   private apiUrl = 'http://localhost:8080/api/auth';
 
@@ -48,8 +50,7 @@ export class AuthService {
   logout() {
     localStorage.removeItem(this.TOKEN_KEY);
     this.currentUser.set(null);
-    // Optional: Aici poti face redirect catre Home
-    // this.router.navigate(['/']);
+    this.router.navigate(['/']);
   }
 
   // --- UTILITARE ---

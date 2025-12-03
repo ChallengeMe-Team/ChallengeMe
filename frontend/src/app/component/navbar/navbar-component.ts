@@ -1,4 +1,12 @@
-import { Component, ChangeDetectionStrategy, inject, ElementRef, HostListener } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  ElementRef,
+  HostListener,
+  EventEmitter,
+  Output
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -19,6 +27,9 @@ export class NavbarComponent {
   private challengeService = inject(ChallengeService);
   private elementRef = inject(ElementRef);
   private router = inject(Router);
+
+  @Output() createChallengeRequest = new EventEmitter<void>();
+  @Output() toastRequest = new EventEmitter<{message: string, type: 'success' | 'error'}>();
 
   // Icons
   readonly icons = { User, FileText, Users, Settings, LogOut, ChevronDown, PlusCircle, Menu };
