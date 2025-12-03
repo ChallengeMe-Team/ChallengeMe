@@ -1,0 +1,102 @@
+.friends-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+  color: #fff;
+}
+
+.header {
+  border-bottom: 1px solid #333;
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.badge {
+  background-color: #3f51b5;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  margin-left: 10px;
+}
+
+.subtitle { color: #aaa; margin-top: 5px; }
+
+/* GRID RESPONSIVE */
+.friends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Auto-aranjare */
+  gap: 20px;
+}
+
+/* CARD DESIGN */
+.friend-card {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.friend-card:hover {
+  transform: translateY(-5px);
+  border-color: #3f51b5;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  background-color: #3f51b5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  border: 3px solid #2c2c2c;
+}
+
+.username { margin: 0; font-size: 1.1rem; }
+.stats { margin: 5px 0 15px 0; color: #aaa; font-size: 0.9rem; }
+
+.btn-profile {
+  background: transparent;
+  border: 1px solid #3f51b5;
+  color: #3f51b5;
+  padding: 5px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-profile:hover {
+  background: #3f51b5;
+  color: white;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  grid-column: 1 / -1; /* Ocupă tot rândul */
+  text-align: center;
+  padding: 4rem;
+  background: #1a1a1a;
+  border-radius: 10px;
+  border: 2px dashed #333;
+}
+.empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+
+/* LOADING */
+.loading-state { text-align: center; margin-top: 50px; }
+.spinner {
+  width: 40px; height: 40px;
+  border: 4px solid rgba(255,255,255,0.1);
+  border-left-color: #3f51b5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
