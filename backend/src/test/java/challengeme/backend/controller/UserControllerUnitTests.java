@@ -53,8 +53,8 @@ public class UserControllerUnitTests {
 
     @Test
     void testGetAllUsers() throws Exception {
-        User u1 = new User(UUID.randomUUID(), "Ana", "ana@email.com", "pass123", 10, "user");
-        User u2 = new User(UUID.randomUUID(), "Ion", "ion@email.com", "pass456", 5, "user");
+        User u1 = new User(UUID.randomUUID(), "Ana", "ana@email.com", "Password_123", 10, "user");
+        User u2 = new User(UUID.randomUUID(), "Ion", "ion@email.com", "Password_456", 5, "user");
 
         UserDTO dto1 = new UserDTO();
         dto1.setId(u1.getId()); dto1.setUsername(u1.getUsername()); dto1.setEmail(u1.getEmail()); dto1.setPoints(u1.getPoints());
@@ -75,7 +75,7 @@ public class UserControllerUnitTests {
     @Test
     void testGetUserById_Success() throws Exception {
         UUID id = UUID.randomUUID();
-        User user = new User(id, "Ana", "ana@email.com", "pass123", 0, "user");
+        User user = new User(id, "Ana", "ana@email.com", "Password_123", 0, "user");
         UserDTO dto = new UserDTO();
         dto.setId(id); dto.setUsername("Ana"); dto.setEmail("ana@email.com"); dto.setPoints(10);
 
@@ -99,7 +99,7 @@ public class UserControllerUnitTests {
 
     @Test
     void testCreateUser() throws Exception {
-        UserCreateRequest req = new UserCreateRequest("Ana", "ana@email.com", "pass123");
+        UserCreateRequest req = new UserCreateRequest("Ana", "ana@email.com", "Password_123");
         User created = new User(UUID.randomUUID(), req.getUsername(), req.getEmail(), req.getPassword(), 0, "user");
         UserDTO dto = new UserDTO();
         dto.setId(created.getId()); dto.setUsername("Ana"); dto.setEmail("ana@email.com"); dto.setPoints(0);
@@ -118,8 +118,8 @@ public class UserControllerUnitTests {
     @Test
     void testUpdateUser_Success() throws Exception {
         UUID id = UUID.randomUUID();
-        UserUpdateRequest req = new UserUpdateRequest("AnaUpdated","anaupdated@email.com","newpass",15);
-        User updated = new User(id,"AnaUpdated","anaupdated@email.com","newpass",15, "user");
+        UserUpdateRequest req = new UserUpdateRequest("AnaUpdated","anaupdated@email.com","NewPassword_123",15);
+        User updated = new User(id,"AnaUpdated","anaupdated@email.com","NewPassword_123",15, "user");
         UserDTO dto = new UserDTO();
         dto.setId(id); dto.setUsername("AnaUpdated"); dto.setEmail("anaupdated@email.com"); dto.setPoints(15);
 
@@ -136,7 +136,7 @@ public class UserControllerUnitTests {
     @Test
     void testUpdateUser_NotFound() throws Exception {
         UUID id = UUID.randomUUID();
-        UserUpdateRequest req = new UserUpdateRequest("AnaUpdated","anaupdated@email.com","newpass",15);
+        UserUpdateRequest req = new UserUpdateRequest("AnaUpdated","anaupdated@email.com","NewPassword_123",15);
         when(userService.updateUser(eq(id), any(UserUpdateRequest.class)))
                 .thenThrow(new UserNotFoundException("User with id " + id + " not found"));
 

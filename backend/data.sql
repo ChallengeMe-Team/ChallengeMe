@@ -9,20 +9,20 @@ TRUNCATE TABLE users CASCADE;
 
 -- ===========================
 -- Users
--- Parola pentru toti userii este: 123456
--- Hash-ul BCrypt este: $2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi
+-- Parola pentru toti userii este: Password_123
+-- Hash-ul BCrypt este: $2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC
 INSERT INTO users (id, username, email, password, points, role) VALUES
-                                                                    ('11111111-1111-1111-1111-111111111111', 'emilia', 'emilia@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 120, 'user'),
-                                                                    ('22222222-2222-2222-2222-222222222222', 'roger', 'roger@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 200, 'user'),
-                                                                    ('33333333-3333-3333-3333-333333333333', 'calin', 'calin@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 180, 'user'),
-                                                                    ('44444444-4444-4444-4444-444444444444', 'alex', 'alex@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 90, 'user'),
-                                                                    ('55555555-5555-5555-5555-555555555555', 'iustin', 'iustin@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 75, 'user'),
-                                                                    ('66666666-6666-6666-6666-666666666666', 'emanuel', 'emanuel@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 130, 'user'),
-                                                                    ('77777777-7777-7777-7777-777777777777', 'stefan', 'stefan@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 110, 'user'),
-                                                                    ('88888888-8888-8888-8888-888888888888', 'tudor', 'tudor@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 95, 'user'),
-                                                                    ('99999999-9999-9999-9999-999999999999', 'ana', 'ana@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 60, 'user'),
-                                                                    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'maria', 'maria@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 50, 'user'),
-                                                                    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'george', 'george@example.com', '$2a$10$SIILJPRDbZLIj0VdrZew4.6hb/aEczRgh48cnep3ssNRgWVJgWRgi', 40, 'user');
+                                                                    ('11111111-1111-1111-1111-111111111111', 'emilia', 'emilia@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 120, 'user'),
+                                                                    ('22222222-2222-2222-2222-222222222222', 'roger', 'roger@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 200, 'user'),
+                                                                    ('33333333-3333-3333-3333-333333333333', 'calin', 'calin@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 180, 'user'),
+                                                                    ('44444444-4444-4444-4444-444444444444', 'alex', 'alex@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 90, 'user'),
+                                                                    ('55555555-5555-5555-5555-555555555555', 'iustin', 'iustin@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 75, 'user'),
+                                                                    ('66666666-6666-6666-6666-666666666666', 'emanuel', 'emanuel@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 130, 'user'),
+                                                                    ('77777777-7777-7777-7777-777777777777', 'stefan', 'stefan@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 110, 'user'),
+                                                                    ('88888888-8888-8888-8888-888888888888', 'tudor', 'tudor@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 95, 'user'),
+                                                                    ('99999999-9999-9999-9999-999999999999', 'ana', 'ana@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 60, 'user'),
+                                                                    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'maria', 'maria@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 50, 'user'),
+                                                                    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'george', 'george@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 40, 'user');
 
 -- ===========================
 -- Badges

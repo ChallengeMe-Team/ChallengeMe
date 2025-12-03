@@ -39,5 +39,3 @@ export const routes: Routes = [
   },
   {path: '**', redirectTo: ''} // Orice altă rută duce la Home (care va verifica authGuard)
 ];
-
-

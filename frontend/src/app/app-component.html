@@ -1,15 +1,12 @@
-<!-- Navbar -->
 <app-navbar
   *ngIf="isLoggedIn()"
-  [currentPage]="currentPage"
-  (navigateRequest)="onNavigate($event)"
   (createChallengeRequest)="openForm()">
 </app-navbar>
 
-<!-- Pagini -->
 <main
-  [class.pt-20]="isLoggedIn()"
-  [class.h-screen]="!isLoggedIn()"
+  class="min-h-screen bg-[#0f0e13] text-white"
+  [class.pt-24]="isLoggedIn()"
+  [class.p-8]="isLoggedIn()"
   [class.flex]="!isLoggedIn()"
   [class.items-center]="!isLoggedIn()"
   [class.justify-center]="!isLoggedIn()">
@@ -18,14 +15,12 @@
 
 </main>
 
-<!-- Formular Create Challenge (Global) -->
 <app-challenge-form
   *ngIf="isFormVisible"
   (cancel)="closeForm()"
   (submitChallenge)="handleSubmit($event)">
 </app-challenge-form>
 
-<!-- Toast Global pentru mesaje -->
 <app-toast
   *ngIf="toastVisible"
   [message]="toastMessage"
