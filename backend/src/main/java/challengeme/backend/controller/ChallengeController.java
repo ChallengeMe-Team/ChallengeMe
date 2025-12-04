@@ -56,4 +56,12 @@ public class ChallengeController {
         service.deleteChallenge(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/user/{username}")
+    public List<ChallengeDTO> getByUser(@PathVariable String username) {
+        return service.getChallengesByCreator(username)
+                .stream()
+                .map(mapper::toDTO)
+                .toList();
+    }
 }
