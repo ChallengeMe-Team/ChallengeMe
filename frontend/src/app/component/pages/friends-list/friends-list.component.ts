@@ -1,45 +1,39 @@
-// friends-list.component.ts
-
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FriendDTO, UserService } from '../../../services/user.service';
-
-// ------------------------------------------------------------------
-// DATE HARDCODATE PENTRU TESTARE (MOCK DATA)
-// ------------------------------------------------------------------
-const MOCK_FRIENDS: FriendDTO[] = [
-  { id: 'mock-1', username: 'Andrei_Coder', points: 8750 },
-  { id: 'mock-2', username: 'Elena_UX', points: 6420 },
-  { id: 'mock-3', username: 'Mihai_DevOps', points: 4980 },
-  { id: 'mock-4', username: 'Sofia_Tester', points: 3100 },
-  { id: 'mock-5', username: 'Gigi_The_CodeMaster', points: 5500 },
-];
-// ------------------------------------------------------------------
+import { AuthService } from '../../../services/auth.service';
+import {ToastComponent} from '../../../shared/toast/toast-component';
+import {FormsModule} from '@angular/forms';
 
 @Component({
   selector: 'app-friends-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ToastComponent, FormsModule],
   templateUrl: './friends-list.component.html',
   styleUrl: './friends-list.component.css'
 })
 export class FriendsListComponent implements OnInit {
+
   private userService = inject(UserService);
+  private authService = inject(AuthService);
 
-  private currentUserId = '1373b29e-d23c-45a4-85b8-21d1d7da2495';
+  currentUserId = '';
+  friends = signal<FriendDTO[]>([]);
+  isLoading = signal(false);
 
-  //Inițializăm friends direct cu datele hardcodate
-  friends = signal<FriendDTO[]>(MOCK_FRIENDS);
-  //Setăm isLoading pe false, deoarece nu mai așteptăm răspunsul API
-  isLoading = signal<boolean>(false);
+  // For the "Add Friend" input
+  friendUsername = signal('');
+
+  // Toast state
+  toastMessage = signal('');
+  toastType = signal<'success'|'error'>('success');
+  showToast = signal(false);
 
   ngOnInit() {
-    // Am comentat sau șters apelul la funcția care cheamă API-ul,
-    // pentru a folosi datele MOCK.
-    // this.loadFriends();
+    this.currentUserId = this.authService.currentUser()?.id;
+    this.loadFriends();
   }
 
-  // Păstrăm funcția loadFriends, dar nu o mai apelăm în ngOnInit.
   loadFriends() {
     this.isLoading.set(true);
     this.userService.getFriends(this.currentUserId).subscribe({
@@ -47,10 +41,52 @@ export class FriendsListComponent implements OnInit {
         this.friends.set(data);
         this.isLoading.set(false);
       },
-      error: (err) => {
-        console.error('Error loading friends', err);
+      error: () => {
+        this.show('Error fetching friends', 'error');
         this.isLoading.set(false);
       }
     });
+  }
+
+  // ADD FRIEND FLOW
+  addFriend() {
+    const username = this.friendUsername().trim();
+
+    if (!username) return;
+
+    // Check if already friend
+    if (this.friends().some(f => f.username === username)) {
+      return this.show("User is already your friend", 'error');
+    }
+
+    // Search in DB
+    this.userService.searchUser(username).subscribe({
+      next: (user) => {
+        // Prevent adding yourself
+        if (user.username === this.authService.currentUser()?.username) {
+          return this.show("You cannot add yourself", 'error');
+        }
+
+        this.userService.addFriend(this.currentUserId, username).subscribe({
+          next: () => {
+            this.show("Friend added successfully!", 'success');
+            this.friendUsername.set('');
+            this.loadFriends();
+          },
+          error: (err) => {
+            this.show(err.error || "Failed to add friend", 'error');
+          }
+        });
+      },
+      error: () => this.show("User not found", 'error')
+    });
+  }
+
+  // Toast helper
+  private show(msg: string, type: 'success' | 'error') {
+    this.toastMessage.set(msg);
+    this.toastType.set(type);
+    this.showToast.set(true);
+    setTimeout(() => this.showToast.set(false), 3000);
   }
 }
