@@ -20,34 +20,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper mapper;
 
-
+    // -----------------------------------------------------------
+    // BASIC CRUD
+    // -----------------------------------------------------------
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     public User getUserById(UUID id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id" + id));
-    }
-
-    public List<FriendDTO> getUserFriends(UUID currentUserId) {
-        // 1. Găsim userul curent
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        List<UUID> friendIds = currentUser.getFriendIds();
-
-        if (friendIds == null || friendIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // 2. Căutăm toți prietenii după lista de ID-uri
-        List<User> friends = userRepository.findAllById(friendIds);
-
-        // 3. Convertim în DTO
-        return friends.stream()
-                .map(u -> new FriendDTO(u.getId(), u.getUsername(), u.getPoints()))
-                .collect(Collectors.toList());
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + id));
     }
 
     public User createUser(User user) {
@@ -59,10 +41,60 @@ public class UserService {
     }
 
     public User updateUser(UUID id, UserUpdateRequest request) {
-        User user = getUserById(id); // aruncă UserNotFoundException dacă nu există
+        User user = getUserById(id);
+        mapper.updateEntity(request, user);
+        return userRepository.save(user);
+    }
 
-        mapper.updateEntity(request, user); // aplică update doar pe câmpurile trimise
+    // -----------------------------------------------------------
+    // SEARCH USER BY USERNAME
+    // -----------------------------------------------------------
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
 
-        return userRepository.save(user); // salvează și returnează
+    // -----------------------------------------------------------
+    // GET FRIENDS OF USER
+    // -----------------------------------------------------------
+    public List<FriendDTO> getUserFriends(UUID currentUserId) {
+        User currentUser = getUserById(currentUserId);
+
+        List<UUID> friendIds = currentUser.getFriendIds();
+        if (friendIds == null || friendIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<User> friends = userRepository.findAllById(friendIds);
+
+        return friends.stream()
+                .map(mapper::toFriendDTO)
+                .collect(Collectors.toList());
+    }
+
+    // -----------------------------------------------------------
+    // ADD FRIEND LOGIC
+    // -----------------------------------------------------------
+    @Transactional
+    public void addFriend(UUID currentUserId, String friendUsername) {
+
+        User current = getUserById(currentUserId);
+
+        // Rule: cannot add yourself
+        if (current.getUsername().equalsIgnoreCase(friendUsername)) {
+            throw new RuntimeException("You cannot add yourself");
+        }
+
+        // Find target friend
+        User friend = userRepository.findByUsername(friendUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Rule: cannot add existing friend
+        if (current.getFriendIds().contains(friend.getId())) {
+            throw new RuntimeException("User is already your friend");
+        }
+
+        // Add
+        current.getFriendIds().add(friend.getId());
+        userRepository.save(current);
     }
 }
