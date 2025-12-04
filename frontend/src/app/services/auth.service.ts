@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, of } from 'rxjs';
+import {Observable, tap, catchError, of, lastValueFrom} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +22,6 @@ export class AuthService {
     // La pornirea aplicatiei (refresh), incercam sa recuperam userul
     this.fetchCurrentUser();
   }
-
   // --- LOGIN ---
   login(credentials: { emailOrUsername: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
