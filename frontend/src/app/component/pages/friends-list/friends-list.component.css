@@ -11,14 +11,6 @@
   margin-bottom: 2rem;
 }
 
-.badge {
-  background-color: #3f51b5;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  margin-left: 10px;
-}
-
 .subtitle { color: #aaa; margin-top: 5px; }
 
 /* GRID RESPONSIVE */
@@ -157,3 +149,253 @@
 }
 
 @keyframes spin { 100% { transform: rotate(360deg); } }
+
+.search-wrapper {
+  position: relative; /* Ca dropdown-ul să se poziționeze față de acest container */
+  max-width: 600px;
+  margin-bottom: 2rem;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 50;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  margin-top: 5px;
+}
+
+/* Cardul din Dropdown */
+.search-result-card {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid #333;
+  transition: all 0.2s;
+}
+
+.search-result-card:last-child {
+  border-bottom: none;
+}
+
+/* 🟢 STARE: NOT FRIEND (ACTIV) */
+.search-result-card:not(.already-friend):hover {
+  background: #252530;
+  transform: translateX(5px);
+  border-left: 3px solid #3f51b5; /* Highlight mov */
+}
+
+/* ⚫ STARE: ALREADY FRIEND (DISABLED/GRAY) */
+.search-result-card.already-friend {
+  background: #141414; /* Foarte închis */
+  opacity: 0.6; /* Transparent */
+  cursor: not-allowed;
+}
+
+.result-avatar {
+  width: 40px;
+  height: 40px;
+  background: #3f51b5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 15px;
+  font-size: 0.9rem;
+}
+
+.already-friend .result-avatar {
+  background: #444; /* Avatar gri pt prieteni */
+}
+
+.result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.result-name {
+  font-weight: bold;
+  color: white;
+}
+
+.result-email {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Butoane */
+.btn-add-mini {
+  background: linear-gradient(to right, #3f51b5, #e040fb);
+  border: none;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-add-mini:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.status-badge {
+  color: #888;
+  font-size: 0.8rem;
+  background: #222;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+
+.big-header {
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.big-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.2rem;
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.big-subtitle {
+  font-size: 1rem;
+  color: #888;
+  margin-bottom: 1rem;
+}
+
+/* Badge-ul cu numărul "Real Time" */
+.badge {
+  background: linear-gradient(135deg, #3f51b5, #e040fb);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(63, 81, 181, 0.4);
+  min-width: 30px;
+  text-align: center;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* SEARCH SECTION - Full Width & Centered */
+.search-section {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 3rem;
+}
+
+/* BARA DE SEARCH "MODERNĂ" */
+.search-bar-container {
+  display: flex;
+  align-items: center;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 50px;
+  padding: 8px 10px 8px 25px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Efect de glow când dai click */
+.search-bar-container.focused {
+  border-color: #3f51b5;
+  box-shadow: 0 0 15px rgba(63, 81, 181, 0.3);
+  transform: scale(1.01);
+}
+
+.search-icon {
+  font-size: 1.2rem;
+  margin-right: 15px;
+  opacity: 0.5;
+}
+
+/* Input-ul propriu-zis */
+.add-input.big-input {
+  flex: 1; /* Ocupă tot spațiul rămas */
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: white;
+  outline: none;
+  padding: 10px 0;
+}
+
+/* BUTONUL "ADD FRIEND" DIN DREAPTA */
+.btn-search-action {
+  background: #3f51b5;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: hover 0.2s;
+  margin-left: 10px;
+}
+
+.btn-search-action:hover {
+  background: #5c6bc0;
+}
+
+.btn-search-action:disabled {
+  background: #333;
+  color: #555;
+  cursor: not-allowed;
+}
+
+/* DROPDOWN MARE */
+.search-dropdown.big-dropdown {
+  top: 110%;
+  border-radius: 20px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  max-height: 400px;
+}
+
+.search-result-card {
+  padding: 15px 25px;
+  cursor: pointer;
+}
+
+.add-icon {
+  font-size: 1.5rem;
+  color: #3f51b5;
+  font-weight: bold;
+}
+
+.avatar, .result-avatar {
+  overflow: hidden;
+  position: relative;
+}
+
+.avatar img, .result-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

@@ -7,5 +7,6 @@ public record UserUpdateRequest(
         String username,
         String email,
         String password,
-        Integer points
+        Integer points,
+        String avatar
 ) {}

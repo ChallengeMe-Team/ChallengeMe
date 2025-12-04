@@ -9,6 +9,7 @@ import {inject} from '@angular/core';
 import {AuthService} from './services/auth.service';
 import {Router} from '@angular/router';
 import {FriendsListComponent} from './component/pages/friends-list/friends-list.component';
+import { SettingsComponent } from './component/pages/settings/settings-component';
 
 const guestGuard = () => {
   const authService = inject(AuthService);
@@ -43,6 +44,15 @@ export const routes: Routes = [
     component: AuthComponent,
     canActivate: [guestGuard] // Accesibil doar dacă NU ești logat
   },
-  { path: 'friends', component: FriendsListComponent, canActivate: [authGuard] },
+  {
+    path: 'friends',
+    component: FriendsListComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'settings',
+    component: SettingsComponent,
+    canActivate: [authGuard]
+  },
   {path: '**', redirectTo: ''} // Orice altă rută duce la Home (care va verifica authGuard)
 ];

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.*;
+import challengeme.backend.dto.request.update.ChangePasswordRequest;
 
 @RestController
 @RequestMapping("/api/users")
@@ -92,5 +93,22 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Change Password
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> changePassword(
+            @PathVariable UUID id,
+            @RequestBody @Valid ChangePasswordRequest request
+    ) {
+        try {
+            userService.changePassword(id, request);
+            // Returnez JSON simplu de succes
+            return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
+        } catch (RuntimeException e) {
+            // Returnez eroare (Bad Request sau Forbidden)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 }

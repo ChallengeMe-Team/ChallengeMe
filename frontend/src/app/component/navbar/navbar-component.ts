@@ -86,9 +86,20 @@ export class NavbarComponent {
 
     // Logout folosind Router
     onLogout() {
-        this.authService.logout();
-        this.isDropdownOpen = false;
-        this.router.navigate(['/auth']); // Navigare directă prin Router
+      // 1. Execută logica de logout
+      this.authService.logout();
+
+      // 2. Închide meniul
+      this.isDropdownOpen = false;
+
+      // 3. Afișează Toast-ul
+      this.toastRequest.emit({
+        message: 'You have been logged out successfully.',
+        type: 'success'
+      });
+
+      // 4. Redirecționează către Login
+      this.router.navigate(['/auth']);
     }
 
     // CLICK OUTSIDE

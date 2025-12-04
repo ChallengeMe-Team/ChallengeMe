@@ -7,6 +7,16 @@ export interface FriendDTO {
   id: any;
   username: string;
   points: number;
+  avatar?: string;
+}
+
+export interface UserDTO {
+  id: string;
+  username: string;
+  email: string;       // email pentru search
+  points: number;
+  avatar?: string;
+  role?: string;
 }
 
 @Injectable({
@@ -32,5 +42,18 @@ export class UserService {
       `${this.apiUrl}/${currentUserId}/friends?username=${username}`,
       {}
     );
+  }
+
+  getAllUsers(): Observable<UserDTO[]> {
+    return this.http.get<UserDTO[]>(this.apiUrl);
+  }
+
+  updateUser(id: string, data: Partial<UserDTO>): Observable<UserDTO> {
+    return this.http.put<UserDTO>(`${this.apiUrl}/${id}`, data);
+  }
+
+  //  Change Password
+  changePassword(id: string, payload: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/password`, payload);
   }
 }

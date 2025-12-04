@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import challengeme.backend.dto.request.update.ChangePasswordRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +21,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper mapper;
+
+    private final PasswordEncoder passwordEncoder;
 
     // -----------------------------------------------------------
     // BASIC CRUD
@@ -44,6 +48,22 @@ public class UserService {
         User user = getUserById(id);
         mapper.updateEntity(request, user);
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(UUID userId, ChangePasswordRequest request) {
+        User user = getUserById(userId);
+
+        // Verific daca parola curenta (raw) se potriveste cu cea din baza de date (hash)
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new RuntimeException("Incorrect current password");
+        }
+
+        // Criptez noua parola
+        String newHash = passwordEncoder.encode(request.newPassword());
+        user.setPassword(newHash);
+
+        userRepository.save(user);
     }
 
     // -----------------------------------------------------------

@@ -1,0 +1,157 @@
+<div class="settings-container animate-fade-in relative">
+
+  <!-- HEADER CENTRAT -->
+  <div class="text-center mb-10">
+    <h2 class="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500 inline-block">
+      Account Settings
+    </h2>
+    <p class="text-gray-400">Manage your identity and security preferences.</p>
+  </div>
+
+  <!-- AVATAR SECTION -->
+  <div class="bg-[#1e1e1e] border border-gray-800 rounded-2xl p-8 mb-8 shadow-xl">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl text-white font-semibold">Choose Avatar</h3>
+      <button (click)="saveChanges()"
+              [disabled]="isLoading()"
+              class="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+        {{ isLoading() ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+
+    <div class="grid grid-cols-3 sm:grid-cols-6 gap-6 justify-items-center">
+      <div *ngFor="let avatar of availableAvatars"
+           (click)="selectAvatar(avatar)"
+           class="avatar-option cursor-pointer relative group transition-all duration-300 transform hover:scale-110"
+           [class.selected]="selectedAvatar() === avatar">
+
+        <img [src]="'/avatars/' + avatar"
+             class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-transparent transition-all duration-300 object-cover bg-gray-800"
+             [class.border-purple-500]="selectedAvatar() === avatar"
+             alt="Avatar Option">
+
+        <div *ngIf="selectedAvatar() === avatar"
+             class="absolute -top-1 -right-1 bg-green-500 text-black rounded-full p-1 shadow-lg animate-bounce-small">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECURITY SECTION (Doar butonul de start) -->
+  <div class="bg-[#1e1e1e] border border-gray-800 rounded-2xl p-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div>
+      <h3 class="text-xl text-white font-semibold mb-1 flex items-center gap-2">
+        <span class="text-purple-400">🔒</span> Security
+      </h3>
+      <p class="text-gray-400 text-sm">Update your password to keep your account safe.</p>
+    </div>
+    <button (click)="openPasswordModal()"
+            class="px-6 py-2.5 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 font-bold rounded-lg transition">
+      Change Password
+    </button>
+  </div>
+
+  <!-- PASSWORD CHANGE FLOW -->
+  <div *ngIf="isPasswordModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Backdrop Blur -->
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" (click)="closeModal()"></div>
+
+    <!-- Modal Content -->
+    <div class="bg-[#1a1625] border border-gray-700 rounded-2xl p-8 max-w-md w-full relative z-10 shadow-2xl animate-scale-in">
+
+      <!-- Close X Button -->
+      <button (click)="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white transition">
+        ✕
+      </button>
+
+      <!-- CONFIRMARE -->
+      <div *ngIf="modalStep() === 'confirm'" class="text-center">
+        <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="text-3xl">⚠️</span>
+        </div>
+        <h3 class="text-2xl font-bold text-white mb-2">Change Password?</h3>
+        <p class="text-gray-400 mb-8">
+          Are you sure you want to change your password? You will need to use the new credentials next time you login.
+        </p>
+        <div class="flex justify-center gap-4">
+          <button (click)="closeModal()" class="px-6 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-medium transition">
+            Cancel
+          </button>
+          <button (click)="proceedToForm()" class="px-6 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold transition">
+            Yes, Continue
+          </button>
+        </div>
+      </div>
+
+      <!--FORMULAR -->
+      <div *ngIf="modalStep() === 'form'">
+        <h3 class="text-xl font-bold text-white mb-6 text-center">Update Password</h3>
+
+        <div class="space-y-4">
+          <!-- Current -->
+          <div>
+            <label class="text-xs text-gray-400 uppercase font-bold ml-1">Current Password</label>
+            <input type="password" [ngModel]="currentPassword()" (ngModelChange)="currentPassword.set($event)"
+                   class="w-full bg-[#0f0e13] border border-gray-700 rounded-lg p-3 text-white focus:border-purple-500 outline-none transition mt-1"
+                   placeholder="••••••">
+          </div>
+
+          <!-- New -->
+          <div>
+            <label class="text-xs text-gray-400 uppercase font-bold ml-1">New Password</label>
+            <input type="password" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)"
+                   class="w-full bg-[#0f0e13] border border-gray-700 rounded-lg p-3 text-white focus:border-purple-500 outline-none transition mt-1"
+                   placeholder="New secure password">
+          </div>
+
+          <!-- CHECKLIST VIZUAL -->
+          <div class="bg-black/30 rounded-lg p-4 border border-gray-800">
+            <p class="text-xs text-gray-500 font-bold mb-2 uppercase tracking-wider">Password Requirements:</p>
+            <ul class="text-sm space-y-1">
+              <li [class]="hasMinLength() ? 'text-green-400' : 'text-gray-500'" class="flex items-center gap-2 transition-colors">
+                <span class="text-xs">{{ hasMinLength() ? '✔' : '○' }}</span> At least 6 characters
+              </li>
+              <li [class]="hasUpperCase() ? 'text-green-400' : 'text-gray-500'" class="flex items-center gap-2 transition-colors">
+                <span class="text-xs">{{ hasUpperCase() ? '✔' : '○' }}</span> One uppercase letter (A-Z)
+              </li>
+              <li [class]="hasLowerCase() ? 'text-green-400' : 'text-gray-500'" class="flex items-center gap-2 transition-colors">
+                <span class="text-xs">{{ hasLowerCase() ? '✔' : '○' }}</span> One lowercase letter (a-z)
+              </li>
+              <li [class]="hasNumber() ? 'text-green-400' : 'text-gray-500'" class="flex items-center gap-2 transition-colors">
+                <span class="text-xs">{{ hasNumber() ? '✔' : '○' }}</span> One number (0-9)
+              </li>
+              <li [class]="hasSpecialChar() ? 'text-green-400' : 'text-gray-500'" class="flex items-center gap-2 transition-colors">
+                <span class="text-xs">{{ hasSpecialChar() ? '✔' : '○' }}</span> One special symbol (!@#$%)
+              </li>
+            </ul>
+          </div>
+
+          <!-- Confirm -->
+          <div>
+            <label class="text-xs text-gray-400 uppercase font-bold ml-1">Confirm New Password</label>
+            <input type="password" [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)"
+                   class="w-full bg-[#0f0e13] border border-gray-700 rounded-lg p-3 text-white focus:border-purple-500 outline-none transition mt-1"
+                   placeholder="Repeat password">
+
+            <p *ngIf="confirmPassword() && !passwordsMatch()" class="text-red-400 text-xs mt-1">Passwords do not match.</p>
+            <p *ngIf="passwordsMatch() && confirmPassword()" class="text-green-400 text-xs mt-1">Passwords match!</p>
+          </div>
+
+          <!-- Button -->
+          <button (click)="onChangePassword()"
+                  [disabled]="!isFormValid() || isLoadingPassword()"
+                  class="w-full py-3 mt-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-bold rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed flex justify-center items-center gap-2">
+            <span *ngIf="isLoadingPassword()" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+            Update Password
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <app-toast *ngIf="showToast()" [message]="toastMessage()" [type]="toastType()"></app-toast>
+</div>
