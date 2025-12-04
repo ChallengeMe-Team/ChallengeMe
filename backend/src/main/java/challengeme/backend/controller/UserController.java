@@ -1,5 +1,6 @@
 package challengeme.backend.controller;
 
+import challengeme.backend.dto.FriendDTO;
 import challengeme.backend.dto.request.create.UserCreateRequest;
 import challengeme.backend.dto.UserDTO;
 import challengeme.backend.dto.request.update.UserUpdateRequest;
@@ -9,10 +10,13 @@ import challengeme.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,6 +26,12 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper mapper;
+
+
+    @GetMapping("/{id}/friends")
+    public ResponseEntity<List<FriendDTO>> getFriends(@PathVariable UUID id) {
+        return ResponseEntity.ok(userService.getUserFriends(id));
+    }
 
     @GetMapping
     public List<UserDTO> getAll() {
