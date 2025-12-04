@@ -1,8 +1,8 @@
 package challengeme.backend.controller;
 
 import challengeme.backend.dto.FriendDTO;
-import challengeme.backend.dto.request.create.UserCreateRequest;
 import challengeme.backend.dto.UserDTO;
+import challengeme.backend.dto.request.create.UserCreateRequest;
 import challengeme.backend.dto.request.update.UserUpdateRequest;
 import challengeme.backend.mapper.UserMapper;
 import challengeme.backend.model.User;
@@ -10,13 +10,10 @@ import challengeme.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,12 +24,44 @@ public class UserController {
     private final UserService userService;
     private final UserMapper mapper;
 
-
+    // -----------------------------------------------------------
+    // GET user friends
+    // -----------------------------------------------------------
     @GetMapping("/{id}/friends")
     public ResponseEntity<List<FriendDTO>> getFriends(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getUserFriends(id));
     }
 
+    // -----------------------------------------------------------
+    // SEARCH user by username (used for "Add Friend" feature)
+    // -----------------------------------------------------------
+    @GetMapping("/search")
+    public ResponseEntity<UserDTO> searchByUsername(@RequestParam String username) {
+        return userService.findByUsername(username)
+                .map(user -> ResponseEntity.ok(mapper.toDTO(user)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // -----------------------------------------------------------
+    // ADD friend to list
+    // -----------------------------------------------------------
+    @PostMapping("/{id}/friends")
+    public ResponseEntity<Map<String, String>> addFriend(
+            @PathVariable UUID id,
+            @RequestParam String username
+    ) {
+        try {
+            userService.addFriend(id, username);
+            return ResponseEntity.ok(Map.of("message", "Friend added successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+
+        }
+    }
+
+    // -----------------------------------------------------------
+    // DEFAULT CRUD
+    // -----------------------------------------------------------
     @GetMapping
     public List<UserDTO> getAll() {
         return userService.getAllUsers()

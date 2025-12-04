@@ -4,20 +4,33 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface FriendDTO {
-    id: any;
-    username: string;
-    points: number;
-    avatarUrl?: string; // Opțional, pentru UI
+  id: any;
+  username: string;
+  points: number;
 }
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class UserService {
-    private http = inject(HttpClient);
-    private apiUrl = `${environment.apiUrl}/users`;
+  private http = inject(HttpClient);
+  private apiUrl = `${environment.apiUrl}/users`;
 
-    getFriends(userId: string): Observable<FriendDTO[]> {
-        return this.http.get<FriendDTO[]>(`${this.apiUrl}/users/${userId}/friends`);
-    }
+  // GET friends of user
+  getFriends(userId: string): Observable<FriendDTO[]> {
+    return this.http.get<FriendDTO[]>(`${this.apiUrl}/${userId}/friends`);
+  }
+
+  // SEARCH user by username
+  searchUser(username: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/search?username=${username}`);
+  }
+
+  // ADD a friend
+  addFriend(currentUserId: string, username: string): Observable<any> {
+    return this.http.post(
+      `${this.apiUrl}/${currentUserId}/friends?username=${username}`,
+      {}
+    );
+  }
 }
