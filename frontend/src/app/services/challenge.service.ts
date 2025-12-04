@@ -21,6 +21,10 @@ export class ChallengeService {
     return this.http.get<Challenge[]>(this.apiUrl);
   }
 
+  getUserChallenges(username: string): Observable<Challenge[]> {
+    return this.http.get<Challenge[]>(`${this.apiUrl}/user/${username}`);
+  }
+
   createChallenge(challenge: any): Observable<Challenge> {
     return this.http.post<Challenge>(this.apiUrl, challenge);
   }

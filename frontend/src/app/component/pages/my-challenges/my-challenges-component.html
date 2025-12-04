@@ -1,0 +1,102 @@
+<section class="p-10 text-white min-h-screen">
+
+  <div class="flex items-center justify-between mb-10">
+    <div>
+      <h2 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+        My Challenges
+      </h2>
+      <p class="text-gray-400 mt-2">Manage the challenges you've created.</p>
+    </div>
+
+    <button (click)="challengeService.isCreateModalOpen.set(true)"
+            class="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-bold transition shadow-lg hover:shadow-purple-500/20">
+      <lucide-icon [img]="icons.PlusCircle" class="w-5 h-5"></lucide-icon>
+      New Challenge
+    </button>
+  </div>
+
+  <div *ngIf="isLoading()" class="text-center text-gray-500 mt-20 animate-pulse">
+    <p>Loading your challenges...</p>
+  </div>
+
+  <div *ngIf="!isLoading() && myChallenges().length === 0" class="text-center mt-20 border border-dashed border-gray-700 rounded-xl p-10">
+    <h3 class="text-xl font-semibold text-gray-300">No challenges yet</h3>
+    <p class="text-gray-500 mb-6">You haven't created any challenges. Share your knowledge!</p>
+    <button (click)="challengeService.isCreateModalOpen.set(true)" class="text-purple-400 hover:text-purple-300 font-bold">
+      Create one now &rarr;
+    </button>
+  </div>
+
+  <div *ngIf="!isLoading() && myChallenges().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    <div *ngFor="let challenge of myChallenges()"
+         class="bg-[#1a1627] p-6 rounded-xl shadow-lg border border-gray-800 hover:border-purple-500/50 transition-all group flex flex-col h-full">
+
+      <div class="flex justify-between items-start mb-4">
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-700 text-gray-300">
+          {{ challenge.category }}
+        </span>
+        <span [ngClass]="{
+          'text-green-400': challenge.difficulty === 'EASY',
+          'text-yellow-400': challenge.difficulty === 'MEDIUM',
+          'text-red-400': challenge.difficulty === 'HARD'
+        }" class="text-xs font-bold border border-gray-700 px-2 py-1 rounded">
+          {{ challenge.difficulty }}
+        </span>
+      </div>
+
+      <h4 class="font-bold text-xl text-white mb-2">{{ challenge.title }}</h4>
+      <p class="text-gray-400 text-sm mb-6 line-clamp-2 flex-grow">
+        {{ challenge.description }}
+      </p>
+
+      <div class="mt-auto pt-4 border-t border-gray-700 flex justify-between items-center">
+        <span class="text-sm font-bold text-purple-400">{{ challenge.points }} pts</span>
+
+        <div class="flex gap-2">
+          <button (click)="openEditModal(challenge)"
+                  class="p-2 bg-gray-800 hover:bg-blue-600/20 hover:text-blue-400 rounded-lg transition text-gray-400"
+                  title="Edit Challenge">
+            <lucide-icon [img]="icons.Edit" class="w-4 h-4"></lucide-icon>
+          </button>
+
+          <button (click)="confirmDelete(challenge)"
+                  class="p-2 bg-gray-800 hover:bg-red-600/20 hover:text-red-400 rounded-lg transition text-gray-400"
+                  title="Delete Challenge">
+            <lucide-icon [img]="icons.Trash2" class="w-4 h-4"></lucide-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<app-challenge-form
+  *ngIf="isEditModalOpen()"
+  [mode]="'edit'"
+  [challengeData]="editChallengeData()"
+  (cancel)="isEditModalOpen.set(false)"
+  (submitChallenge)="onChallengeUpdated($event)">
+</app-challenge-form>
+
+<app-challenge-form
+  *ngIf="challengeService.isCreateModalOpen()"
+  [mode]="'create'"
+  (cancel)="challengeService.isCreateModalOpen.set(false)"
+  (submitChallenge)="loadMyChallenges()">
+</app-challenge-form>
+
+<div *ngIf="isDeleteModalOpen()" class="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">
+  <div class="bg-[#1a1627] p-8 rounded-2xl border border-gray-700 max-w-md w-full text-center">
+    <h3 class="text-2xl font-bold text-white mb-2">Delete Challenge?</h3>
+    <p class="text-gray-400 mb-6">Are you sure you want to delete <span class="text-white font-semibold">"{{ challengeToDelete()?.title }}"</span>?</p>
+    <div class="flex justify-center gap-4">
+      <button (click)="isDeleteModalOpen.set(false)" class="px-6 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-medium transition">Cancel</button>
+      <button (click)="performDelete()" class="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition shadow-lg shadow-red-500/30">Delete</button>
+    </div>
+  </div>
+</div>
+
+<app-toast *ngIf="toastMessage()" [message]="toastMessage()!" [type]="toastType()"></app-toast>

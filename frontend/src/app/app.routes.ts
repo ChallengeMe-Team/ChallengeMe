@@ -1,6 +1,7 @@
 import {Routes} from '@angular/router';
 import {HomeComponent} from './component/pages/home/home-component';
 import {ChallengesComponent} from './component/pages/challenges/challenges-component';
+import { MyChallengesComponent } from './component/pages/my-challenges/my-challenges-component';
 import {LeaderboardComponent} from './component/pages/leaderboard/leaderboard-component';
 import {AuthComponent} from './component/auth/auth-component';
 import {authGuard} from './auth.guard';
@@ -27,6 +28,10 @@ export const routes: Routes = [
     path: 'challenges',
     component: ChallengesComponent,
     canActivate: [authGuard] // Protejat
+  },
+  { path: 'my-challenges',
+    component: MyChallengesComponent,
+    canActivate: [authGuard]
   },
   {
     path: 'leaderboard',
