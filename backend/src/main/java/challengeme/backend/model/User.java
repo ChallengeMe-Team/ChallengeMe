@@ -45,6 +45,8 @@ public class User {
 
     private Integer points;
 
+    private String avatar;
+
     private String role = "user";
 
     // Getters and Setters explicite pentru siguranță, deși Lombok le generează

@@ -45,7 +45,8 @@
             <!-- mousedown se execută înainte de blur -->
 
             <div class="result-avatar">
-              {{ user.username.charAt(0).toUpperCase() }}
+              <img *ngIf="user.avatar" [src]="'avatars/' + user.avatar" class="w-full h-full object-cover" alt="avatar">
+              <span *ngIf="!user.avatar">{{ user.username.charAt(0).toUpperCase() }}</span>
             </div>
 
             <div class="result-info">
@@ -76,8 +77,11 @@
     <div class="friends-grid">
       @for (friend of friends(); track friend.id) {
         <div class="friend-card">
-          <div class="avatar">
-            {{ friend.username.charAt(0).toUpperCase() }}
+          <!-- 🔄 AVATAR MARE SAU INITIALA -->
+          <div class="avatar overflow-hidden relative">
+            <!-- Aici folosim friend.avatar acum ca l-am adus din backend -->
+            <img *ngIf="friend.avatar" [src]="'avatars/' + friend.avatar" class="w-full h-full object-cover" alt="avatar">
+            <span *ngIf="!friend.avatar">{{ friend.username.charAt(0).toUpperCase() }}</span>
           </div>
 
           <div class="card-info">
@@ -88,6 +92,7 @@
           </div>
 
           <button class="btn-profile">View Profile</button>
+
         </div>
       } @empty {
         <div class="empty-state">

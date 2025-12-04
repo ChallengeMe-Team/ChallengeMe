@@ -20,6 +20,7 @@ public class UserMapper {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPoints(),
+                user.getAvatar(),
                 user.getRole()
         );
     }
@@ -29,7 +30,8 @@ public class UserMapper {
         return new FriendDTO(
                 user.getId(),
                 user.getUsername(),
-                user.getPoints()
+                user.getPoints(),
+                user.getAvatar()
         );
     }
 
@@ -42,6 +44,8 @@ public class UserMapper {
         user.setEmail(request.getEmail());
         user.setPassword(request.getPassword());
         user.setPoints(0);
+        // Default avatar la creare
+        user.setAvatar("gamer.png");
         user.setRole("user");
         return user;
     }
@@ -53,9 +57,7 @@ public class UserMapper {
         if (request.email() != null) user.setEmail(request.email());
         if (request.password() != null) user.setPassword(request.password());
         if (request.points() != null) user.setPoints(request.points());
-
-        // NOTĂ: Nu permitem actualizarea rolului prin endpoint-ul standard de update profil!
-        // Asta ar fi o problemă de securitate.
+        if (request.avatar() != null) user.setAvatar(request.avatar());
     }
 
 }

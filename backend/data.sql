@@ -11,18 +11,18 @@ TRUNCATE TABLE users CASCADE;
 -- Users
 -- Parola pentru toti userii este: Password_123
 -- Hash-ul BCrypt este: $2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC
-INSERT INTO users (id, username, email, password, points, role) VALUES
-                                                                    ('11111111-1111-1111-1111-111111111111', 'emilia', 'emilia@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 120, 'user'),
-                                                                    ('22222222-2222-2222-2222-222222222222', 'roger', 'roger@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 200, 'user'),
-                                                                    ('33333333-3333-3333-3333-333333333333', 'calin', 'calin@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 180, 'user'),
-                                                                    ('44444444-4444-4444-4444-444444444444', 'alex', 'alex@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 90, 'user'),
-                                                                    ('55555555-5555-5555-5555-555555555555', 'iustin', 'iustin@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 75, 'user'),
-                                                                    ('66666666-6666-6666-6666-666666666666', 'emanuel', 'emanuel@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 130, 'user'),
-                                                                    ('77777777-7777-7777-7777-777777777777', 'stefan', 'stefan@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 110, 'user'),
-                                                                    ('88888888-8888-8888-8888-888888888888', 'tudor', 'tudor@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 95, 'user'),
-                                                                    ('99999999-9999-9999-9999-999999999999', 'ana', 'ana@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 60, 'user'),
-                                                                    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'maria', 'maria@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 50, 'user'),
-                                                                    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'george', 'george@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 40, 'user');
+INSERT INTO users (id, username, email, password, points, role, avatar) VALUES
+                                                                    ('11111111-1111-1111-1111-111111111111', 'emilia', 'emilia@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 120, 'user', 'cat.png'),
+                                                                    ('22222222-2222-2222-2222-222222222222', 'roger', 'roger@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 200, 'user', 'gamer.png'),
+                                                                    ('33333333-3333-3333-3333-333333333333', 'calin', 'calin@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 180, 'user', 'dog.png'),
+                                                                    ('44444444-4444-4444-4444-444444444444', 'alex', 'alex@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 90, 'user', 'monster.png'),
+                                                                    ('55555555-5555-5555-5555-555555555555', 'iustin', 'iustin@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 75, 'user', 'ninja.png'),
+                                                                    ('66666666-6666-6666-6666-666666666666', 'emanuel', 'emanuel@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 130, 'user', 'robot.png'),
+                                                                    ('77777777-7777-7777-7777-777777777777', 'stefan', 'stefan@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 110, 'user', 'gamer.png'),
+                                                                    ('88888888-8888-8888-8888-888888888888', 'tudor', 'tudor@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 95, 'user', 'dog.png'),
+                                                                    ('99999999-9999-9999-9999-999999999999', 'ana', 'ana@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 60, 'user', 'cat.png'),
+                                                                    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'maria', 'maria@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 50, 'user', 'gamer.png'),
+                                                                    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'george', 'george@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 40, 'user', 'robot.png');
 
 -- ===========================
 -- Badges
@@ -82,3 +82,31 @@ INSERT INTO notifications (id, user_id, message, type, timestamp, is_read) VALUE
                                                                                ('11111111-aaaa-1111-aaaa-111111111111', '11111111-1111-1111-1111-111111111111', 'Welcome to ChallengeMe!', 'SYSTEM', CURRENT_TIMESTAMP, false),
                                                                                ('22222222-bbbb-2222-bbbb-222222222222', '22222222-2222-2222-2222-222222222222', 'New challenge available!', 'CHALLENGE', CURRENT_TIMESTAMP, false),
                                                                                ('33333333-cccc-3333-cccc-333333333333', '33333333-3333-3333-3333-333333333333', 'You earned a badge!', 'BADGE', CURRENT_TIMESTAMP, false);
+
+-- ====================================================================================
+-- FRIENDS CONFIGURATION (UPDATES)
+-- Sintaxa '{uuid1, uuid2}' este specifică PostgreSQL pentru array-uri.
+-- ====================================================================================
+
+-- Emilia (1111...) -> Friends with: Stefan (7777), Emanuel (6666), Maria (aaaa), Calin (3333)
+UPDATE users SET friend_ids = '{77777777-7777-7777-7777-777777777777, 66666666-6666-6666-6666-666666666666, aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa, 33333333-3333-3333-3333-333333333333}' WHERE username = 'emilia';
+-- Roger (2222...) -> Friends with: Calin (3333), Alex (4444), Tudor (8888)
+UPDATE users SET friend_ids = '{33333333-3333-3333-3333-333333333333, 44444444-4444-4444-4444-444444444444, 88888888-8888-8888-8888-888888888888}' WHERE username = 'roger';
+-- Calin (3333...) -> Friends with: Emilia (1111), Roger (2222), Iustin (5555)
+UPDATE users SET friend_ids = '{11111111-1111-1111-1111-111111111111, 22222222-2222-2222-2222-222222222222, 55555555-5555-5555-5555-555555555555}' WHERE username = 'calin';
+-- Alex (4444...) -> Friends with: Roger (2222), Ana (9999), George (bbbb)
+UPDATE users SET friend_ids = '{22222222-2222-2222-2222-222222222222, 99999999-9999-9999-9999-999999999999, bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb}' WHERE username = 'alex';
+-- Iustin (5555...) -> Friends with: Calin (3333), Emanuel (6666), Stefan (7777)
+UPDATE users SET friend_ids = '{33333333-3333-3333-3333-333333333333, 66666666-6666-6666-6666-666666666666, 77777777-7777-7777-7777-777777777777}' WHERE username = 'iustin';
+-- Emanuel (6666...) -> Friends with: Emilia (1111), Iustin (5555), Maria (aaaa)
+UPDATE users SET friend_ids = '{11111111-1111-1111-1111-111111111111, 55555555-5555-5555-5555-555555555555, aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}' WHERE username = 'emanuel';
+-- Stefan (7777...) -> Friends with: Emilia (1111), Iustin (5555), Tudor (8888)
+UPDATE users SET friend_ids = '{11111111-1111-1111-1111-111111111111, 55555555-5555-5555-5555-555555555555, 88888888-8888-8888-8888-888888888888}' WHERE username = 'stefan';
+-- Tudor (8888...) -> Friends with: Roger (2222), Stefan (7777), Ana (9999)
+UPDATE users SET friend_ids = '{22222222-2222-2222-2222-222222222222, 77777777-7777-7777-7777-777777777777, 99999999-9999-9999-9999-999999999999}' WHERE username = 'tudor';
+-- Ana (9999...) -> Friends with: Alex (4444), Tudor (8888), George (bbbb)
+UPDATE users SET friend_ids = '{44444444-4444-4444-4444-444444444444, 88888888-8888-8888-8888-888888888888, bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb}' WHERE username = 'ana';
+-- Maria (aaaa...) -> Friends with: Emilia (1111), Emanuel (6666), George (bbbb)
+UPDATE users SET friend_ids = '{11111111-1111-1111-1111-111111111111, 66666666-6666-6666-6666-666666666666, bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb}' WHERE username = 'maria';
+-- George (bbbb...) -> Friends with: Alex (4444), Ana (9999), Maria (aaaa)
+UPDATE users SET friend_ids = '{44444444-4444-4444-4444-444444444444, 99999999-9999-9999-9999-999999999999, aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}' WHERE username = 'george';

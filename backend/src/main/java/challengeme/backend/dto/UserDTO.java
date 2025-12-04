@@ -18,6 +18,6 @@ public class UserDTO {
     private String username;
     private String email;
     private Integer points;
-
+    private String avatar;
     private String role;
 }
