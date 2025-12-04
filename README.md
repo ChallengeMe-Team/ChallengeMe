@@ -88,7 +88,7 @@ docker exec -it challengeme-db psql -U postgres -d challengeme -c "\dt"
 ```Bash
 #Check data in a specific table: 
 # For example, to view all registered users:
-docker exec -it challengeme-db psql -U postgres -d challengeme -c "SELECT * FROM us
+docker exec -it challengeme-db psql -U postgres -d challengeme -c "SELECT * FROM users"
 ````
 
 ### 🟦 Alternative Option: Local PostgreSQL + pgAdmin 4
