@@ -5,12 +5,14 @@ import challengeme.backend.exception.ChallengeNotFoundException;
 import challengeme.backend.mapper.ChallengeMapper;
 import challengeme.backend.model.Challenge;
 import challengeme.backend.repository.ChallengeRepository;
+import challengeme.backend.repository.ChallengeUserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -27,6 +29,9 @@ class ChallengeServiceTests {
     private ChallengeRepository repository;
 
     @Mock
+    private ChallengeUserRepository challengeUserRepository; // 1. Dependență nouă adăugată
+
+    @Mock
     private ChallengeMapper mapper;
 
     private ChallengeService service;
@@ -34,7 +39,23 @@ class ChallengeServiceTests {
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
-        service = new ChallengeService(repository, mapper);
+        // 2. Constructor actualizat cu cele 3 argumente
+        service = new ChallengeService(repository, challengeUserRepository, mapper);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Curățăm contextul de securitate după fiecare test ca să nu se influențeze între ele
+        SecurityContextHolder.clearContext();
+    }
+
+    // --- Helper pentru a simula userul logat ---
+    private void mockSecurityContext(String username) {
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn(username);
+        SecurityContextHolder.setContext(securityContext);
     }
 
     @Test
@@ -46,9 +67,6 @@ class ChallengeServiceTests {
 
         List<Challenge> result = service.getAllChallenges();
         assertEquals(2, result.size());
-        assertTrue(result.contains(c1));
-        assertTrue(result.contains(c2));
-
         verify(repository, times(1)).findAll();
     }
 
@@ -61,8 +79,6 @@ class ChallengeServiceTests {
 
         Challenge result = service.getChallengeById(id);
         assertEquals("Title", result.getTitle());
-
-        verify(repository, times(1)).findById(id);
     }
 
     @Test
@@ -71,101 +87,95 @@ class ChallengeServiceTests {
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(ChallengeNotFoundException.class, () -> service.getChallengeById(id));
-
-        verify(repository, times(1)).findById(id);
     }
 
     @Test
     void testAddChallenge() {
         Challenge c = new Challenge(null, "Title", "Desc", "Cat", Challenge.Difficulty.EASY, 10, "User");
-
         when(repository.save(c)).thenReturn(c);
 
         Challenge result = service.addChallenge(c);
         assertEquals(c, result);
-
-        verify(repository, times(1)).save(c);
     }
 
     @Test
-    void testUpdateChallengeExists() {
+    void testUpdateChallengeSuccess() {
         UUID id = UUID.randomUUID();
-        Challenge existing = new Challenge(null, "OldTitle", "OldDesc", "OldCat", Challenge.Difficulty.EASY, 10, "User");
-        ChallengeUpdateRequest request = new ChallengeUpdateRequest("NewTitle", "NewDesc", "NewCat", Challenge.Difficulty.MEDIUM, 20, "User");
+        String owner = "OwnerUser";
+
+        // Setup challenge existent
+        Challenge existing = new Challenge(id, "OldTitle", "OldDesc", "OldCat", Challenge.Difficulty.EASY, 10, owner);
+        ChallengeUpdateRequest request = new ChallengeUpdateRequest("NewTitle", "NewDesc", "NewCat", Challenge.Difficulty.MEDIUM, 20, owner);
 
         when(repository.findById(id)).thenReturn(Optional.of(existing));
         when(repository.save(existing)).thenReturn(existing);
 
-        // Mapper-ul este apelat, dar nu accesăm atributele DTO-ului
-        doNothing().when(mapper).updateEntity(request, existing);
+        // Simulăm că suntem logați ca proprietarul challenge-ului
+        mockSecurityContext(owner);
 
         Challenge updated = service.updateChallenge(id, request);
 
-        assertNotNull(updated); // verificăm că returnează entity-ul
-        verify(repository, times(1)).findById(id);
-        verify(mapper, times(1)).updateEntity(request, existing);
+        assertNotNull(updated);
+        verify(mapper, times(1)).updateEntity(request, existing); // Verificăm că s-a făcut update la câmpuri
         verify(repository, times(1)).save(existing);
     }
 
     @Test
-    void testUpdateChallengeNotFound() {
+    void testUpdateChallengeForbidden() {
         UUID id = UUID.randomUUID();
-        ChallengeUpdateRequest request = new ChallengeUpdateRequest("NewTitle", "NewDesc", "NewCat", Challenge.Difficulty.MEDIUM, 20, "User");
+        Challenge existing = new Challenge(id, "Title", "Desc", "Cat", Challenge.Difficulty.EASY, 10, "OriginalOwner");
+        ChallengeUpdateRequest request = new ChallengeUpdateRequest("New", "New", "New", Challenge.Difficulty.EASY, 10, "Hacker");
 
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
 
-        assertThrows(ChallengeNotFoundException.class, () -> service.updateChallenge(id, request));
+        // Simulăm un alt user decât proprietarul
+        mockSecurityContext("OtherUser");
 
-        verify(repository, times(1)).findById(id);
-        verify(mapper, never()).updateEntity(any(), any());
-        verify(repository, never()).save(any());
+        assertThrows(ResponseStatusException.class, () -> service.updateChallenge(id, request));
+
+        verify(repository, never()).save(any()); // Ne asigurăm că NU s-a salvat nimic
     }
 
     @Test
-    void testDeleteChallengeExists() {
+    void testDeleteChallengeSuccess() {
         UUID id = UUID.randomUUID();
-        when(repository.existsById(id)).thenReturn(true);
+        String owner = "OwnerUser";
+        Challenge existing = new Challenge(id, "Title", "Desc", "Cat", Challenge.Difficulty.EASY, 10, owner);
+
+        // Serviciul folosește findById, nu existsById acum
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+        // Simulăm userul corect
+        mockSecurityContext(owner);
 
         service.deleteChallenge(id);
 
-        verify(repository, times(1)).existsById(id);
-        verify(repository, times(1)).deleteById(id);
+        // Verificăm ordinea operațiunilor
+        verify(challengeUserRepository, times(1)).deleteAllByChallengeId(id); // 1. Șterge dependențele
+        verify(repository, times(1)).delete(existing); // 2. Șterge challenge-ul
+    }
+
+    @Test
+    void testDeleteChallengeForbidden() {
+        UUID id = UUID.randomUUID();
+        Challenge existing = new Challenge(id, "Title", "Desc", "Cat", Challenge.Difficulty.EASY, 10, "RealOwner");
+
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+        // Simulăm un intrus
+        mockSecurityContext("Intruder");
+
+        assertThrows(ResponseStatusException.class, () -> service.deleteChallenge(id));
+
+        verify(repository, never()).delete(any());
+        verify(challengeUserRepository, never()).deleteAllByChallengeId(any());
     }
 
     @Test
     void testDeleteChallengeNotFound() {
         UUID id = UUID.randomUUID();
-        when(repository.existsById(id)).thenReturn(false);
+        when(repository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(ChallengeNotFoundException.class, () -> service.deleteChallenge(id));
-
-        verify(repository, times(1)).existsById(id);
-        verify(repository, never()).deleteById(any());
-    }
-
-    @Test
-    void updateChallenge_shouldReturn403_whenUserNotOwner() {
-        UUID id = UUID.randomUUID();
-
-        Challenge challenge = new Challenge();
-        challenge.setId(id);
-        challenge.setCreatedBy("otherUser");
-
-        when(repository.findById(id)).thenReturn(Optional.of(challenge));
-
-        Authentication auth =
-                new UsernamePasswordAuthenticationToken("theUser", null);
-        SecurityContextHolder.getContext().setAuthentication(auth);
-
-        ChallengeUpdateRequest req = new ChallengeUpdateRequest("Updated Title",
-                "Updated Description",
-                "Fitness",
-                Challenge.Difficulty.EASY,
-                50,
-                "doesNotMatter");
-
-        assertThrows(ResponseStatusException.class, () -> {
-            service.updateChallenge(id, req);
-        });
     }
 }

@@ -34,6 +34,10 @@ public class ChallengeService {
                 .orElseThrow(() -> new ChallengeNotFoundException(id));
     }
 
+    public List<Challenge> getChallengesByCreator(String username) {
+        return repository.findAllByCreatedBy(username);
+    }
+
     public Challenge addChallenge(Challenge challenge) {
         return repository.save(challenge);
     }

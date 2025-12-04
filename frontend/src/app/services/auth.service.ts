@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, of } from 'rxjs';
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -18,7 +19,7 @@ export class AuthService {
 
   constructor() {
     // La pornirea aplicatiei (refresh), incercam sa recuperam userul
-    this.fetchCurrentUser();
+
   }
 
   // --- LOGIN ---
@@ -64,19 +65,29 @@ export class AuthService {
   // --- PERSISTENTA (REFRESH) ---
   // Aceasta metoda este apelata in constructor pentru a verifica daca token-ul
   // salvat este inca valid si pentru a recuceri datele userului.
-  private fetchCurrentUser() {
-    if (!this.getToken()) return;
+  public initializeSession(): Promise<void> {
+    if (!this.getToken()) {
+      return Promise.resolve();
+    }
 
-    this.http.get(`${this.apiUrl}/me`).pipe(
-      catchError(() => {
-        // Daca token-ul este expirat sau invalid (401), facem logout automat
-        this.logout();
-        return of(null);
-      })
-    ).subscribe((user) => {
-      if (user) {
-        this.currentUser.set(user);
-      }
+    // PAS 2: Returneaza un Promise care se rezolva dupa ce se termina request-ul
+    return new Promise((resolve) => {
+      this.http.get<any>(`${this.apiUrl}/me`).pipe(
+        catchError((error) => {
+          this.logout();
+          return of(null);
+        })
+      ).subscribe({
+        next: (user: any | null) => {
+          if (user) {
+            this.currentUser.set(user);
+          }
+        },
+        // NU e necesara tratare eroare, complete se ocupa de resolve
+        complete: () => {
+          resolve(); // GARANTEAZA CA APLICATIA PORNESTE
+        }
+      });
     });
   }
 }
