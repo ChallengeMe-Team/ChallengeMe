@@ -1,0 +1,44 @@
+<div class="friends-container">
+
+    <div class="header">
+        <h2>My Friends <span class="badge">{{ friends().length }}</span></h2>
+        <p class="subtitle">Connect and compete with your peers.</p>
+    </div>
+
+    @if (isLoading()) {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading your crew...</p>
+        </div>
+    } @else {
+
+        <div class="friends-grid">
+            @for (friend of friends(); track friend.id) {
+
+                <div class="friend-card">
+                    <div class="avatar">
+                        {{ friend.username.charAt(0).toUpperCase() }}
+                    </div>
+
+                    <div class="card-info">
+                        <h3 class="username">{{ friend.username }}</h3>
+                        <div class="stats">
+                            <span class="xp">{{ friend.points }} XP</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-profile">View Profile</button>
+                </div>
+
+            } @empty {
+
+                <div class="empty-state">
+                    <div class="empty-icon">👥</div>
+                    <h3>No friends yet</h3>
+                    <p>Start connecting with people to see them here!</p>
+                </div>
+
+            }
+        </div>
+    }
+</div>
