@@ -9,6 +9,15 @@ export interface FriendDTO {
   points: number;
 }
 
+export interface UserDTO {
+  id: string;
+  username: string;
+  email: string;       // email pentru search
+  points: number;
+  avatar?: string;
+  role?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -32,5 +41,9 @@ export class UserService {
       `${this.apiUrl}/${currentUserId}/friends?username=${username}`,
       {}
     );
+  }
+
+  getAllUsers(): Observable<UserDTO[]> {
+    return this.http.get<UserDTO[]>(this.apiUrl);
   }
 }
