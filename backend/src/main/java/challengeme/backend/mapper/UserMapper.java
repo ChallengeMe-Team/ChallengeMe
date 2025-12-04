@@ -1,10 +1,13 @@
 package challengeme.backend.mapper;
 
+import challengeme.backend.dto.FriendDTO;
 import challengeme.backend.dto.request.create.UserCreateRequest;
 import challengeme.backend.dto.UserDTO;
 import challengeme.backend.dto.request.update.UserUpdateRequest;
 import challengeme.backend.model.User;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
 
 @Component
 public class UserMapper {
@@ -21,17 +24,26 @@ public class UserMapper {
         );
     }
 
+    public FriendDTO toFriendDTO(User user) {
+        if (user == null) return null;
+        return new FriendDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getPoints()
+        );
+    }
+
     // Mapare Request -> Entitate (Folosit la creare manuală, deși AuthController face asta separat)
     public User toEntity(UserCreateRequest request) {
         if (request == null) return null;
-        return new User(
-                null,                   // ID (generat automat)
-                request.getUsername(),
-                request.getEmail(),
-                request.getPassword(),
-                0,                      // Points default
-                "user"                  // CRITIC: Trebuie setat un rol default aici pentru constructor
-        );
+        User user = new User();
+
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
+        user.setPoints(0);
+        user.setRole("user");
+        return user;
     }
 
     // pentru update — nu creează un nou user, ci aplică pe unul existent
