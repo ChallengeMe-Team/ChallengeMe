@@ -7,6 +7,7 @@ export interface FriendDTO {
   id: any;
   username: string;
   points: number;
+  avatar?: string;
 }
 
 export interface UserDTO {
@@ -45,5 +46,9 @@ export class UserService {
 
   getAllUsers(): Observable<UserDTO[]> {
     return this.http.get<UserDTO[]>(this.apiUrl);
+  }
+
+  updateUser(id: string, data: Partial<UserDTO>): Observable<UserDTO> {
+    return this.http.put<UserDTO>(`${this.apiUrl}/${id}`, data);
   }
 }

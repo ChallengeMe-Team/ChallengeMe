@@ -1,0 +1,17 @@
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Efect de Glow pentru avatarul selectat */
+.avatar-option.selected img {
+  border-color: #a855f7; /* Purple-500 */
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+}
+
+/* Hover effect pentru cele neselectate */
+.avatar-option:not(.selected):hover img {
+  border-color: #4b5563; /* Gray-600 */
+  opacity: 0.8;
+}

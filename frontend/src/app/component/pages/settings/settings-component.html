@@ -1,0 +1,48 @@
+<div class="settings-container animate-fade-in">
+
+  <h2 class="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+    Account Settings
+  </h2>
+  <p class="text-gray-400 mb-8">Personalize your identity.</p>
+
+  <!-- AVATAR SECTION -->
+  <div class="bg-[#1e1e1e] border border-gray-800 rounded-xl p-6 mb-8">
+    <h3 class="text-xl text-white font-semibold mb-4">Choose Avatar</h3>
+
+    <div class="grid grid-cols-3 sm:grid-cols-6 gap-4">
+      <div *ngFor="let avatar of availableAvatars"
+           (click)="selectAvatar(avatar)"
+           class="avatar-option cursor-pointer relative group transition-all duration-300 transform hover:scale-105"
+           [class.selected]="selectedAvatar() === avatar">
+
+        <!-- Image -->
+        <img [src]="'/avatars/' + avatar"
+             class="w-full h-auto rounded-full border-4 border-transparent transition-all duration-300"
+             [class.border-purple-500]="selectedAvatar() === avatar"
+             alt="Avatar Option">
+
+        <!-- Selected Checkmark -->
+        <div *ngIf="selectedAvatar() === avatar"
+             class="absolute -top-2 -right-2 bg-green-500 text-black rounded-full p-1 shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="flex justify-end">
+    <button (click)="saveChanges()"
+            [disabled]="isLoading()"
+            class="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-lg shadow-lg transform transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+      <span *ngIf="isLoading()" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+      <span>{{ isLoading() ? 'Saving...' : 'Save Changes' }}</span>
+    </button>
+  </div>
+
+  <app-toast *ngIf="showToast()" [message]="toastMessage()" [type]="toastType()"></app-toast>
+
+</div>
