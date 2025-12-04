@@ -51,4 +51,9 @@ export class UserService {
   updateUser(id: string, data: Partial<UserDTO>): Observable<UserDTO> {
     return this.http.put<UserDTO>(`${this.apiUrl}/${id}`, data);
   }
+
+  //  Change Password
+  changePassword(id: string, payload: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/password`, payload);
+  }
 }
