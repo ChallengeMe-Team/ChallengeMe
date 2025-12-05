@@ -82,11 +82,34 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(created));
     }
 
+    // Update cu Error Handling
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> update(@PathVariable UUID id,
-                                          @Valid @RequestBody UserUpdateRequest request) {
-        User updated = userService.updateUser(id, request);
-        return ResponseEntity.ok(mapper.toDTO(updated));
+    public ResponseEntity<?> update(@PathVariable UUID id,
+                                    @Valid @RequestBody UserUpdateRequest request) {
+        try {
+            User updated = userService.updateUser(id, request);
+            return ResponseEntity.ok(mapper.toDTO(updated));
+        } catch (RuntimeException e) {
+            // Returnam 409 Conflict sau 400 Bad Request cu mesajul erorii
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Check Username Availability
+    @GetMapping("/check-username")
+    public ResponseEntity<Boolean> checkUsernameAvailability(@RequestParam String username) {
+        // Returneaza true daca exista, false daca e liber
+        // Poti adauga metoda asta in service: return userRepository.existsByUsername(username);
+        boolean exists = userService.existsByUsername(username);
+        return ResponseEntity.ok(exists);
+    }
+
+    // NEW: Check Email Availability
+    @GetMapping("/check-email")
+    public ResponseEntity<Boolean> checkEmailAvailability(@RequestParam String email) {
+        boolean exists = userService.existsByEmail(email);
+        return ResponseEntity.ok(exists);
     }
 
     @DeleteMapping("/{id}")

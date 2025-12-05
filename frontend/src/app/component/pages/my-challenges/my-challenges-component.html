@@ -85,7 +85,7 @@
   *ngIf="challengeService.isCreateModalOpen()"
   [mode]="'create'"
   (cancel)="challengeService.isCreateModalOpen.set(false)"
-  (submitChallenge)="loadMyChallenges()">
+  (submitChallenge)="onCreateChallenge($event)">
 </app-challenge-form>
 
 <div *ngIf="isDeleteModalOpen()" class="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">

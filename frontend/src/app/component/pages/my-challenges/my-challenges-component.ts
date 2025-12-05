@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Edit, Trash2, PlusCircle } from 'lucide-angular';
-
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
 import { Challenge } from '../challenges/challenge.model';
@@ -12,7 +11,6 @@ import { ToastComponent } from '../../../shared/toast/toast-component';
   selector: 'app-my-challenges',
   standalone: true,
   imports: [CommonModule, ChallengeFormComponent, ToastComponent, LucideAngularModule],
-  // Nu avem CSS dedicat, refolosim stilul de la challenges sau global
   templateUrl: './my-challenges-component.html',
   styles: []
 })
@@ -68,7 +66,46 @@ export class MyChallengesComponent implements OnInit {
 
   // --- ACTIUNI ---
 
-  // 1. EDIT
+  // 1. CREATE
+  onCreateChallenge(formValues: any) {
+    const currentUser = this.auth.currentUser();
+
+    if (!currentUser) {
+      this.showToast("You must be logged in to create challenges.", "error");
+      return;
+    }
+
+    // 1. Construim obiectul complet (formular + user)
+    const newChallenge = {
+      ...formValues,
+      createdBy: currentUser.username // Setăm proprietarul
+    };
+
+    this.isLoading.set(true);
+
+    // 2. Apelăm serviciul
+    this.challengeService.createChallenge(newChallenge).subscribe({
+      next: () => {
+        this.showToast('Challenge created successfully!', 'success');
+
+        // 3. Închidem modala
+        this.challengeService.isCreateModalOpen.set(false);
+
+        // 4. Reîncărcăm lista locală (My Challenges)
+        this.loadMyChallenges();
+
+        // NOTĂ: Lista generală (/challenges) se va actualiza automat când navighezi acolo,
+        // deoarece componenta respectivă își face fetch-ul în ngOnInit.
+      },
+      error: (err) => {
+        console.error(err);
+        this.showToast('Failed to create challenge.', 'error');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  // 2. EDIT
   openEditModal(challenge: Challenge) {
     this.editChallengeData.set(challenge);
     this.isEditModalOpen.set(true);
@@ -85,7 +122,7 @@ export class MyChallengesComponent implements OnInit {
     });
   }
 
-  // 2. DELETE
+  // 3. DELETE
   confirmDelete(challenge: Challenge) {
     this.challengeToDelete.set(challenge);
     this.isDeleteModalOpen.set(true);
