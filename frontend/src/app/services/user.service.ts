@@ -56,4 +56,13 @@ export class UserService {
   changePassword(id: string, payload: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/${id}/password`, payload);
   }
+
+  // Verificare disponibilitate
+  checkUsername(username: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/check-username?username=${username}`);
+  }
+
+  checkEmail(email: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/check-email?email=${email}`);
+  }
 }
