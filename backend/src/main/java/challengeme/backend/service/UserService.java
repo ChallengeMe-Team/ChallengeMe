@@ -44,11 +44,36 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    // Update User with Uniqueness Check
     public User updateUser(UUID id, UserUpdateRequest request) {
         User user = getUserById(id);
+
+        // 1. Validare Unicitate USERNAME
+        if (request.username() != null && !request.username().equals(user.getUsername())) {
+            if (userRepository.existsByUsername(request.username())) {
+                throw new RuntimeException("This username is already taken. Please choose another.");
+            }
+        }
+
+        // 2. Validare Unicitate EMAIL
+        if (request.email() != null && !request.email().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(request.email())) {
+                throw new RuntimeException("This email address is already in use.");
+            }
+        }
+
         mapper.updateEntity(request, user);
         return userRepository.save(user);
     }
+
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
 
     @Transactional
     public void changePassword(UUID userId, ChangePasswordRequest request) {
