@@ -23,7 +23,7 @@ export const routes: Routes = [
   {
     path: '',
     component: HomeComponent,
-    canActivate: [authGuard] // Protejat
+
   },
   {
     path: 'challenges',

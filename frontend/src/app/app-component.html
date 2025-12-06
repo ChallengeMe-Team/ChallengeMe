@@ -1,5 +1,4 @@
 <app-navbar
-  *ngIf="isLoggedIn()"
   (createChallengeRequest)="openForm()"
   (toastRequest)="showToast($event.message, $event.type)">
 </app-navbar>
