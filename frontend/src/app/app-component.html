@@ -1,19 +1,17 @@
+@if (showNavbar) {
 <app-navbar
-  *ngIf="isLoggedIn()"
   (createChallengeRequest)="openForm()"
   (toastRequest)="showToast($event.message, $event.type)">
 </app-navbar>
-
-<main
-  class="min-h-screen bg-[#0f0e13] text-white"
-  [class.pt-24]="isLoggedIn()"
-  [class.p-8]="isLoggedIn()"
-  [class.flex]="!isLoggedIn()"
-  [class.items-center]="!isLoggedIn()"
-  [class.justify-center]="!isLoggedIn()">
+}
+<main class="min-h-screen bg-[#0f0e13] text-white"
+      [class.pt-24]="showNavbar"
+      [class.p-8]="showNavbar"
+      [class.flex]="!showNavbar"
+      [class.items-center]="!showNavbar"
+      [class.justify-center]="!showNavbar">
 
   <router-outlet (activate)="onActivate($event)"></router-outlet>
-
 </main>
 
 <app-challenge-form
