@@ -76,6 +76,10 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    // return !!this.getToken();
+    // Înainte verificam doar: return !!this.getToken();
+    // Acum verificăm dacă avem datele utilizatorului încărcate efectiv.
+    // Datorită APP_INITIALIZER, știm sigur că s-a încercat încărcarea lor înainte de acest punct.
+    return !!this.currentUser();
   }
 }

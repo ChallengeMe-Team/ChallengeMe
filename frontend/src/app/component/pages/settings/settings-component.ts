@@ -245,18 +245,28 @@ export class SettingsComponent implements OnInit {
     this.isLoading.set(true);
 
     this.userService.updateUser(this.currentUser.id, payload).subscribe({
-      next: (updatedUser) => {
-        this.triggerToast(successMsg, 'success');
+      next: (response: any) => {
+        // ATENTIE: 'response' acum contine { user: ..., token: ... }
 
-        const mergedUser = { ...this.currentUser, ...updatedUser };
+        // 1. Extragem datele
+        const updatedUserDTO = response.user;
+        const newToken = response.token;
+
+        // 2. ACTUALIZAM TOKEN-UL IN BROWSER (CRITIC!)
+        if (newToken) {
+          localStorage.setItem('auth-token', newToken);
+        }
+
+        // 3. Actualizam starea user-ului in aplicatie
+        const mergedUser = { ...this.currentUser, ...updatedUserDTO };
         this.currentUser = mergedUser;
         this.authService.currentUser.set(mergedUser);
 
+        this.triggerToast(successMsg, 'success');
         this.closeModal();
         this.isLoading.set(false);
       },
       error: (err) => {
-        // Afisam eroarea de unicitate din backend
         const msg = err.error?.error || 'Update failed.';
         this.triggerToast(msg, 'error');
         this.isLoading.set(false);

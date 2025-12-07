@@ -73,4 +73,10 @@ public class ChallengeService {
         repository.delete(entity);
     }
 
+    @Transactional
+    public void synchronizeUsername(String oldUsername, String newUsername) {
+        // Aceasta va executa query-ul creat mai sus
+        repository.updateCreatorUsername(oldUsername, newUsername);
+    }
+
 }

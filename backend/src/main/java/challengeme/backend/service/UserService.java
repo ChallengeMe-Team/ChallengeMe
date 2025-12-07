@@ -24,6 +24,9 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
+    //Am adăugat ChallengeService pentru sincronizare ---
+    private final ChallengeService challengeService;
+
     // -----------------------------------------------------------
     // BASIC CRUD
     // -----------------------------------------------------------
@@ -45,27 +48,55 @@ public class UserService {
     }
 
     // Update User with Uniqueness Check
+    @Transactional // Recomandat Transactional aici
     public User updateUser(UUID id, UserUpdateRequest request) {
         User user = getUserById(id);
 
-        // 1. Validare Unicitate USERNAME
-        if (request.username() != null && !request.username().equals(user.getUsername())) {
-            if (userRepository.existsByUsername(request.username())) {
-                throw new RuntimeException("This username is already taken. Please choose another.");
+        // Salvăm username-ul vechi ÎNAINTE de update
+        String oldUsername = user.getUsername();
+        boolean usernameChanged = false;
+
+        // 1. Update Username
+        // Folosim request.username() fără "get" (fiind Record)
+        if (request.username() != null && !request.username().isBlank()) {
+            if (!request.username().equals(user.getUsername())) {
+                if (userRepository.existsByUsername(request.username())) {
+                    throw new RuntimeException("Username already taken");
+                }
+                user.setUsername(request.username());
+                usernameChanged = true; // Marcăm că s-a schimbat
             }
         }
 
-        // 2. Validare Unicitate EMAIL
-        if (request.email() != null && !request.email().equals(user.getEmail())) {
-            if (userRepository.existsByEmail(request.email())) {
-                throw new RuntimeException("This email address is already in use.");
+        // 2. Update Email
+        // Folosim request.email() fără "get"
+        if (request.email() != null && !request.email().isBlank()) {
+            // Verificăm dacă emailul e diferit și dacă e deja luat
+            if (!request.email().equals(user.getEmail())) {
+                if (userRepository.existsByEmail(request.email())) {
+                    throw new RuntimeException("Email already taken");
+                }
+                user.setEmail(request.email());
             }
         }
 
-        mapper.updateEntity(request, user);
-        return userRepository.save(user);
-    }
+        // 3. Update Avatar
+        // Folosim request.avatar() fără "get"
+        if (request.avatar() != null) {
+            user.setAvatar(request.avatar());
+        }
 
+        // Salvăm userul
+        User updatedUser = userRepository.save(user);
+
+        // 4. SINCRONIZARE
+        if (usernameChanged) {
+            // Dacă și-a schimbat numele, actualizăm toate provocările create de el
+            challengeService.synchronizeUsername(oldUsername, updatedUser.getUsername());
+        }
+
+        return updatedUser;
+    } // Aici se închide metoda updateUser (aveai o acoladă în plus înainte)
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }

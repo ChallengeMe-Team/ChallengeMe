@@ -48,8 +48,10 @@ export class UserService {
     return this.http.get<UserDTO[]>(this.apiUrl);
   }
 
-  updateUser(id: string, data: Partial<UserDTO>): Observable<UserDTO> {
-    return this.http.put<UserDTO>(`${this.apiUrl}/${id}`, data);
+  // Returnam 'any' sau o interfata {user: UserDTO, token: string}
+  updateUser(id: string, data: Partial<UserDTO>): Observable<any> {
+    // Backend-ul va returna acum: { user: {...}, token: "ey..." }
+    return this.http.put<any>(`${this.apiUrl}/${id}`, data);
   }
 
   //  Change Password
