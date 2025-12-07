@@ -23,7 +23,7 @@ export const routes: Routes = [
   {
     path: '',
     component: HomeComponent,
-
+    canActivate: [authGuard] // Protejat: Dacă nu ești logat, te trimite la /auth
   },
   {
     path: 'challenges',
@@ -53,6 +53,16 @@ export const routes: Routes = [
     path: 'settings',
     component: SettingsComponent,
     canActivate: [authGuard]
+  },
+  {
+    path: 'home',
+    redirectTo: '', // Te trimite la path: '' care este protejat de authGuard
+    pathMatch: 'full'
+  },
+  {
+    path: 'auth',
+    component: AuthComponent,
+    canActivate: [guestGuard]
   },
   {path: '**', redirectTo: ''} // Orice altă rută duce la Home (care va verifica authGuard)
 ];

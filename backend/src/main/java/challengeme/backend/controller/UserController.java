@@ -1,5 +1,6 @@
 package challengeme.backend.controller;
 
+
 import challengeme.backend.dto.FriendDTO;
 import challengeme.backend.dto.UserDTO;
 import challengeme.backend.dto.request.create.UserCreateRequest;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.*;
 import challengeme.backend.dto.request.update.ChangePasswordRequest;
+import challengeme.backend.security.JwtUtils;
 
 @RestController
 @RequestMapping("/api/users")
@@ -24,6 +26,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper mapper;
+    private final JwtUtils jwtUtils; // <--- 1. Injecteaza Generatorul de Tokenuri
 
     // -----------------------------------------------------------
     // GET user friends
@@ -86,11 +89,33 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id,
                                     @Valid @RequestBody UserUpdateRequest request) {
+//        try {
+//            User updated = userService.updateUser(id, request);
+//            return ResponseEntity.ok(mapper.toDTO(updated));
+//        } catch (RuntimeException e) {
+//            // Returnam 409 Conflict sau 400 Bad Request cu mesajul erorii
+//            return ResponseEntity.status(HttpStatus.CONFLICT)
+//                    .body(Map.of("error", e.getMessage()));
+//        }
         try {
-            User updated = userService.updateUser(id, request);
-            return ResponseEntity.ok(mapper.toDTO(updated));
+            // 1. Update în baza de date
+            User updatedUser = userService.updateUser(id, request);
+
+            // 2. Generăm token-ul NOU folosind metoda nouă din JwtUtils
+            // Îi pasăm direct noul username
+            String newToken = jwtUtils.generateTokenFromUsername(updatedUser.getUsername());
+
+            // 3. Convertim la DTO
+            UserDTO userDTO = mapper.toDTO(updatedUser);
+
+            // 4. Construim răspunsul
+            Map<String, Object> response = new HashMap<>();
+            response.put("user", userDTO);
+            response.put("token", newToken);
+
+            return ResponseEntity.ok(response);
+
         } catch (RuntimeException e) {
-            // Returnam 409 Conflict sau 400 Bad Request cu mesajul erorii
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", e.getMessage()));
         }
