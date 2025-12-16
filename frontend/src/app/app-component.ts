@@ -1,11 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterOutlet } from '@angular/router';
+import {NavigationEnd, Router, RouterOutlet} from '@angular/router';
 import { NavbarComponent } from './component/navbar/navbar-component';
 import { ChallengeFormComponent } from './component/forms/challenge-form/challenge-form';
 import { ToastComponent } from './shared/toast/toast-component';
 import { AuthComponent } from './component/auth/auth-component';
 import { AuthService } from './services/auth.service';
+import {filter} from 'rxjs';
 
 
 @Component({
@@ -28,10 +29,26 @@ export class AppComponent {
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
+  showNavbar: boolean = false;
+
   isFormVisible = false;
   toastVisible = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
+
+  ngOnInit(): void {
+    // Setăm starea inițială a Navbar-ului
+    this.showNavbar = !this.router.url.startsWith('/auth');
+
+    // Ascultă evenimentele de schimbare a rutei
+    this.router.events.pipe(
+      // Filtrăm doar evenimentele de finalizare a navigării
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      // Setează showNavbar la 'false' dacă ruta curentă începe cu '/auth'
+      this.showNavbar = !event.urlAfterRedirects.startsWith('/auth');
+    });
+  }
 
   openForm() {
     this.isFormVisible = true;

@@ -6,6 +6,7 @@ import challengeme.backend.dto.request.update.ChallengeUserUpdateRequest;
 import challengeme.backend.mapper.ChallengeUserMapper;
 import challengeme.backend.model.ChallengeUser;
 import challengeme.backend.service.ChallengeUserService;
+import challengeme.backend.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -50,10 +51,16 @@ public class ChallengeUserController {
         return ResponseEntity.ok(dtos);
     }
 
+    @PostMapping("/assign")
+    public ResponseEntity<ChallengeUserDTO> assignChallenge(@Valid @RequestBody ChallengeUserCreateRequest request) {
+        ChallengeUser created = service.assignChallenge(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(created));
+    }
+
     @PutMapping("/{id}/status")
     public ResponseEntity<ChallengeUserDTO> updateStatus(@PathVariable UUID id,
                                                          @RequestBody ChallengeUserUpdateRequest request) {
-        ChallengeUser updated = service.updateChallengeUserStatus(id, request.getStatus());
+        ChallengeUser updated = service.updateChallengeUserStatus(id, request);
         return ResponseEntity.ok(mapper.toDTO(updated));
     }
 
@@ -62,4 +69,5 @@ public class ChallengeUserController {
         service.deleteChallengeUser(id);
         return ResponseEntity.noContent().build();
     }
+
 }

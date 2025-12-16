@@ -32,8 +32,16 @@ public class ChallengeUser {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ChallengeUserStatus status = ChallengeUserStatus.PENDING;
+    private ChallengeUserStatus status = ChallengeUserStatus.RECEIVED;
 
     private LocalDate dateAccepted;
     private LocalDate dateCompleted;
+
+    private LocalDate startDate;
+
+    private LocalDate deadline;
+
+    @NotNull
+    private UUID assignedBy;
+
 }

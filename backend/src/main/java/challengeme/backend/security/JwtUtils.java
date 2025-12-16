@@ -51,4 +51,14 @@ public class JwtUtils {
         }
         return false;
     }
+
+    // Generează token direct din Username (pentru Update Profil)
+    public String generateTokenFromUsername(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key(), SignatureAlgorithm.HS256)
+                .compact();
+    }
 }
