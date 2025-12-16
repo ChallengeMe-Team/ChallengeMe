@@ -56,11 +56,20 @@ INSERT INTO user_badges (id, user_id, badge_id, date_awarded) VALUES
 
 -- ===========================
 -- Challenge Users
-INSERT INTO challenge_users (id, user_id, challenge_id, status, date_accepted, date_completed) VALUES
-                                                                                                   ('11111111-1111-aaaa-1111-111111111111', '11111111-1111-1111-1111-111111111111', '11111111-1111-aaaa-aaaa-111111111111', 'COMPLETED', CURRENT_DATE - 5, CURRENT_DATE - 1),
-                                                                                                   ('22222222-2222-bbbb-bbbb-222222222222', '22222222-2222-2222-2222-222222222222', '22222222-2222-bbbb-bbbb-222222222222', 'ACCEPTED', CURRENT_DATE - 3, NULL),
-                                                                                                   ('33333333-3333-cccc-cccc-333333333333', '33333333-3333-3333-3333-333333333333', '33333333-3333-cccc-cccc-333333333333', 'PENDING', NULL, NULL);
+-- ===========================
+-- Challenge Users
+-- Updates: Added start_date, deadline, and assigned_by columns
+-- ===========================
 
+INSERT INTO challenge_users (id, user_id, challenge_id, status, date_accepted, date_completed, start_date, deadline, assigned_by) VALUES
+-- Emilia completed Angular Basics (Assigned by Calin)
+('11111111-1111-aaaa-1111-111111111111', '11111111-1111-1111-1111-111111111111', '11111111-1111-aaaa-aaaa-111111111111', 'COMPLETED', CURRENT_DATE - 5, CURRENT_DATE - 1, CURRENT_DATE - 5, CURRENT_DATE + 2, '33333333-3333-3333-3333-333333333333'),
+
+-- Roger accepted Spring Boot (Assigned by Alex)
+('22222222-2222-bbbb-bbbb-222222222222', '22222222-2222-2222-2222-222222222222', '22222222-2222-bbbb-bbbb-222222222222', 'ACCEPTED', CURRENT_DATE - 3, NULL, CURRENT_DATE - 3, CURRENT_DATE + 7, '44444444-4444-4444-4444-444444444444'),
+
+-- Calin has pending Docker Setup (Assigned by Emilia)
+('33333333-3333-cccc-cccc-333333333333', '33333333-3333-3333-3333-333333333333', '33333333-3333-cccc-cccc-333333333333', 'PENDING', NULL, NULL, CURRENT_DATE + 1, CURRENT_DATE + 10, '11111111-1111-1111-1111-111111111111');
 -- ===========================
 -- Leaderboard
 INSERT INTO leaderboard (id, user_id, total_points, rank) VALUES
