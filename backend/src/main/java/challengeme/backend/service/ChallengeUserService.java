@@ -71,7 +71,7 @@ public class ChallengeUserService {
         link.setUser(targetUser);
         link.setChallenge(challenge);
         link.setAssignedBy(currentUser.getId());
-        link.setStatus(ChallengeUserStatus.PENDING);
+        link.setStatus(ChallengeUserStatus.RECEIVED);
 
         ChallengeUser savedLink = repository.save(link);
 
