@@ -12,6 +12,9 @@ public interface ChallengeUserRepository extends JpaRepository<ChallengeUser, UU
     List<ChallengeUser> findByUserId(UUID userId);
 
     void deleteAllByChallengeId(UUID challengeId);
+
+    // Verifică dacă există deja o intrare pentru acest user și acest challenge
+    boolean existsByUserIdAndChallengeId(UUID userId, UUID challengeId);
 }
 
 
