@@ -1,16 +1,26 @@
-import {Component, OnInit, ChangeDetectorRef, inject, signal} from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router'; // 1. Import Router pentru redirect
+
 import { Challenge, Difficulty } from './challenge.model';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
-import {ChallengeFormComponent} from '../../forms/challenge-form/challenge-form';
-import {ToastComponent} from '../../../shared/toast/toast-component';
+import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
+import { ToastComponent } from '../../../shared/toast/toast-component';
+import {AcceptChallengeModalComponent} from '../../accept-challenge-modal/accept-challenge-modal';
 
+// 2. Import Componenta Noua
 
 @Component({
   selector: 'app-challenges',
   standalone: true,
-  imports: [CommonModule, ToastComponent, ChallengeFormComponent],
+  // 3. Adaugam componenta in lista de imports
+  imports: [
+    CommonModule,
+    ToastComponent,
+    ChallengeFormComponent,
+    AcceptChallengeModalComponent
+  ],
   templateUrl: './challenges-component.html',
   styleUrls: ['./challenges-component.css']
 })
@@ -18,7 +28,7 @@ export class ChallengesComponent implements OnInit {
   public challengeService = inject(ChallengeService);
   private cdr = inject(ChangeDetectorRef);
   private auth = inject(AuthService);
-
+  private router = inject(Router); // 4. Injectam Router-ul
 
   challenges = signal<Challenge[]>([]);
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
@@ -26,13 +36,22 @@ export class ChallengesComponent implements OnInit {
   // State for modal
   isLoading = signal(false);
   errorMessage = signal('');
+
+  // Edit & Create Modals
   isEditModalOpen = signal(false);
   editChallenge = signal<any | null>(null);
+
+  // Toast
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
+
+  // Delete Modal
   isDeleteModalOpen = signal(false);
   challengeToDelete = signal<Challenge | null>(null);
 
+  // 5. Variables for Accept/Contract Modal
+  isAcceptModalOpen = false;
+  selectedChallengeForContract: any = null;
 
   ngOnInit(): void {
     this.loadChallenges();
@@ -53,6 +72,8 @@ export class ChallengesComponent implements OnInit {
       }
     });
   }
+
+
 
   getChallengesByDifficulty(difficulty: Difficulty): Challenge[] {
     return this.challenges().filter(c => c.difficulty === difficulty);
@@ -84,6 +105,7 @@ export class ChallengesComponent implements OnInit {
       }
     });
   }
+
   onChallengeDoubleClick(challenge: Challenge) {
     const user = this.auth.currentUser();
 
@@ -95,6 +117,49 @@ export class ChallengesComponent implements OnInit {
     this.editChallenge.set(challenge);
     this.isEditModalOpen.set(true);
   }
+
+  // --- LOGICA PENTRU ACCEPT CHALLENGE (CONTRACT) ---
+
+  // Se apeleaza cand dai click pe "Start Challenge"
+  openContractModal(challenge: any) {
+    this.selectedChallengeForContract = challenge;
+    this.isAcceptModalOpen = true;
+  }
+
+  // Se apeleaza cand userul da click pe "Sign & Start" in modal
+  onContractSigned(dates: { start: string, end: string }) {
+    if (!this.selectedChallengeForContract) return;
+
+    this.challengeService.acceptChallenge(
+      this.selectedChallengeForContract.id,
+      dates.start,
+      dates.end
+    ).subscribe({
+      next: () => {
+        // 1. Inchidem modalul
+        this.isAcceptModalOpen = false;
+
+        // 2. Afisam succes
+        this.showToast("Commitment signed! Good luck! 🚀", "success");
+
+        // 3. Optional: Redirectionam catre pagina "My Challenges"
+        // (Daca ai o ruta definita pentru asta)
+        this.router.navigate(['/my-challenges']);
+
+        // Alternativa: Doar reincarcam lista daca ramanem pe pagina
+        // this.loadChallenges();
+        setTimeout(() => {
+          this.router.navigate(['/my-challenges']);
+        }, 1500);
+      },
+      error: (err) => {
+        console.error(err);
+        this.showToast(err.error?.message || "Failed to accept challenge.", "error");
+      }
+    });
+  }
+
+  // --------------------------------------------------
 
   onChallengeUpdated(updated: any) {
     this.challengeService.updateChallenge(updated.id, updated).subscribe({
@@ -108,6 +173,7 @@ export class ChallengesComponent implements OnInit {
       }
     });
   }
+
   showToast(message: string, type: 'success' | 'error' = 'error') {
     this.toastMessage.set(message);
     this.toastType.set(type);
@@ -115,47 +181,38 @@ export class ChallengesComponent implements OnInit {
       this.toastMessage.set(null);
     }, 3000);
   }
-  onRightClick(event: MouseEvent, challenge: Challenge) {
-    // 1. Oprim meniul browserului (Inspect, Save As, etc.)
-    event.preventDefault();
 
+  onRightClick(event: MouseEvent, challenge: Challenge) {
+    event.preventDefault();
     const user = this.auth.currentUser();
 
-    // 2. Verificam Ownership-ul
     if (!user || user.username !== challenge.createdBy) {
-      // Cazul A: Nu esti proprietar -> Eroare Rosie
       this.showToast("You can only delete challenges created by you.", "error");
       return;
     }
 
-    // Cazul B: Esti proprietar -> Deschidem fereastra de confirmare
     this.challengeToDelete.set(challenge);
     this.isDeleteModalOpen.set(true);
   }
+
   confirmDelete() {
     const challenge = this.challengeToDelete();
     if (!challenge) return;
 
-    // Apelam Backend-ul
     this.challengeService.deleteChallenge(challenge.id).subscribe({
       next: () => {
-        // Succes: Mesaj Verde + Scoatem din lista instant (fara reload la toata pagina)
         this.showToast("Challenge deleted successfully.", "success");
-
-        // Actualizam lista locala (filtram elementul sters)
         this.challenges.update(prev => prev.filter(c => c.id !== challenge.id));
-
-        // Inchidem modala
         this.closeDeleteModal();
       },
       error: (err) => {
-        // Eroare (ex: Backend-ul zice 403 Forbidden daca cineva a "fentat" UI-ul)
         console.error(err);
         this.showToast("Error deleting challenge.", "error");
         this.closeDeleteModal();
       }
     });
   }
+
   closeDeleteModal() {
     this.isDeleteModalOpen.set(false);
     this.challengeToDelete.set(null);

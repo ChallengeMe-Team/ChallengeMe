@@ -6,3 +6,6 @@ import { appConfig } from './app/app.config';
 
 bootstrapApplication(AppComponent, appConfig)
   .catch((err) => console.error(err));
+
+
+//docker exec -it challengeme-db psql -U postgres -d challengeme -c "SELECT * FROM users;"

@@ -41,7 +41,7 @@ public class ChallengeUser {
 
     private LocalDate deadline;
 
-    @NotNull
+    @Column(nullable = true)
     private UUID assignedBy;
 
 }
