@@ -9,14 +9,13 @@ import { Challenge } from '../component/pages/challenges/challenge.model';
 export class ChallengeService {
   private http = inject(HttpClient);
 
-  // The URL must be complete and point to port 8080 of the backend
   private apiUrl = 'http://localhost:8080/api/challenges';
+  private challengeUserUrl = 'http://localhost:8080/api/challenge-users';
 
   isCreateModalOpen = signal(false);
 
   constructor() { }
 
-  // Method to get the list (used in the table)
   getAllChallenges(): Observable<Challenge[]> {
     return this.http.get<Challenge[]>(this.apiUrl);
   }
@@ -37,4 +36,16 @@ export class ChallengeService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+
+  getChallengesByStatus(userId: string, status: 'RECEIVED' | 'ACCEPTED'): Observable<any[]> {
+    return this.http.get<any[]>(`${this.challengeUserUrl}/user/${userId}/status/${status}`);
+  }
+
+  updateChallengeStatus(challengeId: string, userId: string, status: 'ACCEPTED' | 'DECLINED'): Observable<any> {
+    return this.http.put(`${this.challengeUserUrl}/status`, {
+      challengeId,
+      userId,
+      status
+    });
+  }
 }
