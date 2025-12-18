@@ -58,4 +58,13 @@ export class ChallengeService {
       status
     });
   }
+  assignChallenge(challengeId: string, friendId: string) {
+    return this.http.post(
+      'http://localhost:8080/api/challenge-users/assign',
+      {
+        challengeId,
+        userId: friendId
+      }
+    );
+  }
 }

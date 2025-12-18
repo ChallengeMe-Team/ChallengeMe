@@ -135,12 +135,17 @@ public class ChallengeUserService {
 
     @Transactional
     public ChallengeUser assignChallenge(ChallengeUserCreateRequest request) {
+        System.out.println("Assigning challenge " + request.getChallengeId() + " to user " + request.getUserId());
+        if (repository.existsByUserIdAndChallengeId(request.getUserId(), request.getChallengeId())) {
+            throw new RuntimeException("You already sent this challenge to this friend");
+        }
+
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new UserNotFoundException("Current user not found"));
 
         User targetUser = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new UserNotFoundException("Target user not found with id: " + request.getUserId()));
+                .orElseThrow(() -> new UserNotFoundException("Target user not found"));
 
         Challenge challenge = challengeRepository.findById(request.getChallengeId())
                 .orElseThrow(() -> new ChallengeNotFoundException(request.getChallengeId()));
@@ -153,15 +158,12 @@ public class ChallengeUserService {
 
         ChallengeUser savedLink = repository.save(link);
 
-        String message = currentUser.getUsername() + " te-a provocat la: " + challenge.getTitle() + "!";
-
-        NotificationCreateRequest notifRequest = new NotificationCreateRequest(
+        // 2. Notificare
+        notificationService.createNotification(new NotificationCreateRequest(
                 targetUser.getId(),
-                message,
+                currentUser.getUsername() + " te-a provocat la: " + challenge.getTitle() + "!",
                 NotificationType.CHALLENGE
-        );
-
-        notificationService.createNotification(notifRequest);
+        ));
 
         return savedLink;
     }

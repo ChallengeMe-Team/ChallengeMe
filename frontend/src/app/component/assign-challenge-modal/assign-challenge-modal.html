@@ -1,0 +1,48 @@
+<div *ngIf="isVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+  <div class="bg-[#1a1627] border border-gray-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden border-t-4 border-purple-500">
+
+    <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
+      <h3 class="text-lg font-bold text-white flex items-center gap-2">
+        <span>✈️</span> Throw Challenge
+      </h3>
+      <button (click)="close.emit()" class="text-gray-400 hover:text-white transition-colors">✕</button>
+    </div>
+
+    <div class="p-4">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Search friends..."
+        class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500 mb-4 transition-all"
+      >
+
+      <div class="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+        <div
+          *ngFor="let friend of filteredFriends()"
+          (click)="onSelect(friend)"
+          class="flex items-center justify-between p-3 hover:bg-purple-500/10 rounded-xl cursor-pointer transition-all border border-transparent hover:border-purple-500/30 group"
+        >
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-lg border-2 border-gray-700 bg-gradient-to-br from-purple-600 to-blue-600">
+              {{ getInitials(friend.username) }}
+            </div>
+
+            <div class="flex-1">
+              <p class="text-white font-medium group-hover:text-purple-300">{{ friend.username }}</p>
+              <p class="text-xs text-gray-500">{{ friend.points }} pts</p>
+            </div>
+          </div>
+
+          <span class="opacity-0 group-hover:opacity-100 text-purple-400 transition-opacity font-bold text-sm flex items-center gap-1">
+            Send ✈️
+          </span>
+        </div>
+
+        <p *ngIf="filteredFriends().length === 0" class="text-center text-gray-500 py-4 text-sm">
+          No friends found.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
