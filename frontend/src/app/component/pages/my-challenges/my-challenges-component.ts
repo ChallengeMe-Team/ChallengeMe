@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router'; // Import Router
-import { LucideAngularModule, Edit, Trash2, PlusCircle, Check, X } from 'lucide-angular';
+import { LucideAngularModule, Edit, Trash2, PlusCircle, Check, X, Clock } from 'lucide-angular';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
 import { Challenge } from '../challenges/challenge.model';
@@ -52,7 +52,7 @@ export class MyChallengesComponent implements OnInit {
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
 
-  readonly icons = { Edit, Trash2, PlusCircle, Check, X };
+  readonly icons = { Edit, Trash2, PlusCircle, Check, X, Clock };
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -77,7 +77,7 @@ export class MyChallengesComponent implements OnInit {
 
     // 2. Load Inbox & Active
     if(currentUser.id) {
-      this.challengeService.getChallengesByStatus(currentUser.id, 'RECEIVED').subscribe(data => {
+      this.challengeService.getChallengesByStatus(currentUser.id, 'PENDING').subscribe(data => {
         this.inboxChallenges.set(data);
       });
 
@@ -103,42 +103,43 @@ export class MyChallengesComponent implements OnInit {
   onContractSigned(dates: { start: string, end: string }) {
     if (!this.selectedChallengeForContract) return;
 
-    // Folosim metoda noua 'acceptChallenge' din service (cea cu start/deadline)
-    // NOTA: 'item.id' aici se refera la ChallengeID.
 
-    // Deoarece endpoint-ul de acceptare cere ID-ul provocarii (challengeId), nu al relatiei:
-    // Backend: @PostMapping("/{challengeId}/accept")
+    const payload = {
+      status: 'ACCEPTED',
+      startDate: dates.start,
+      targetDeadline: dates.end
+    };
 
-    this.challengeService.acceptChallenge(
-      this.selectedChallengeForContract.id, // Challenge ID
-      dates.start,
-      dates.end
-    ).subscribe({
+    // Apelăm direct un PUT/PATCH pe ID-ul relației
+    this.challengeService.updateChallengeUser(this.selectedChallengeForContract.id, payload).subscribe({
       next: () => {
-        this.showToast('Commitment signed! Challenge Accepted!', 'success');
+        this.showToast('Challenge Accepted! 🚀', 'success');
         this.isAcceptModalOpen = false;
 
-        // Mutam elementul vizual din Inbox in Active
+        // Refresh local
         this.inboxChallenges.update(prev => prev.filter(c => c.id !== this.selectedChallengeForContract.id));
-        this.activeChallenges.update(prev => [...prev, this.selectedChallengeForContract]);
+        this.activeChallenges.update(prev => [...prev, { ...this.selectedChallengeForContract, status: 'ACCEPTED', startDate: dates.start }]);
 
-        // Comutam pe tab-ul Active
         this.switchTab('active');
       },
       error: (err) => {
         console.error(err);
-        this.showToast('Failed to accept challenge.', 'error');
+        this.showToast(err.error?.message || 'Failed to accept challenge.', 'error');
       }
     });
   }
 
   declineChallenge(item: any) {
-    const user = this.auth.currentUser();
-    if(!user?.id) return;
+    if(!confirm('Are you sure you want to decline this challenge?')) return;
 
-    this.challengeService.updateChallengeStatus(item.id, user.id, 'DECLINED').subscribe(() => {
-      this.showToast('Challenge Declined.', 'success');
-      this.inboxChallenges.update(prev => prev.filter(c => c.id !== item.id));
+    // MODIFICARE: Folosim delete (Refuse) în loc de update status
+    // item.id este ID-ul relației (ChallengeUser ID)
+    this.challengeService.refuseChallenge(item.id).subscribe({
+      next: () => {
+        this.showToast('Challenge Declined.', 'success');
+        this.inboxChallenges.update(prev => prev.filter(c => c.id !== item.id));
+      },
+      error: () => this.showToast('Action failed.', 'error')
     });
   }
 
