@@ -40,7 +40,7 @@ class UserServiceTests {
 
     @Test
     void testCreateUser() {
-        User user = new User(userId, "Ana", "ana@email.com", "pass123", 10, "user");
+        User user = new User(userId, "Ana", List<UUID.randomUUID()>, "pass123", "pass123", 10, "user");
         when(userRepository.save(user)).thenReturn(user);
 
         User created = userService.createUser(user);

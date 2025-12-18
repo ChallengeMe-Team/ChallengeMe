@@ -20,6 +20,16 @@ export class ChallengeService {
     return this.http.get<Challenge[]>(this.apiUrl);
   }
 
+  acceptChallenge(challengeId: string, startDate: string, deadline: string | null) {
+    const payload = {
+      status: 'ACCEPTED',
+      startDate: startDate,
+      targetDeadline: deadline
+    };
+
+    return this.http.post<any>(`/api/user-challenges/${challengeId}/accept`, payload);
+  }
+
   getUserChallenges(username: string): Observable<Challenge[]> {
     return this.http.get<Challenge[]>(`${this.apiUrl}/user/${username}`);
   }

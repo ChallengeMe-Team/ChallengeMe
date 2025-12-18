@@ -1,8 +1,10 @@
 package challengeme.backend.service;
 
+import challengeme.backend.dto.ChallengeUserDTO;
 import challengeme.backend.dto.request.create.ChallengeUserCreateRequest;
 import challengeme.backend.dto.request.create.NotificationCreateRequest;
 import challengeme.backend.dto.request.update.ChallengeUserUpdateRequest;
+import challengeme.backend.dto.request.update.UpdateChallengeRequest;
 import challengeme.backend.exception.ChallengeNotFoundException;
 import challengeme.backend.exception.ChallengeUserNotFoundException;
 import challengeme.backend.exception.UserNotFoundException;
@@ -52,6 +54,72 @@ public class ChallengeUserService {
     public ChallengeUser getChallengeUserById(UUID id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ChallengeUserNotFoundException("ChallengeUser not found with id: " + id));
+    }
+
+    public ChallengeUserDTO acceptChallenge(UUID challengeId, String username, UpdateChallengeRequest request) {
+        // 1. Găsim User-ul (presupunând că ai userRepository)
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Găsim Challenge-ul
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new RuntimeException("Challenge not found"));
+
+        // 3. Verificăm dacă userul are deja această provocare (opțional, dar recomandat)
+        // boolean exists = userChallengeRepository.existsByUserAndChallenge(user, challenge);
+        // if (exists) throw new RuntimeException("You already accepted this challenge!");
+
+        // 4. Creăm relația nouă
+        ChallengeUser challengeUser = new ChallengeUser();
+        challengeUser.setUser(user);
+        challengeUser.setChallenge(challenge);
+        challengeUser.setStatus(ChallengeUserStatus.valueOf(request.getStatus())); // status din Frontend
+
+        // Setăm datele din Request
+        if (request.getStartDate() != null) {
+            challengeUser.setStartDate(request.getStartDate());
+            challengeUser.setDateAccepted(request.getStartDate()); // Setăm și data acceptării
+        }
+
+        if (request.getTargetDeadline() != null) {
+            // ATENȚIE: Verifică dacă entitatea ta are 'deadline' sau 'targetDeadline'
+            challengeUser.setDeadline(request.getTargetDeadline());
+        }
+
+        // IMPORTANT: Setăm assignedBy (ca să nu crape baza de date cu NotNull)
+        // Fiind self-assigned, punem ID-ul userului propriu
+        challengeUser.setAssignedBy(user.getId());
+
+        // 5. Salvăm
+        ChallengeUser saved = repository.save(challengeUser);
+
+        return convertToDto(saved);
+    }
+
+    private ChallengeUserDTO convertToDto(ChallengeUser entity) {
+        ChallengeUserDTO dto = new ChallengeUserDTO();
+
+        // Mapăm ID-ul relației
+        dto.setId(entity.getId());
+
+        // Mapăm datele despre User (verificăm să nu fie null)
+        if (entity.getUser() != null) {
+            dto.setUserId(entity.getUser().getId());
+            dto.setUsername(entity.getUser().getUsername());
+        }
+
+        // Mapăm datele despre Challenge
+        if (entity.getChallenge() != null) {
+            dto.setChallengeId(entity.getChallenge().getId());
+            dto.setChallengeTitle(entity.getChallenge().getTitle());
+        }
+
+        // Mapăm statusul și datele calendaristice
+        dto.setStatus(entity.getStatus());
+        dto.setDateAccepted(entity.getDateAccepted());
+        dto.setDateCompleted(entity.getDateCompleted());
+
+        return dto;
     }
 
     public List<ChallengeUser> getChallengeUsersByUserId(UUID userId) {
