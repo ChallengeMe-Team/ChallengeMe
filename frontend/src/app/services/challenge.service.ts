@@ -9,6 +9,8 @@ import { Challenge } from '../component/pages/challenges/challenge.model';
 export class ChallengeService {
   private http = inject(HttpClient);
 
+  private readonly baseUrl = 'http://localhost:8080/api';
+
   private apiUrl = 'http://localhost:8080/api/challenges';
   private challengeUserUrl = 'http://localhost:8080/api/challenge-users';
 
@@ -60,7 +62,7 @@ export class ChallengeService {
   }
   assignChallenge(challengeId: string, friendId: string) {
     return this.http.post(
-      'http://localhost:8080/api/challenge-users/assign',
+      `${this.challengeUserUrl}/assign`,
       {
         challengeId,
         userId: friendId

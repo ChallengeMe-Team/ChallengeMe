@@ -7,6 +7,7 @@ import challengeme.backend.dto.request.update.ChallengeUserUpdateRequest;
 import challengeme.backend.dto.request.update.UpdateChallengeRequest;
 import challengeme.backend.exception.ChallengeNotFoundException;
 import challengeme.backend.exception.ChallengeUserNotFoundException;
+import challengeme.backend.exception.ConflictException;
 import challengeme.backend.exception.UserNotFoundException;
 import challengeme.backend.model.*;
 import challengeme.backend.repository.ChallengeRepository;
@@ -137,7 +138,7 @@ public class ChallengeUserService {
     public ChallengeUser assignChallenge(ChallengeUserCreateRequest request) {
         System.out.println("Assigning challenge " + request.getChallengeId() + " to user " + request.getUserId());
         if (repository.existsByUserIdAndChallengeId(request.getUserId(), request.getChallengeId())) {
-            throw new RuntimeException("You already sent this challenge to this friend");
+            throw new ConflictException("You already sent this challenge to this friend");
         }
 
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
