@@ -1,6 +1,7 @@
 package challengeme.backend.repository;
 
 import challengeme.backend.model.ChallengeUser;
+import challengeme.backend.model.ChallengeUserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +13,8 @@ public interface ChallengeUserRepository extends JpaRepository<ChallengeUser, UU
     List<ChallengeUser> findByUserId(UUID userId);
 
     void deleteAllByChallengeId(UUID challengeId);
+
+    List<ChallengeUser> findByUserIdAndStatus(UUID userId, ChallengeUserStatus status);
 }
 
 

@@ -99,25 +99,32 @@ public class ChallengeUserService {
     private ChallengeUserDTO convertToDto(ChallengeUser entity) {
         ChallengeUserDTO dto = new ChallengeUserDTO();
 
-        // Mapăm ID-ul relației
+        // 1. Mapăm ID-ul relației
         dto.setId(entity.getId());
 
-        // Mapăm datele despre User (verificăm să nu fie null)
+        // 2. Mapăm datele despre User
         if (entity.getUser() != null) {
             dto.setUserId(entity.getUser().getId());
             dto.setUsername(entity.getUser().getUsername());
         }
 
-        // Mapăm datele despre Challenge
+        // 3. Mapăm datele despre Challenge (AICI ERA LIPSA)
         if (entity.getChallenge() != null) {
-            dto.setChallengeId(entity.getChallenge().getId());
-            dto.setChallengeTitle(entity.getChallenge().getTitle());
+            Challenge c = entity.getChallenge();
+            dto.setChallengeId(c.getId());
+            dto.setChallengeTitle(c.getTitle());
+            dto.setDescription(c.getDescription());
+            dto.setPoints(c.getPoints());
+            dto.setCategory(c.getCategory());
+            dto.setDifficulty(c.getDifficulty().toString());
+            dto.setChallengeCreatedBy(c.getCreatedBy());
         }
 
-        // Mapăm statusul și datele calendaristice
+        // 4. Mapăm statusul și datele calendaristice
         dto.setStatus(entity.getStatus());
         dto.setDateAccepted(entity.getDateAccepted());
         dto.setDateCompleted(entity.getDateCompleted());
+        dto.setDeadline(entity.getDeadline()); // Mapăm și deadline-ul
 
         return dto;
     }
@@ -197,5 +204,16 @@ public class ChallengeUserService {
     public void deleteChallengeUser(UUID id) {
         ChallengeUser link = getChallengeUserById(id);
         repository.delete(link);
+    }
+
+    public List<ChallengeUserDTO> getChallengeUsersByStatus(UUID userId, String statusString) {
+        // Convertim string-ul primit din URL (ex: "RECEIVED") în Enum
+        ChallengeUserStatus status = ChallengeUserStatus.valueOf(statusString.toUpperCase());
+
+        List<ChallengeUser> challenges = repository.findByUserIdAndStatus(userId, status);
+
+        return challenges.stream()
+                .map(this::convertToDto)
+                .toList();
     }
 }

@@ -27,7 +27,7 @@ export class ChallengeService {
       targetDeadline: deadline
     };
 
-    return this.http.post<any>(`/api/user-challenges/${challengeId}/accept`, payload);
+    return this.http.post<any>(`${this.challengeUserUrl}/${challengeId}/accept`, payload);
   }
 
   getUserChallenges(username: string): Observable<Challenge[]> {
