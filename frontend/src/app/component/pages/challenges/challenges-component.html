@@ -48,6 +48,12 @@
                       class="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-sm shadow-md hover:shadow-green-500/30 hover:scale-105 transition-all z-10 cursor-pointer">
                 Start 🚀
               </button>
+              <div class="flex items-center gap-2">
+                <button (click)="openAssignModal(challenge); $event.stopPropagation()"
+                        class="p-2 rounded-full bg-gray-800 text-purple-400 hover:bg-purple-500 hover:text-white transition-all shadow-md group">
+                  <span class="text-lg group-hover:rotate-12 block">✈️</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -99,3 +105,9 @@
   (close)="isAcceptModalOpen = false"
   (confirm)="onContractSigned($event)">
 </app-accept-challenge-modal>
+
+<app-assign-challenge-modal
+  [isVisible]="isAssignModalOpen"
+  (close)="isAssignModalOpen = false"
+  (friendSelected)="onFriendAssigned($event)">
+</app-assign-challenge-modal>
