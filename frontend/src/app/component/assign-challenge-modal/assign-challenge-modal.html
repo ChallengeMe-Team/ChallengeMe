@@ -24,10 +24,21 @@
         >
 
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-lg border-2 border-gray-700 bg-gradient-to-br from-purple-600 to-blue-600">
-              {{ getInitials(friend.username) }}
-            </div>
 
+            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-lg border-2 border-gray-700 bg-gradient-to-br from-purple-600 to-blue-600 overflow-hidden relative">
+
+              <img
+                *ngIf="friend.avatar"
+                [src]="friend.avatar"
+                alt="{{ friend.username }}"
+                class="w-full h-full object-cover absolute inset-0"
+              >
+
+              <span *ngIf="!friend.avatar" class="z-10">
+                {{ getInitials(friend.username) }}
+              </span>
+
+            </div>
             <div class="flex-1">
               <p class="text-white font-medium group-hover:text-purple-300">{{ friend.username }}</p>
               <p class="text-xs text-gray-500">{{ friend.points }} pts</p>
