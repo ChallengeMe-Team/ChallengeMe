@@ -5,6 +5,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './auth.interceptor'; // Asigură-te că path-ul este corect
 import { provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 
+
 // --- NOU: IMPORT PENTRU SERVICIUL DE AUTENTIFICARE ---
 import { AuthService } from './services/auth.service';
 

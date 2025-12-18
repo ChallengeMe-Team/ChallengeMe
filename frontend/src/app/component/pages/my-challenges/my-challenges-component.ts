@@ -1,111 +1,163 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Edit, Trash2, PlusCircle } from 'lucide-angular';
+import { ActivatedRoute, Router } from '@angular/router'; // Import Router
+import { LucideAngularModule, Edit, Trash2, PlusCircle, Check, X } from 'lucide-angular';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
 import { Challenge } from '../challenges/challenge.model';
 import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
 import { ToastComponent } from '../../../shared/toast/toast-component';
+import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/accept-challenge-modal';
 
 @Component({
   selector: 'app-my-challenges',
   standalone: true,
-  imports: [CommonModule, ChallengeFormComponent, ToastComponent, LucideAngularModule],
+  imports: [
+    CommonModule,
+    ChallengeFormComponent,
+    ToastComponent,
+    LucideAngularModule,
+    AcceptChallengeModalComponent // 1. Importam Modalul
+  ],
   templateUrl: './my-challenges-component.html',
   styles: []
 })
 export class MyChallengesComponent implements OnInit {
   public challengeService = inject(ChallengeService);
   private auth = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
-  // State
+  // Tabs
+  activeTab = signal<'active' | 'inbox' | 'created'>('active');
+
+  // Lists
   myChallenges = signal<Challenge[]>([]);
+  inboxChallenges = signal<any[]>([]);
+  activeChallenges = signal<any[]>([]);
+
   isLoading = signal(false);
 
-  // Modale
+  // Modale Existing
   isEditModalOpen = signal(false);
   editChallengeData = signal<any | null>(null);
-
   isDeleteModalOpen = signal(false);
   challengeToDelete = signal<Challenge | null>(null);
+
+  // 2. Modale Noi (Contract)
+  isAcceptModalOpen = false;
+  selectedChallengeForContract: any = null;
 
   // Toast
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
 
-  // Icons
-  readonly icons = { Edit, Trash2, PlusCircle };
+  readonly icons = { Edit, Trash2, PlusCircle, Check, X };
 
   ngOnInit() {
-    this.loadMyChallenges();
-  }
-
-  loadMyChallenges() {
-    // 1. Luăm userul curent din Auth Service (Frontend decision)
-    const currentUser = this.auth.currentUser();
-
-    if (!currentUser || !currentUser.username) {
-      console.error("No user logged in!");
-      return;
-    }
-
-    this.isLoading.set(true);
-
-    // 2. Trimitem username-ul explicit către Backend
-    this.challengeService.getUserChallenges(currentUser.username).subscribe({
-      next: (data) => {
-        this.myChallenges.set(data);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Error fetching user challenges:', err);
-        this.isLoading.set(false);
+    this.route.queryParams.subscribe(params => {
+      if (params['tab'] === 'inbox') {
+        this.activeTab.set('inbox');
       }
     });
+    this.loadAllData();
   }
 
-  // --- ACTIUNI ---
-
-  // 1. CREATE
-  onCreateChallenge(formValues: any) {
+  loadAllData() {
     const currentUser = this.auth.currentUser();
-
-    if (!currentUser) {
-      this.showToast("You must be logged in to create challenges.", "error");
-      return;
-    }
-
-    // 1. Construim obiectul complet (formular + user)
-    const newChallenge = {
-      ...formValues,
-      createdBy: currentUser.username // Setăm proprietarul
-    };
+    if (!currentUser) return;
 
     this.isLoading.set(true);
 
-    // 2. Apelăm serviciul
-    this.challengeService.createChallenge(newChallenge).subscribe({
+    // 1. Load Created Challenges
+    this.challengeService.getUserChallenges(currentUser.username).subscribe({
+      next: (data) => this.myChallenges.set(data),
+      complete: () => this.isLoading.set(false)
+    });
+
+    // 2. Load Inbox & Active
+    if(currentUser.id) {
+      this.challengeService.getChallengesByStatus(currentUser.id, 'RECEIVED').subscribe(data => {
+        this.inboxChallenges.set(data);
+      });
+
+      this.challengeService.getChallengesByStatus(currentUser.id, 'ACCEPTED').subscribe(data => {
+        this.activeChallenges.set(data);
+      });
+    }
+  }
+
+  switchTab(tab: 'active' | 'inbox' | 'created') {
+    this.activeTab.set(tab);
+  }
+
+  // --- ACTIONS ---
+
+  // Nu mai cheama API direct, deschide modalul
+  acceptChallenge(item: any) {
+    this.selectedChallengeForContract = item;
+    this.isAcceptModalOpen = true;
+  }
+
+  // Se apeleaza cand userul semneaza contractul in modal
+  onContractSigned(dates: { start: string, end: string }) {
+    if (!this.selectedChallengeForContract) return;
+
+    // Folosim metoda noua 'acceptChallenge' din service (cea cu start/deadline)
+    // NOTA: 'item.id' aici se refera la ChallengeID.
+
+    // Deoarece endpoint-ul de acceptare cere ID-ul provocarii (challengeId), nu al relatiei:
+    // Backend: @PostMapping("/{challengeId}/accept")
+
+    this.challengeService.acceptChallenge(
+      this.selectedChallengeForContract.id, // Challenge ID
+      dates.start,
+      dates.end
+    ).subscribe({
       next: () => {
-        this.showToast('Challenge created successfully!', 'success');
+        this.showToast('Commitment signed! Challenge Accepted!', 'success');
+        this.isAcceptModalOpen = false;
 
-        // 3. Închidem modala
-        this.challengeService.isCreateModalOpen.set(false);
+        // Mutam elementul vizual din Inbox in Active
+        this.inboxChallenges.update(prev => prev.filter(c => c.id !== this.selectedChallengeForContract.id));
+        this.activeChallenges.update(prev => [...prev, this.selectedChallengeForContract]);
 
-        // 4. Reîncărcăm lista locală (My Challenges)
-        this.loadMyChallenges();
-
-        // NOTĂ: Lista generală (/challenges) se va actualiza automat când navighezi acolo,
-        // deoarece componenta respectivă își face fetch-ul în ngOnInit.
+        // Comutam pe tab-ul Active
+        this.switchTab('active');
       },
       error: (err) => {
         console.error(err);
-        this.showToast('Failed to create challenge.', 'error');
-        this.isLoading.set(false);
+        this.showToast('Failed to accept challenge.', 'error');
       }
     });
   }
 
-  // 2. EDIT
+  declineChallenge(item: any) {
+    const user = this.auth.currentUser();
+    if(!user?.id) return;
+
+    this.challengeService.updateChallengeStatus(item.id, user.id, 'DECLINED').subscribe(() => {
+      this.showToast('Challenge Declined.', 'success');
+      this.inboxChallenges.update(prev => prev.filter(c => c.id !== item.id));
+    });
+  }
+
+  // --- CRUD ---
+  onCreateChallenge(formValues: any) {
+    const currentUser = this.auth.currentUser();
+    if (!currentUser) return;
+    const newChallenge = { ...formValues, createdBy: currentUser.username };
+
+    this.challengeService.createChallenge(newChallenge).subscribe({
+      next: () => {
+        this.showToast('Challenge created successfully!', 'success');
+        this.challengeService.isCreateModalOpen.set(false);
+        this.loadAllData();
+      },
+      error: (err) => this.showToast('Failed to create.', 'error')
+    });
+  }
+
   openEditModal(challenge: Challenge) {
     this.editChallengeData.set(challenge);
     this.isEditModalOpen.set(true);
@@ -116,13 +168,12 @@ export class MyChallengesComponent implements OnInit {
       next: () => {
         this.showToast('Challenge updated!', 'success');
         this.isEditModalOpen.set(false);
-        this.loadMyChallenges();
+        this.loadAllData();
       },
-      error: (err) => this.showToast('Update failed.', 'error')
+      error: () => this.showToast('Update failed.', 'error')
     });
   }
 
-  // 3. DELETE
   confirmDelete(challenge: Challenge) {
     this.challengeToDelete.set(challenge);
     this.isDeleteModalOpen.set(true);
@@ -131,17 +182,13 @@ export class MyChallengesComponent implements OnInit {
   performDelete() {
     const target = this.challengeToDelete();
     if (!target) return;
-
     this.challengeService.deleteChallenge(target.id).subscribe({
       next: () => {
         this.showToast('Challenge deleted.', 'success');
         this.isDeleteModalOpen.set(false);
         this.myChallenges.update(list => list.filter(c => c.id !== target.id));
       },
-      error: (err) => {
-        this.showToast('Delete failed.', 'error');
-        this.isDeleteModalOpen.set(false);
-      }
+      error: () => this.showToast('Delete failed.', 'error')
     });
   }
 

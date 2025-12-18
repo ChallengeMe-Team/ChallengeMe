@@ -7,14 +7,14 @@
   <div *ngFor="let difficulty of difficultyKeys" class="space-y-6">
 
     <div *ngIf="getChallengesByDifficulty(difficulty).length > 0">
-
       <h3 class="text-2xl font-semibold uppercase tracking-wide text-gray-300 border-b border-gray-700 pb-2">
         {{ difficulty }} Challenges
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+
         <div *ngFor="let challenge of getChallengesByDifficulty(difficulty)"
-             class="bg-[#1a1627] p-6 rounded-xl shadow-lg hover:shadow-purple-500/20 transition-transform hover:scale-105 relative min-h-[200px]"
+             class="bg-[#1a1627] p-6 rounded-xl shadow-lg hover:shadow-purple-500/20 transition-transform hover:scale-105 relative min-h-[220px]"
              (dblclick)="onChallengeDoubleClick(challenge)"
              (contextmenu)="onRightClick($event, challenge)">
 
@@ -30,17 +30,30 @@
 
           <h4 class="font-bold text-xl mb-2 text-white">{{ challenge.title }}</h4>
 
-          <p class="text-gray-400 mb-10 text-sm line-clamp-3">
+          <p class="text-gray-400 mb-14 text-sm line-clamp-3">
             {{ challenge.description }}
           </p>
 
-          <div class="absolute bottom-4 left-6 right-4 flex justify-between items-end">
-             <span class="text-xs text-gray-500 italic">
+          <div class="absolute bottom-4 left-6 right-4 flex justify-between items-center">
+             <span class="text-xs text-gray-500 italic hidden sm:block truncate max-w-[80px]">
                by {{ challenge.createdBy }}
              </span>
 
-            <div class="text-sm font-semibold bg-gradient-to-r from-purple-400 to-blue-500 text-white px-3 py-1 rounded-full shadow-md">
-              {{ challenge.points }} pts
+            <div class="flex items-center gap-2">
+              <div class="text-sm font-semibold bg-gradient-to-r from-purple-400 to-blue-500 text-white px-3 py-1.5 rounded-full shadow-md">
+                {{ challenge.points }} pts
+              </div>
+
+              <button (click)="openContractModal(challenge); $event.stopPropagation()"
+                      class="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-sm shadow-md hover:shadow-green-500/30 hover:scale-105 transition-all z-10 cursor-pointer">
+                Start 🚀
+              </button>
+              <div class="flex items-center gap-2">
+                <button (click)="openAssignModal(challenge); $event.stopPropagation()"
+                        class="p-2 rounded-full bg-gray-800 text-purple-400 hover:bg-purple-500 hover:text-white transition-all shadow-md group">
+                  <span class="text-lg group-hover:rotate-12 block">✈️</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -77,31 +90,24 @@
 </app-toast>
 
 <div *ngIf="isDeleteModalOpen()" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 backdrop-blur-sm">
-<div class="bg-[#1a1627] border border-gray-700 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center transform transition-all scale-100">
-
-  <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-900/30 mb-4">
-    <svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  </div>
-
-  <h3 class="text-2xl font-bold text-white mb-2">Delete Challenge?</h3>
-
-  <p class="text-gray-400 mb-8">
-    Are you sure you want to delete <span class="text-white font-semibold">"{{ challengeToDelete()?.title }}"</span>?
-    This action cannot be undone.
-  </p>
-
-  <div class="flex justify-center gap-4">
-    <button (click)="closeDeleteModal()"
-            class="px-6 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-medium transition-colors">
-      Cancel
-    </button>
-
-    <button (click)="confirmDelete()"
-            class="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg shadow-red-500/30 transition-all transform active:scale-95">
-      Delete
-    </button>
+  <div class="bg-[#1a1627] border border-gray-700 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+    <h3 class="text-2xl font-bold text-white mb-2">Delete Challenge?</h3>
+    <div class="flex justify-center gap-4 mt-6">
+      <button (click)="closeDeleteModal()" class="px-6 py-2 rounded-lg bg-gray-700 text-white">Cancel</button>
+      <button (click)="confirmDelete()" class="px-6 py-2 rounded-lg bg-red-600 text-white">Delete</button>
+    </div>
   </div>
 </div>
-</div>
+
+<app-accept-challenge-modal
+  [isVisible]="isAcceptModalOpen"
+  [challengeTitle]="selectedChallengeForContract?.title"
+  (close)="isAcceptModalOpen = false"
+  (confirm)="onContractSigned($event)">
+</app-accept-challenge-modal>
+
+<app-assign-challenge-modal
+  [isVisible]="isAssignModalOpen"
+  (close)="isAssignModalOpen = false"
+  (friendSelected)="onFriendAssigned($event)">
+</app-assign-challenge-modal>

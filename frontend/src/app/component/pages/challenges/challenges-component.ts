@@ -1,16 +1,27 @@
-import {Component, OnInit, ChangeDetectorRef, inject, signal} from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+
 import { Challenge, Difficulty } from './challenge.model';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
-import {ChallengeFormComponent} from '../../forms/challenge-form/challenge-form';
-import {ToastComponent} from '../../../shared/toast/toast-component';
-
+import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
+import { ToastComponent } from '../../../shared/toast/toast-component';
+import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/accept-challenge-modal';
+// Import corectat conform structurii tale de directoare
+import { AssignChallengeModalComponent } from '../../assign-challenge-modal/assign-challenge-modal';
+import { FriendDTO } from '../../../services/user.service';
 
 @Component({
   selector: 'app-challenges',
   standalone: true,
-  imports: [CommonModule, ToastComponent, ChallengeFormComponent],
+  imports: [
+    CommonModule,
+    ToastComponent,
+    ChallengeFormComponent,
+    AcceptChallengeModalComponent,
+    AssignChallengeModalComponent // Adăugat în lista de imports
+  ],
   templateUrl: './challenges-component.html',
   styleUrls: ['./challenges-component.css']
 })
@@ -18,21 +29,34 @@ export class ChallengesComponent implements OnInit {
   public challengeService = inject(ChallengeService);
   private cdr = inject(ChangeDetectorRef);
   private auth = inject(AuthService);
-
+  private router = inject(Router);
 
   challenges = signal<Challenge[]>([]);
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
 
-  // State for modal
+  // State general
   isLoading = signal(false);
   errorMessage = signal('');
+
+  // Edit & Create Modals
   isEditModalOpen = signal(false);
   editChallenge = signal<any | null>(null);
+
+  // Toast
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
+
+  // Delete Modal
   isDeleteModalOpen = signal(false);
   challengeToDelete = signal<Challenge | null>(null);
 
+  // Accept/Contract Modal
+  isAcceptModalOpen = false;
+  selectedChallengeForContract: any = null;
+
+  // --- State pentru Assign Challenge Modal ---
+  isAssignModalOpen = false;
+  selectedChallengeToAssign = signal<Challenge | null>(null);
 
   ngOnInit(): void {
     this.loadChallenges();
@@ -58,6 +82,38 @@ export class ChallengesComponent implements OnInit {
     return this.challenges().filter(c => c.difficulty === difficulty);
   }
 
+  // --- Logica pentru Throw Challenge ---
+
+  openAssignModal(challenge: Challenge) {
+    this.selectedChallengeToAssign.set(challenge); // Salvează challenge-ul pe care vrei să îl trimiți
+    this.isAssignModalOpen = true; // Deschide modalul
+  }
+
+  onFriendAssigned(friend: FriendDTO) {
+    const challenge = this.selectedChallengeToAssign();
+    if (!challenge) return;
+
+    // Apelăm service-ul cu cele două ID-uri conform semnăturii tale de metodă
+    this.challengeService.assignChallenge(challenge.id, friend.id).subscribe({
+      next: () => {
+        this.showToast(`Challenge sent to ${friend.username}!`, "success"); // Feedback succes
+        this.isAssignModalOpen = false; // Închide modalul automat
+        this.selectedChallengeToAssign.set(null);
+      },
+      error: (err) => {
+        // Gestionare eroare duplicat conform Acceptance Criteria
+        const errorMsg = err.error?.message || err.message || "";
+        if (errorMsg.includes("already") || err.status === 409) {
+          this.showToast(`You already sent this challenge to ${friend.username}`, "error");
+        } else {
+          this.showToast("Failed to assign challenge.", "error");
+        }
+      }
+    });
+  }
+
+  // --- Logica existenta: Create/Edit/Delete ---
+
   closeCreateModal() {
     this.challengeService.isCreateModalOpen.set(false);
   }
@@ -70,9 +126,8 @@ export class ChallengesComponent implements OnInit {
     };
 
     this.isLoading.set(true);
-
     this.challengeService.createChallenge(newChallenge).subscribe({
-      next: (createdChallenge) => {
+      next: () => {
         this.showToast("Challenge created successfully!", "success");
         this.closeCreateModal();
         this.loadChallenges();
@@ -84,16 +139,42 @@ export class ChallengesComponent implements OnInit {
       }
     });
   }
+
   onChallengeDoubleClick(challenge: Challenge) {
     const user = this.auth.currentUser();
-
     if (!user || user.username !== challenge.createdBy) {
       this.showToast("You can only edit challenges created by you.", "error");
       return;
     }
-
     this.editChallenge.set(challenge);
     this.isEditModalOpen.set(true);
+  }
+
+  openContractModal(challenge: any) {
+    this.selectedChallengeForContract = challenge;
+    this.isAcceptModalOpen = true;
+  }
+
+  onContractSigned(dates: { start: string, end: string }) {
+    if (!this.selectedChallengeForContract) return;
+
+    this.challengeService.acceptChallenge(
+      this.selectedChallengeForContract.id,
+      dates.start,
+      dates.end
+    ).subscribe({
+      next: () => {
+        this.isAcceptModalOpen = false;
+        this.showToast("Commitment signed! Good luck! 🚀", "success");
+        setTimeout(() => {
+          this.router.navigate(['/my-challenges']);
+        }, 1500);
+      },
+      error: (err) => {
+        console.error(err);
+        this.showToast(err.error?.message || "Failed to accept challenge.", "error");
+      }
+    });
   }
 
   onChallengeUpdated(updated: any) {
@@ -108,6 +189,7 @@ export class ChallengesComponent implements OnInit {
       }
     });
   }
+
   showToast(message: string, type: 'success' | 'error' = 'error') {
     this.toastMessage.set(message);
     this.toastType.set(type);
@@ -115,47 +197,36 @@ export class ChallengesComponent implements OnInit {
       this.toastMessage.set(null);
     }, 3000);
   }
+
   onRightClick(event: MouseEvent, challenge: Challenge) {
-    // 1. Oprim meniul browserului (Inspect, Save As, etc.)
     event.preventDefault();
-
     const user = this.auth.currentUser();
-
-    // 2. Verificam Ownership-ul
     if (!user || user.username !== challenge.createdBy) {
-      // Cazul A: Nu esti proprietar -> Eroare Rosie
       this.showToast("You can only delete challenges created by you.", "error");
       return;
     }
-
-    // Cazul B: Esti proprietar -> Deschidem fereastra de confirmare
     this.challengeToDelete.set(challenge);
     this.isDeleteModalOpen.set(true);
   }
+
   confirmDelete() {
     const challenge = this.challengeToDelete();
     if (!challenge) return;
 
-    // Apelam Backend-ul
     this.challengeService.deleteChallenge(challenge.id).subscribe({
       next: () => {
-        // Succes: Mesaj Verde + Scoatem din lista instant (fara reload la toata pagina)
         this.showToast("Challenge deleted successfully.", "success");
-
-        // Actualizam lista locala (filtram elementul sters)
         this.challenges.update(prev => prev.filter(c => c.id !== challenge.id));
-
-        // Inchidem modala
         this.closeDeleteModal();
       },
       error: (err) => {
-        // Eroare (ex: Backend-ul zice 403 Forbidden daca cineva a "fentat" UI-ul)
         console.error(err);
         this.showToast("Error deleting challenge.", "error");
         this.closeDeleteModal();
       }
     });
   }
+
   closeDeleteModal() {
     this.isDeleteModalOpen.set(false);
     this.challengeToDelete.set(null);

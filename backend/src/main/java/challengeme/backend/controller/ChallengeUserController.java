@@ -3,6 +3,7 @@ package challengeme.backend.controller;
 import challengeme.backend.dto.ChallengeUserDTO;
 import challengeme.backend.dto.request.create.ChallengeUserCreateRequest;
 import challengeme.backend.dto.request.update.ChallengeUserUpdateRequest;
+import challengeme.backend.dto.request.update.UpdateChallengeRequest;
 import challengeme.backend.mapper.ChallengeUserMapper;
 import challengeme.backend.model.ChallengeUser;
 import challengeme.backend.service.ChallengeUserService;
@@ -13,13 +14,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/api/user-challenges")
+@RequestMapping("/api/challenge-users")
 @RequiredArgsConstructor
 public class ChallengeUserController {
 
@@ -70,4 +72,25 @@ public class ChallengeUserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{challengeId}/accept")
+    public ResponseEntity<ChallengeUserDTO> acceptChallenge(
+            @PathVariable UUID challengeId,
+            @RequestBody UpdateChallengeRequest request,
+            Principal principal) { // Spring ne dă userul logat automat
+
+        // Extragem username-ul sau ID-ul userului curent
+        // (Aici depinde cum ai tu Auth-ul, presupunem că luăm userul după username)
+        ChallengeUserDTO newChallengeUser = service.acceptChallenge(challengeId, principal.getName(), request);
+
+        return ResponseEntity.ok(newChallengeUser);
+    }
+
+    @GetMapping("/user/{userId}/status/{status}")
+    public ResponseEntity<List<ChallengeUserDTO>> getChallengeUsersByStatus(
+            @PathVariable UUID userId,
+            @PathVariable String status) {
+
+        List<ChallengeUserDTO> challenges = service.getChallengeUsersByStatus(userId, status);
+        return ResponseEntity.ok(challenges);
+    }
 }
