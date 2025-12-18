@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/api/user-challenges")
+@RequestMapping("/api/challenge-users")
 @RequiredArgsConstructor
 public class ChallengeUserController {
 
@@ -83,5 +83,14 @@ public class ChallengeUserController {
         ChallengeUserDTO newChallengeUser = service.acceptChallenge(challengeId, principal.getName(), request);
 
         return ResponseEntity.ok(newChallengeUser);
+    }
+
+    @GetMapping("/user/{userId}/status/{status}")
+    public ResponseEntity<List<ChallengeUserDTO>> getChallengeUsersByStatus(
+            @PathVariable UUID userId,
+            @PathVariable String status) {
+
+        List<ChallengeUserDTO> challenges = service.getChallengeUsersByStatus(userId, status);
+        return ResponseEntity.ok(challenges);
     }
 }

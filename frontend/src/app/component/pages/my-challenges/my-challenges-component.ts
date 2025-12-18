@@ -1,17 +1,24 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router'; // Import Router
 import { LucideAngularModule, Edit, Trash2, PlusCircle, Check, X } from 'lucide-angular';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
 import { Challenge } from '../challenges/challenge.model';
 import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
 import { ToastComponent } from '../../../shared/toast/toast-component';
+import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/accept-challenge-modal';
 
 @Component({
   selector: 'app-my-challenges',
   standalone: true,
-  imports: [CommonModule, ChallengeFormComponent, ToastComponent, LucideAngularModule],
+  imports: [
+    CommonModule,
+    ChallengeFormComponent,
+    ToastComponent,
+    LucideAngularModule,
+    AcceptChallengeModalComponent // 1. Importam Modalul
+  ],
   templateUrl: './my-challenges-component.html',
   styles: []
 })
@@ -19,22 +26,27 @@ export class MyChallengesComponent implements OnInit {
   public challengeService = inject(ChallengeService);
   private auth = inject(AuthService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
-  // Tabs: 'active' (Accepted), 'inbox' (Received), 'created' (My own)
+  // Tabs
   activeTab = signal<'active' | 'inbox' | 'created'>('active');
 
   // Lists
-  myChallenges = signal<Challenge[]>([]); // Tab: Created
-  inboxChallenges = signal<any[]>([]);    // Tab: Inbox
-  activeChallenges = signal<any[]>([]);   // Tab: Active
+  myChallenges = signal<Challenge[]>([]);
+  inboxChallenges = signal<any[]>([]);
+  activeChallenges = signal<any[]>([]);
 
   isLoading = signal(false);
 
-  // Modale
+  // Modale Existing
   isEditModalOpen = signal(false);
   editChallengeData = signal<any | null>(null);
   isDeleteModalOpen = signal(false);
   challengeToDelete = signal<Challenge | null>(null);
+
+  // 2. Modale Noi (Contract)
+  isAcceptModalOpen = false;
+  selectedChallengeForContract: any = null;
 
   // Toast
   toastMessage = signal<string | null>(null);
@@ -75,20 +87,48 @@ export class MyChallengesComponent implements OnInit {
     }
   }
 
-  // --- TAB SWITCH ---
   switchTab(tab: 'active' | 'inbox' | 'created') {
     this.activeTab.set(tab);
   }
 
   // --- ACTIONS ---
-  acceptChallenge(item: any) {
-    const user = this.auth.currentUser();
-    if(!user?.id) return;
 
-    this.challengeService.updateChallengeStatus(item.id, user.id, 'ACCEPTED').subscribe(() => {
-      this.showToast('Challenge Accepted!', 'success');
-      this.inboxChallenges.update(prev => prev.filter(c => c.id !== item.id));
-      this.activeChallenges.update(prev => [...prev, item]);
+  // Nu mai cheama API direct, deschide modalul
+  acceptChallenge(item: any) {
+    this.selectedChallengeForContract = item;
+    this.isAcceptModalOpen = true;
+  }
+
+  // Se apeleaza cand userul semneaza contractul in modal
+  onContractSigned(dates: { start: string, end: string }) {
+    if (!this.selectedChallengeForContract) return;
+
+    // Folosim metoda noua 'acceptChallenge' din service (cea cu start/deadline)
+    // NOTA: 'item.id' aici se refera la ChallengeID.
+
+    // Deoarece endpoint-ul de acceptare cere ID-ul provocarii (challengeId), nu al relatiei:
+    // Backend: @PostMapping("/{challengeId}/accept")
+
+    this.challengeService.acceptChallenge(
+      this.selectedChallengeForContract.id, // Challenge ID
+      dates.start,
+      dates.end
+    ).subscribe({
+      next: () => {
+        this.showToast('Commitment signed! Challenge Accepted!', 'success');
+        this.isAcceptModalOpen = false;
+
+        // Mutam elementul vizual din Inbox in Active
+        this.inboxChallenges.update(prev => prev.filter(c => c.id !== this.selectedChallengeForContract.id));
+        this.activeChallenges.update(prev => [...prev, this.selectedChallengeForContract]);
+
+        // Comutam pe tab-ul Active
+        this.switchTab('active');
+      },
+      error: (err) => {
+        console.error(err);
+        this.showToast('Failed to accept challenge.', 'error');
+      }
     });
   }
 
@@ -102,7 +142,7 @@ export class MyChallengesComponent implements OnInit {
     });
   }
 
-  // --- CRUD (For Created Tab) ---
+  // --- CRUD ---
   onCreateChallenge(formValues: any) {
     const currentUser = this.auth.currentUser();
     if (!currentUser) return;
