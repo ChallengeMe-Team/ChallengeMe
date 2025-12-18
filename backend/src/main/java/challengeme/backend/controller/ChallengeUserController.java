@@ -59,7 +59,7 @@ public class ChallengeUserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(created));
     }
 
-    @PutMapping("/{id}/status")
+    @PatchMapping("/{id}")
     public ResponseEntity<ChallengeUserDTO> updateStatus(@PathVariable UUID id,
                                                          @RequestBody ChallengeUserUpdateRequest request) {
         ChallengeUser updated = service.updateChallengeUserStatus(id, request);

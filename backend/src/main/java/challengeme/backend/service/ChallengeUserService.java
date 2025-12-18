@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import challengeme.backend.model.NotificationType;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -57,41 +58,34 @@ public class ChallengeUserService {
                 .orElseThrow(() -> new ChallengeUserNotFoundException("ChallengeUser not found with id: " + id));
     }
 
+    @Transactional
     public ChallengeUserDTO acceptChallenge(UUID challengeId, String username, UpdateChallengeRequest request) {
-        // 1. Găsim User-ul (presupunând că ai userRepository)
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        // 2. Găsim Challenge-ul
         Challenge challenge = challengeRepository.findById(challengeId)
-                .orElseThrow(() -> new RuntimeException("Challenge not found"));
+                .orElseThrow(() -> new ChallengeNotFoundException(challengeId));
 
-        // 3. Verificăm dacă userul are deja această provocare (opțional, dar recomandat)
-        // boolean exists = userChallengeRepository.existsByUserAndChallenge(user, challenge);
-        // if (exists) throw new RuntimeException("You already accepted this challenge!");
+        // Validare - Nu poți da "Start" dacă ai deja provocarea în orice stare (Received, Active, etc.)
+        if (repository.existsByUserIdAndChallengeId(user.getId(), challenge.getId())) {
+            throw new ConflictException("You already have this challenge in your list or inbox.");
+        }
 
-        // 4. Creăm relația nouă
         ChallengeUser challengeUser = new ChallengeUser();
         challengeUser.setUser(user);
         challengeUser.setChallenge(challenge);
-        challengeUser.setStatus(ChallengeUserStatus.valueOf(request.getStatus())); // status din Frontend
+        challengeUser.setStatus(ChallengeUserStatus.valueOf(request.getStatus()));
 
-        // Setăm datele din Request
         if (request.getStartDate() != null) {
             challengeUser.setStartDate(request.getStartDate());
-            challengeUser.setDateAccepted(request.getStartDate()); // Setăm și data acceptării
+            challengeUser.setDateAccepted(LocalDate.now());
         }
 
         if (request.getTargetDeadline() != null) {
-            // ATENȚIE: Verifică dacă entitatea ta are 'deadline' sau 'targetDeadline'
             challengeUser.setDeadline(request.getTargetDeadline());
         }
 
-        // IMPORTANT: Setăm assignedBy (ca să nu crape baza de date cu NotNull)
-        // Fiind self-assigned, punem ID-ul userului propriu
-        challengeUser.setAssignedBy(user.getId());
-
-        // 5. Salvăm
+        challengeUser.setAssignedBy(user.getId()); // Self-assigned
         ChallengeUser saved = repository.save(challengeUser);
 
         return convertToDto(saved);
@@ -136,14 +130,19 @@ public class ChallengeUserService {
 
     @Transactional
     public ChallengeUser assignChallenge(ChallengeUserCreateRequest request) {
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UserNotFoundException("Current user not found"));
+
+        if (currentUser.getId().equals(request.getUserId())) {
+            // Poți folosi IllegalArgumentException care se mapează uzual la 400 Bad Request
+            throw new IllegalArgumentException("You cannot assign a challenge to yourself. Use the standard 'Start' button instead.");
+        }
+
         System.out.println("Assigning challenge " + request.getChallengeId() + " to user " + request.getUserId());
         if (repository.existsByUserIdAndChallengeId(request.getUserId(), request.getChallengeId())) {
             throw new ConflictException("You already sent this challenge to this friend");
         }
-
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new UserNotFoundException("Current user not found"));
 
         User targetUser = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new UserNotFoundException("Target user not found"));
@@ -172,17 +171,39 @@ public class ChallengeUserService {
     @Transactional
     public ChallengeUser updateChallengeUserStatus(UUID id, ChallengeUserUpdateRequest request) {
         ChallengeUser link = getChallengeUserById(id);
-
         ChallengeUserStatus oldStatus = link.getStatus();
 
-        link.setStatus(request.getStatus());
+        // MODIFICARE 1: Verificăm dacă statusul e null înainte să-l setăm
+        if (request.getStatus() != null) {
+            link.setStatus(request.getStatus());
+        }
 
+        // Dacă noul status este ACCEPTED
         if (request.getStatus() == ChallengeUserStatus.ACCEPTED) {
-            if (link.getDateAccepted() == null) {
-                link.setDateAccepted(LocalDate.now());
+            // Setăm data acceptării la ziua curentă
+            link.setDateAccepted(LocalDate.now());
+
+            if (request.getStartDate() != null) {
+                link.setStartDate(request.getStartDate());
             }
-            if (request.getStartDate() != null) link.setStartDate(request.getStartDate());
-            if (request.getDeadline() != null) link.setDeadline(request.getDeadline());
+
+            // MODIFICARE 2: Folosim getTargetDeadline() în loc de getDeadline()
+            // (pentru a se potrivi cu modificarea făcută în DTO)
+            if (request.getTargetDeadline() != null) {
+                link.setDeadline(request.getTargetDeadline());
+            }
+
+            // Sender Feedback Loop (Notificare către cel care a trimis provocarea)
+            if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
+                User sender = userRepository.findById(link.getAssignedBy()).orElse(null);
+                if (sender != null) {
+                    notificationService.createNotification(new NotificationCreateRequest(
+                            sender.getId(),
+                            "Game on! " + link.getUser().getUsername() + " has accepted your challenge: " + link.getChallenge().getTitle() + ".",
+                            NotificationType.CHALLENGE
+                    ));
+                }
+            }
         }
 
         if (request.getStatus() == ChallengeUserStatus.COMPLETED) {
