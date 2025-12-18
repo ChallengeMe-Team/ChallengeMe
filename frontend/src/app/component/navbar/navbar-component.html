@@ -43,15 +43,25 @@
                (click)="onNotificationClick(notif)"
                class="p-3 border-b border-gray-700/50 hover:bg-gray-800 cursor-pointer transition flex gap-3 items-start relative group">
 
-            <div *ngIf="!notif.isRead" class="mt-1.5 w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-            <div *ngIf="notif.isRead" class="mt-1.5 w-2 h-2 flex-shrink-0"></div>
+            <div class="mt-1 flex-shrink-0">
+              <lucide-icon
+                [img]="getIconForType(notif.type)"
+                [class]="notif.isRead ? 'text-gray-500 w-5 h-5' : 'text-blue-400 w-5 h-5'">
+              </lucide-icon>
+            </div>
 
             <div class="flex-1">
-              <p class="text-sm text-gray-300 group-hover:text-white transition" [class.font-bold]="!notif.isRead">
+              <p class="text-sm text-gray-300 group-hover:text-white transition"
+                 [class.font-bold]="!notif.isRead">
                 {{ notif.message }}
               </p>
-              <p class="text-xs text-gray-500 mt-1">{{ notif.createdAt | date:'short' }}</p>
+
+              <p class="text-xs text-gray-500 mt-1">
+                {{ notif.timestamp | timeAgo }}
+              </p>
             </div>
+
+            <div *ngIf="!notif.isRead" class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
           </div>
         </div>
       </div>

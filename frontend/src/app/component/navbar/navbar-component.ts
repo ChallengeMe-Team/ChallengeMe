@@ -13,7 +13,10 @@ import {CommonModule} from '@angular/common';
 import {RouterModule, Router} from '@angular/router';
 import {AuthService} from '../../services/auth.service';
 import {ChallengeService} from '../../services/challenge.service';
-import {NotificationService, NotificationDTO} from '../../services/notification.service';
+import {NotificationService} from '../../services/notification.service';
+import { NotificationDTO } from '../../models/notification.model';
+import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
+import { Swords, UserPlus, Info } from 'lucide-angular';
 import {
   LucideAngularModule,
   User,
@@ -31,7 +34,7 @@ import {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterModule],
+  imports: [CommonModule, LucideAngularModule, RouterModule, TimeAgoPipe],
   templateUrl: './navbar-component.html',
   styleUrls: ['./navbar-component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -48,7 +51,7 @@ export class NavbarComponent implements OnInit {
   @Output() toastRequest = new EventEmitter<{ message: string, type: 'success' | 'error' }>();
 
   // Icons
-  readonly icons = {User, FileText, Users, Settings, LogOut, ChevronDown, PlusCircle, Menu, Bell, Check};
+  readonly icons = {User, FileText, Users, Settings, LogOut, ChevronDown, PlusCircle, Menu, Bell, Check, Swords, UserPlus, Info};
 
   isDropdownOpen = false;
   isMenuOpen = false;
@@ -80,8 +83,43 @@ export class NavbarComponent implements OnInit {
     const u = this.user();
     if (u && u.id) {
       this.notificationService.getUserNotifications(u.id).subscribe(data => {
-        this.notifications.set(data);
+        // SORTARE: Cele mai noi primele
+        const sorted = data.sort((a, b) => {
+          // Helper pentru a gestiona atât Array (Java) cât și String (ISO)
+          const getTime = (t: any) => {
+            if (Array.isArray(t)) {
+              // [An, Luna(1-12), Zi, Ora, Min, Sec] -> Luna in JS e 0-11, deci t[1]-1
+              return new Date(t[0], t[1] - 1, t[2], t[3] || 0, t[4] || 0).getTime();
+            }
+            return new Date(t).getTime();
+          };
+
+          return getTime(b.timestamp) - getTime(a.timestamp);
+        });
+
+        // Păstrează doar primele 10 elemente
+        const limitedList = sorted.slice(0, 10);
+
+        this.notifications.set(limitedList); // Setează lista limitată
       });
+    }
+  }
+
+  getIconForType(type: string): any {
+    console.log('Notification Type received:', type);
+
+    // Asigură-te că string-ul de aici se potrivește cu cel din consolă (Java Enum)
+    switch (type) {
+      case 'CHALLENGE':       // Probabil așa vine din Java
+      case 'CHALLENGE_REQ':   // Varianta veche
+        return this.icons.Swords;
+
+      case 'FRIEND':
+      case 'FRIEND_REQ':
+        return this.icons.UserPlus;
+
+      default:
+        return this.icons.Info;
     }
   }
 

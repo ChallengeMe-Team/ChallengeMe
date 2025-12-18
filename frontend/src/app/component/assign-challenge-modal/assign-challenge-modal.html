@@ -29,9 +29,10 @@
 
               <img
                 *ngIf="friend.avatar"
-                [src]="friend.avatar"
+                [src]="'/avatars/' + friend.avatar"
                 alt="{{ friend.username }}"
                 class="w-full h-full object-cover absolute inset-0"
+                onError="this.style.display='none'"
               >
 
               <span *ngIf="!friend.avatar" class="z-10">

@@ -1,17 +1,18 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { NotificationDTO } from '../models/notification.model';
 
-// Definim modelul direct aici pentru simplitate, sau într-un fișier separat
-export interface NotificationDTO {
-  id: string;
-  message: string;
-  type: string; // 'CHALLENGE_REQ', 'FRIEND_REQ', etc.
-  isRead: boolean;
-  createdAt: string;
-  relatedUserId?: string; // ID-ul celui care a trimis
-  relatedChallengeId?: string; // ID-ul provocării
-}
+// // Definim modelul direct aici pentru simplitate, sau într-un fișier separat
+// export interface NotificationDTO {
+//   id: string;
+//   message: string;
+//   type: string; // 'CHALLENGE_REQ', 'FRIEND_REQ', etc.
+//   isRead: boolean;
+//   createdAt: string;
+//   relatedUserId?: string; // ID-ul celui care a trimis
+//   relatedChallengeId?: string; // ID-ul provocării
+// }
 
 @Injectable({
   providedIn: 'root'
