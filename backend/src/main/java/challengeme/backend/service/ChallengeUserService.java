@@ -214,13 +214,49 @@ public class ChallengeUserService {
                 int currentPoints = user.getPoints() == null ? 0 : user.getPoints();
                 user.setPoints(currentPoints + pointsReward);
                 userRepository.save(user);
+
+                // --- NOTIFICARE COMPLETION START ---
+                // Verificăm dacă a fost o provocare trimisă de altcineva
+                if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
+                    String message = "Victory! " + link.getUser().getUsername() +
+                            " has crushed your challenge: " + link.getChallenge().getTitle() +
+                            " (+" + link.getChallenge().getPoints() + " XP)!";
+
+                    notificationService.createNotification(new NotificationCreateRequest(
+                            link.getAssignedBy(),
+                            message,
+                            NotificationType.CHALLENGE // Folosim CHALLENGE pentru tematică unitară
+                    ));
+                }
             }
+
+
         }
         return repository.save(link);
     }
 
+    @Transactional
     public void deleteChallengeUser(UUID id) {
         ChallengeUser link = getChallengeUserById(id);
+
+        // --- NOTIFICARE REFUSAL START ---
+        // Dacă provocarea a fost trimisă de altcineva și este încă în stadiul PENDING/RECEIVED
+        if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
+            if (link.getStatus() == ChallengeUserStatus.PENDING || link.getStatus() == ChallengeUserStatus.RECEIVED) {
+
+                String message = link.getUser().getUsername() +
+                        " has declined your challenge: " + link.getChallenge().getTitle() +
+                        ". Maybe next time!";
+
+                notificationService.createNotification(new NotificationCreateRequest(
+                        link.getAssignedBy(),
+                        message,
+                        NotificationType.CHALLENGE
+                ));
+            }
+        }
+        // --- NOTIFICARE REFUSAL END ---
+
         repository.delete(link);
     }
 

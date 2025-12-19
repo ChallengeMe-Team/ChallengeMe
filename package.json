@@ -1,5 +1,9 @@
 {
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
     "lucide-angular": "^0.554.0"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0"
   }
 }
