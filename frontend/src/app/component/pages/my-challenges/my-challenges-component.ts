@@ -87,16 +87,19 @@ export class MyChallengesComponent implements OnInit {
 
     this.challengeService.getUserChallenges(currentUser.username).subscribe({
       next: (data) => this.myChallenges.set(data),
+      error: () => this.showToast('Failed to load created challenges', 'error'),
       complete: () => this.isLoading.set(false)
     });
 
     if (currentUser.id) {
-      this.challengeService.getChallengesByStatus(currentUser.id, 'PENDING').subscribe(data => {
-        this.inboxChallenges.set(data);
+      this.challengeService.getChallengesByStatus(currentUser.id, 'PENDING').subscribe({
+        next: (data) => this.inboxChallenges.set(data),
+        error: () => this.showToast('Failed to load inbox', 'error')
       });
 
-      this.challengeService.getChallengesByStatus(currentUser.id, 'ACCEPTED').subscribe(data => {
-        this.activeChallenges.set(data);
+      this.challengeService.getChallengesByStatus(currentUser.id, 'ACCEPTED').subscribe({
+        next: (data) => this.activeChallenges.set(data),
+        error: () => this.showToast('Failed to load active challenges', 'error')
       });
     }
   }
@@ -132,7 +135,6 @@ export class MyChallengesComponent implements OnInit {
         this.switchTab('active');
       },
       error: (err) => {
-        console.error(err);
         this.showToast(err.error?.message || 'Failed to accept challenge.', 'error');
       }
     });
@@ -183,7 +185,7 @@ export class MyChallengesComponent implements OnInit {
           this.auth.currentUser.set({ ...currentUser, points: newPoints });
         }
       },
-      error: (err) => {
+      error: () => {
         this.showToast('Failed to complete challenge.', 'error');
       }
     });
@@ -227,7 +229,7 @@ export class MyChallengesComponent implements OnInit {
         this.challengeService.isCreateModalOpen.set(false);
         this.loadAllData();
       },
-      error: (err) => this.showToast('Failed to create.', 'error')
+      error: () => this.showToast('Failed to create challenge.', 'error')
     });
   }
 
@@ -270,4 +272,4 @@ export class MyChallengesComponent implements OnInit {
     this.toastType.set(type);
     setTimeout(() => this.toastMessage.set(null), 3000);
   }
-}//
+} //
