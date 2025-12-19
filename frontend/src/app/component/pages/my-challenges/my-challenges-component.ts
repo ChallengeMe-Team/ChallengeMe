@@ -55,11 +55,17 @@ export class MyChallengesComponent implements OnInit {
   readonly icons = { Edit, Trash2, PlusCircle, Check, X, Clock };
 
   ngOnInit() {
+    // 1. Ascultă schimbările de parametri din URL (pentru redirect din notificări)
     this.route.queryParams.subscribe(params => {
       if (params['tab'] === 'inbox') {
-        this.activeTab.set('inbox');
+        // Folosim un mic timeout pentru a ne asigura că UI-ul e stabil
+        setTimeout(() => {
+          this.switchTab('inbox');
+        }, 50);
       }
     });
+
+    // 2. Încarcă datele
     this.loadAllData();
   }
 
