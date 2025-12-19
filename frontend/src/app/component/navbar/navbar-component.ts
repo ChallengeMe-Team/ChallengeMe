@@ -150,6 +150,11 @@ export class NavbarComponent implements OnInit {
     if (notif.type === 'CHALLENGE_REQ' || notif.message.toLowerCase().includes('challenge')) {
       this.router.navigate(['/my-challenges'], { queryParams: { tab: 'inbox' } });
     }
+
+    if (notif.type === 'CHALLENGE' || notif.message.includes('provocat')) {
+      // Navigăm către pagina My Challenges și setăm tab-ul activ pe 'inbox'
+      this.router.navigate(['/my-challenges'], { queryParams: { tab: 'inbox' } });
+    }
   }
 
   onCreateChallenge() {
