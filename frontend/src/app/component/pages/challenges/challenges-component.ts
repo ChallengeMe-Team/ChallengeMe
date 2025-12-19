@@ -31,6 +31,8 @@ export class ChallengesComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
 
+  activeChallengeIds = signal<Set<string>>(new Set());
+
   challenges = signal<Challenge[]>([]);
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
 
@@ -60,6 +62,7 @@ export class ChallengesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadChallenges();
+    this.loadUserActiveChallenges();
   }
 
   loadChallenges() {
@@ -80,6 +83,30 @@ export class ChallengesComponent implements OnInit {
 
   getChallengesByDifficulty(difficulty: Difficulty): Challenge[] {
     return this.challenges().filter(c => c.difficulty === difficulty);
+  }
+
+  // NEW: Încarcă relațiile user-challenge existente
+  loadUserActiveChallenges() {
+    const user = this.auth.currentUser();
+    if (!user) return;
+
+    this.challengeService.getAllUserChallengeLinks(user.id).subscribe({
+      next: (data) => {
+        // Colectăm ID-urile challenge-urilor într-un Set pentru căutare rapidă
+        // data este un array de ChallengeUserDTO sau entități care conțin obiectul 'challenge' sau 'challengeId'
+        const ids = new Set(data.map((link: any) =>
+          // Verificăm structura: poate fi link.challenge.id sau link.challengeId direct
+          link.challenge?.id || link.challengeId
+        ));
+        this.activeChallengeIds.set(ids);
+      },
+      error: (err) => console.error('Could not load user challenges status', err)
+    });
+  }
+
+  // NEW: Helper pentru template
+  isChallengeActive(challengeId: string): boolean {
+    return this.activeChallengeIds().has(challengeId);
   }
 
   // --- Logica pentru Throw Challenge ---
@@ -169,6 +196,7 @@ export class ChallengesComponent implements OnInit {
         setTimeout(() => {
           this.router.navigate(['/my-challenges']);
         }, 1500);
+        this.loadUserActiveChallenges();
       },
       error: (err) => {
         console.error(err);

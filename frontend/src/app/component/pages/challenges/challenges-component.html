@@ -44,16 +44,21 @@
                 {{ challenge.points }} pts
               </div>
 
-              <button (click)="openContractModal(challenge); $event.stopPropagation()"
+              <button *ngIf="!isChallengeActive(challenge.id)"
+                      (click)="openContractModal(challenge); $event.stopPropagation()"
                       class="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-sm shadow-md hover:shadow-green-500/30 hover:scale-105 transition-all z-10 cursor-pointer">
                 Start 🚀
               </button>
-              <div class="flex items-center gap-2">
-                <button (click)="openAssignModal(challenge); $event.stopPropagation()"
-                        class="p-2 rounded-full bg-gray-800 text-purple-400 hover:bg-purple-500 hover:text-white transition-all shadow-md group">
-                  <span class="text-lg group-hover:rotate-12 block">✈️</span>
-                </button>
+
+              <div *ngIf="isChallengeActive(challenge.id)"
+                   class="px-3 py-1.5 text-xs text-gray-400 font-medium border border-gray-700 rounded-full bg-gray-800/50">
+                Active / Inbox
               </div>
+
+              <button (click)="openAssignModal(challenge); $event.stopPropagation()"
+                      class="p-2 rounded-full bg-gray-800 text-purple-400 hover:bg-purple-500 hover:text-white transition-all shadow-md group">
+                <span class="text-lg group-hover:rotate-12 block">✈️</span>
+              </button>
             </div>
           </div>
 
@@ -62,9 +67,9 @@
     </div>
   </div>
 
-<!--  <div *ngIf="challenges.length === 0" class="text-center text-gray-500 mt-10">-->
-<!--    <p>Loading challenges or no challenges found...</p>-->
-<!--  </div>-->
+  <div *ngIf="challenges().length === 0 && !isLoading()" class="text-center text-gray-500 mt-10">
+    <p>No challenges found...</p>
+  </div>
 
 </section>
 

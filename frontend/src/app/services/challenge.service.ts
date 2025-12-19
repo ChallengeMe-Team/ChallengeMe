@@ -49,7 +49,7 @@ export class ChallengeService {
   }
 
 
-  getChallengesByStatus(userId: string, status: 'RECEIVED' | 'ACCEPTED'): Observable<any[]> {
+  getChallengesByStatus(userId: string, status: 'RECEIVED' | 'ACCEPTED' | 'PENDING'): Observable<any[]> {
     return this.http.get<any[]>(`${this.challengeUserUrl}/user/${userId}/status/${status}`);
   }
 
@@ -68,5 +68,24 @@ export class ChallengeService {
         userId: friendId
       }
     );
+  }
+
+  // Metoda noua pentru a verifica statusul global al utilizatorului
+  getAllUserChallengeLinks(userId: string): Observable<any[]> {
+    // Backend-ul tău are deja repository.findByUserId(userId),
+    // trebuie doar să ai un endpoint expus în Controller pentru asta.
+    // Presupunând că endpoint-ul este GET /api/challenge-users/user/{userId}
+    return this.http.get<any[]>(`${this.challengeUserUrl}/user/${userId}`);
+  }
+
+  // Metoda pentru a șterge invitația (Refuse)
+  refuseChallenge(challengeUserId: string): Observable<void> {
+    return this.http.delete<void>(`${this.challengeUserUrl}/${challengeUserId}`);
+  }
+
+  // Metoda generică de update pentru ChallengeUser (pentru a accepta invitații existente)
+  updateChallengeUser(challengeUserId: string, data: any): Observable<any> {
+    // PATCH sau PUT pe /api/challenge-users/{id}
+    return this.http.patch(`${this.challengeUserUrl}/${challengeUserId}`, data);
   }
 }
