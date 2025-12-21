@@ -76,7 +76,11 @@ export class NavbarComponent implements OnInit {
   ];
 
   ngOnInit() {
-    this.loadNotifications();
+    const u = this.user();
+    if (u && u.id) {
+      this.notificationService.startPolling(u.id);
+      this.loadNotifications(); // Încărcare inițială manuală pentru listă
+    }
   }
 
   loadNotifications() {
@@ -106,12 +110,12 @@ export class NavbarComponent implements OnInit {
   }
 
   getIconForType(type: string): any {
-    console.log('Notification Type received:', type);
+    // Conversie la uppercase pentru siguranță (Java Enums sunt de obicei uppercase)
+    const normalizedType = type?.toUpperCase();
 
-    // Asigură-te că string-ul de aici se potrivește cu cel din consolă (Java Enum)
-    switch (type) {
-      case 'CHALLENGE':       // Probabil așa vine din Java
-      case 'CHALLENGE_REQ':   // Varianta veche
+    switch (normalizedType) {
+      case 'CHALLENGE':
+      case 'CHALLENGE_COMPLETED': // Tip nou (opțional dacă îl trimiți specific)
         return this.icons.Swords;
 
       case 'FRIEND':
@@ -135,7 +139,7 @@ export class NavbarComponent implements OnInit {
   }
 
   onNotificationClick(notif: NotificationDTO) {
-    // 1. Mark as read
+    // 1. Mark as read (logica ta existentă e perfectă)
     if (!notif.isRead) {
       this.notificationService.markAsRead(notif.id).subscribe(() => {
         this.notifications.update(list =>
@@ -145,10 +149,20 @@ export class NavbarComponent implements OnInit {
     }
 
     this.isNotificationsOpen = false;
+    const msg = notif.message.toLowerCase();
 
-    // 2. Redirect logic
-    if (notif.type === 'CHALLENGE_REQ' || notif.message.toLowerCase().includes('challenge')) {
+    // 2. Redirecționare inteligentă bazată pe conținutul mesajului de pe Backend
+
+    // Dacă e notificare de VICTORY sau ACCEPTARE -> Mergem la tab-ul "Active" (pentru a vedea progresul)
+    if (msg.includes('victory') || msg.includes('acceptat')) {
+      this.router.navigate(['/my-challenges'], { queryParams: { tab: 'active' } });
+      return;
+    }
+
+    // Dacă e o PROVOCARE NOUĂ sau REFZ -> Mergem la tab-ul "Inbox"
+    if (msg.includes('te-a provocat') || msg.includes('declined')) {
       this.router.navigate(['/my-challenges'], { queryParams: { tab: 'inbox' } });
+      return;
     }
   }
 
@@ -158,6 +172,7 @@ export class NavbarComponent implements OnInit {
   }
 
   onLogout() {
+    this.notificationService.stopPolling(); // Oprim cererile automate
     this.authService.logout();
     this.isDropdownOpen = false;
     this.toastRequest.emit({ message: 'You have been logged out successfully.', type: 'success' });

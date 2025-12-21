@@ -176,22 +176,34 @@ public class ChallengeUserService {
         if (request.getStatus() != null) link.setStatus(request.getStatus());
 
         if (request.getStatus() == ChallengeUserStatus.ACCEPTED) {
-            link.setDateAccepted(LocalDate.now());
+            if (link.getDateAccepted() == null) {
+                link.setDateAccepted(LocalDate.now());
+            }
             if (request.getStartDate() != null) link.setStartDate(request.getStartDate());
             if (request.getTargetDeadline() != null) link.setDeadline(request.getTargetDeadline());
 
-            if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
-                User sender = userRepository.findById(link.getAssignedBy()).orElse(null);
-                if (sender != null) {
-                    notificationService.createNotification(new NotificationCreateRequest(
-                            sender.getId(),
-                            "Game on! " + link.getUser().getUsername() + " has accepted your challenge: " + link.getChallenge().getTitle() + ".",
-                            NotificationType.CHALLENGE
-                    ));
+            // --- FIX START ---
+            // 1. Verificăm "oldStatus" ca să nu trimitem notificare dacă userul doar își actualizează datele
+            if (oldStatus != ChallengeUserStatus.ACCEPTED) {
+
+                // 2. Verificăm dacă a fost asignat de altcineva (nu self-challenge)
+                if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
+                    User sender = userRepository.findById(link.getAssignedBy()).orElse(null);
+
+                    if (sender != null) {
+                        // 3. Mesajul CORECT de acceptare
+                        String message = "Game on! " + link.getUser().getUsername() + " a acceptat provocarea ta: " + link.getChallenge().getTitle();
+
+                        NotificationCreateRequest notifRequest = new NotificationCreateRequest(
+                                sender.getId(),
+                                message,
+                                NotificationType.CHALLENGE // Sau SYSTEM, cum preferi
+                        );
+                        notificationService.createNotification(notifRequest);
+                    }
                 }
             }
         }
-
         if (request.getStatus() == ChallengeUserStatus.COMPLETED) {
             if (link.getDateAccepted() == null) link.setDateAccepted(LocalDate.now());
             link.setDateCompleted(LocalDate.now());
@@ -202,13 +214,49 @@ public class ChallengeUserService {
                 int currentPoints = user.getPoints() == null ? 0 : user.getPoints();
                 user.setPoints(currentPoints + pointsReward);
                 userRepository.save(user);
+
+                // --- NOTIFICARE COMPLETION START ---
+                // Verificăm dacă a fost o provocare trimisă de altcineva
+                if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
+                    String message = "Victory! " + link.getUser().getUsername() +
+                            " has crushed your challenge: " + link.getChallenge().getTitle() +
+                            " (+" + link.getChallenge().getPoints() + " XP)!";
+
+                    notificationService.createNotification(new NotificationCreateRequest(
+                            link.getAssignedBy(),
+                            message,
+                            NotificationType.CHALLENGE // Folosim CHALLENGE pentru tematică unitară
+                    ));
+                }
             }
+
+
         }
         return repository.save(link);
     }
 
+    @Transactional
     public void deleteChallengeUser(UUID id) {
         ChallengeUser link = getChallengeUserById(id);
+
+        // --- NOTIFICARE REFUSAL START ---
+        // Dacă provocarea a fost trimisă de altcineva și este încă în stadiul PENDING/RECEIVED
+        if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
+            if (link.getStatus() == ChallengeUserStatus.PENDING || link.getStatus() == ChallengeUserStatus.RECEIVED) {
+
+                String message = link.getUser().getUsername() +
+                        " has declined your challenge: " + link.getChallenge().getTitle() +
+                        ". Maybe next time!";
+
+                notificationService.createNotification(new NotificationCreateRequest(
+                        link.getAssignedBy(),
+                        message,
+                        NotificationType.CHALLENGE
+                ));
+            }
+        }
+        // --- NOTIFICARE REFUSAL END ---
+
         repository.delete(link);
     }
 

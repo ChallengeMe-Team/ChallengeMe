@@ -1,13 +1,17 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router'; // Import Router
-import { LucideAngularModule, Edit, Trash2, PlusCircle, Check, X, Clock } from 'lucide-angular';
+import { ActivatedRoute, Router } from '@angular/router';
+import { LucideAngularModule, Edit, Trash2, PlusCircle, Check, X, Clock, CheckCircle } from 'lucide-angular';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
 import { Challenge } from '../challenges/challenge.model';
 import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
 import { ToastComponent } from '../../../shared/toast/toast-component';
 import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/accept-challenge-modal';
+import { ConfirmationModalComponent } from '../../../shared/confirmation-modal/confirmation-modal.component';
+import { CompleteChallengeModalComponent } from '../../complete-challenge-modal/complete-challenge-modal-component';
+
+import confetti from 'canvas-confetti';
 
 @Component({
   selector: 'app-my-challenges',
@@ -17,14 +21,16 @@ import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/acce
     ChallengeFormComponent,
     ToastComponent,
     LucideAngularModule,
-    AcceptChallengeModalComponent // 1. Importam Modalul
+    AcceptChallengeModalComponent,
+    CompleteChallengeModalComponent,
+    ConfirmationModalComponent
   ],
   templateUrl: './my-challenges-component.html',
   styles: []
 })
 export class MyChallengesComponent implements OnInit {
   public challengeService = inject(ChallengeService);
-  private auth = inject(AuthService);
+  public auth = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -44,20 +50,30 @@ export class MyChallengesComponent implements OnInit {
   isDeleteModalOpen = signal(false);
   challengeToDelete = signal<Challenge | null>(null);
 
-  // 2. Modale Noi (Contract)
+  // Modale Accept (Contract)
   isAcceptModalOpen = false;
   selectedChallengeForContract: any = null;
+
+  // State for Completion Modal
+  isCompleteModalOpen = false;
+  selectedChallengeForCompletion: any = null;
+
+  // State pentru Decline Modal
+  isDeclineModalOpen = false;
+  challengeToDecline: any = null;
 
   // Toast
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
 
-  readonly icons = { Edit, Trash2, PlusCircle, Check, X, Clock };
+  readonly icons = { Edit, Trash2, PlusCircle, Check, X, Clock, CheckCircle };
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       if (params['tab'] === 'inbox') {
-        this.activeTab.set('inbox');
+        setTimeout(() => {
+          this.switchTab('inbox');
+        }, 50);
       }
     });
     this.loadAllData();
@@ -69,20 +85,21 @@ export class MyChallengesComponent implements OnInit {
 
     this.isLoading.set(true);
 
-    // 1. Load Created Challenges
     this.challengeService.getUserChallenges(currentUser.username).subscribe({
       next: (data) => this.myChallenges.set(data),
+      error: () => this.showToast('Failed to load created challenges', 'error'),
       complete: () => this.isLoading.set(false)
     });
 
-    // 2. Load Inbox & Active
-    if(currentUser.id) {
-      this.challengeService.getChallengesByStatus(currentUser.id, 'PENDING').subscribe(data => {
-        this.inboxChallenges.set(data);
+    if (currentUser.id) {
+      this.challengeService.getChallengesByStatus(currentUser.id, 'PENDING').subscribe({
+        next: (data) => this.inboxChallenges.set(data),
+        error: () => this.showToast('Failed to load inbox', 'error')
       });
 
-      this.challengeService.getChallengesByStatus(currentUser.id, 'ACCEPTED').subscribe(data => {
-        this.activeChallenges.set(data);
+      this.challengeService.getChallengesByStatus(currentUser.id, 'ACCEPTED').subscribe({
+        next: (data) => this.activeChallenges.set(data),
+        error: () => this.showToast('Failed to load active challenges', 'error')
       });
     }
   }
@@ -91,18 +108,13 @@ export class MyChallengesComponent implements OnInit {
     this.activeTab.set(tab);
   }
 
-  // --- ACTIONS ---
-
-  // Nu mai cheama API direct, deschide modalul
   acceptChallenge(item: any) {
     this.selectedChallengeForContract = item;
     this.isAcceptModalOpen = true;
   }
 
-  // Se apeleaza cand userul semneaza contractul in modal
   onContractSigned(dates: { start: string, end: string }) {
     if (!this.selectedChallengeForContract) return;
-
 
     const payload = {
       status: 'ACCEPTED',
@@ -110,40 +122,102 @@ export class MyChallengesComponent implements OnInit {
       targetDeadline: dates.end
     };
 
-    // Apelăm direct un PUT/PATCH pe ID-ul relației
     this.challengeService.updateChallengeUser(this.selectedChallengeForContract.id, payload).subscribe({
       next: () => {
         this.showToast('Challenge Accepted! 🚀', 'success');
         this.isAcceptModalOpen = false;
-
-        // Refresh local
         this.inboxChallenges.update(prev => prev.filter(c => c.id !== this.selectedChallengeForContract.id));
-        this.activeChallenges.update(prev => [...prev, { ...this.selectedChallengeForContract, status: 'ACCEPTED', startDate: dates.start }]);
-
+        this.activeChallenges.update(prev => [...prev, {
+          ...this.selectedChallengeForContract,
+          status: 'ACCEPTED',
+          startDate: dates.start
+        }]);
         this.switchTab('active');
       },
       error: (err) => {
-        console.error(err);
         this.showToast(err.error?.message || 'Failed to accept challenge.', 'error');
       }
     });
   }
 
   declineChallenge(item: any) {
-    if(!confirm('Are you sure you want to decline this challenge?')) return;
+    this.challengeToDecline = item;
+    this.isDeclineModalOpen = true;
+  }
 
-    // MODIFICARE: Folosim delete (Refuse) în loc de update status
-    // item.id este ID-ul relației (ChallengeUser ID)
-    this.challengeService.refuseChallenge(item.id).subscribe({
+  onConfirmDecline() {
+    if (!this.challengeToDecline) return;
+
+    this.challengeService.refuseChallenge(this.challengeToDecline.id).subscribe({
       next: () => {
         this.showToast('Challenge Declined.', 'success');
-        this.inboxChallenges.update(prev => prev.filter(c => c.id !== item.id));
+        this.inboxChallenges.update(prev => prev.filter(c => c.id !== this.challengeToDecline.id));
+        this.isDeclineModalOpen = false;
+        this.challengeToDecline = null;
       },
-      error: () => this.showToast('Action failed.', 'error')
+      error: () => {
+        this.showToast('Action failed.', 'error');
+        this.isDeclineModalOpen = false;
+      }
     });
   }
 
-  // --- CRUD ---
+  openCompleteModal(item: any) {
+    this.selectedChallengeForCompletion = item;
+    this.isCompleteModalOpen = true;
+  }
+
+  onChallengeCompleted() {
+    if (!this.selectedChallengeForCompletion) return;
+
+    const payload = { status: 'COMPLETED' };
+
+    this.challengeService.updateChallengeUser(this.selectedChallengeForCompletion.id, payload).subscribe({
+      next: () => {
+        this.triggerSuccessAnimation();
+        this.showToast(`Victory! +${this.selectedChallengeForCompletion.points} XP Earned! 🏆`, 'success');
+        this.isCompleteModalOpen = false;
+        this.activeChallenges.update(prev => prev.filter(c => c.id !== this.selectedChallengeForCompletion.id));
+
+        const currentUser = this.auth.currentUser();
+        if (currentUser) {
+          const newPoints = (currentUser.points || 0) + (this.selectedChallengeForCompletion.points || 0);
+          this.auth.currentUser.set({ ...currentUser, points: newPoints });
+        }
+      },
+      error: () => {
+        this.showToast('Failed to complete challenge.', 'error');
+      }
+    });
+  }
+
+  private triggerSuccessAnimation() {
+    const duration = 3 * 1000;
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#a855f7', '#3b82f6', '#22c55e']
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#a855f7', '#3b82f6', '#22c55e']
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    frame();
+  }
+
   onCreateChallenge(formValues: any) {
     const currentUser = this.auth.currentUser();
     if (!currentUser) return;
@@ -155,7 +229,7 @@ export class MyChallengesComponent implements OnInit {
         this.challengeService.isCreateModalOpen.set(false);
         this.loadAllData();
       },
-      error: (err) => this.showToast('Failed to create.', 'error')
+      error: () => this.showToast('Failed to create challenge.', 'error')
     });
   }
 
@@ -198,4 +272,4 @@ export class MyChallengesComponent implements OnInit {
     this.toastType.set(type);
     setTimeout(() => this.toastMessage.set(null), 3000);
   }
-}
+} //

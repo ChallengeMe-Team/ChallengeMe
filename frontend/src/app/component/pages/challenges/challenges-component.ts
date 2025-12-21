@@ -8,9 +8,10 @@ import { AuthService } from '../../../services/auth.service';
 import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
 import { ToastComponent } from '../../../shared/toast/toast-component';
 import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/accept-challenge-modal';
-// Import corectat conform structurii tale de directoare
 import { AssignChallengeModalComponent } from '../../assign-challenge-modal/assign-challenge-modal';
 import { FriendDTO } from '../../../services/user.service';
+import { LucideAngularModule, CheckCircle, RotateCcw } from 'lucide-angular';
+import { ConfirmationModalComponent } from '../../../shared/confirmation-modal/confirmation-modal.component'; // Verifică calea
 
 @Component({
   selector: 'app-challenges',
@@ -20,7 +21,9 @@ import { FriendDTO } from '../../../services/user.service';
     ToastComponent,
     ChallengeFormComponent,
     AcceptChallengeModalComponent,
-    AssignChallengeModalComponent // Adăugat în lista de imports
+    AssignChallengeModalComponent,
+    LucideAngularModule,
+    ConfirmationModalComponent
   ],
   templateUrl: './challenges-component.html',
   styleUrls: ['./challenges-component.css']
@@ -28,10 +31,11 @@ import { FriendDTO } from '../../../services/user.service';
 export class ChallengesComponent implements OnInit {
   public challengeService = inject(ChallengeService);
   private cdr = inject(ChangeDetectorRef);
-  private auth = inject(AuthService);
+  public auth = inject(AuthService); // Public pentru template
   private router = inject(Router);
 
-  activeChallengeIds = signal<Set<string>>(new Set());
+  // Mapare ID Challenge -> Status (ex: "ACCEPTED", "COMPLETED")
+  userChallengeStatuses = signal<Map<string, string>>(new Map());
 
   challenges = signal<Challenge[]>([]);
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
@@ -39,6 +43,10 @@ export class ChallengesComponent implements OnInit {
   // State general
   isLoading = signal(false);
   errorMessage = signal('');
+
+  //// State pentru Modalul de Restart
+  isRestartModalOpen = false;
+  challengeToRestart: Challenge | null = null;
 
   // Edit & Create Modals
   isEditModalOpen = signal(false);
@@ -56,9 +64,12 @@ export class ChallengesComponent implements OnInit {
   isAcceptModalOpen = false;
   selectedChallengeForContract: any = null;
 
-  // --- State pentru Assign Challenge Modal ---
+  // Assign Challenge Modal
   isAssignModalOpen = false;
   selectedChallengeToAssign = signal<Challenge | null>(null);
+
+  // Iconite
+  readonly icons = { CheckCircle, RotateCcw };
 
   ngOnInit(): void {
     this.loadChallenges();
@@ -85,50 +96,89 @@ export class ChallengesComponent implements OnInit {
     return this.challenges().filter(c => c.difficulty === difficulty);
   }
 
-  // NEW: Încarcă relațiile user-challenge existente
+  // --- LOGICĂ STATUS UTILIZATOR ---
+
   loadUserActiveChallenges() {
     const user = this.auth.currentUser();
     if (!user) return;
 
     this.challengeService.getAllUserChallengeLinks(user.id).subscribe({
       next: (data) => {
-        // Colectăm ID-urile challenge-urilor într-un Set pentru căutare rapidă
-        // data este un array de ChallengeUserDTO sau entități care conțin obiectul 'challenge' sau 'challengeId'
-        const ids = new Set(data.map((link: any) =>
-          // Verificăm structura: poate fi link.challenge.id sau link.challengeId direct
-          link.challenge?.id || link.challengeId
-        ));
-        this.activeChallengeIds.set(ids);
+        const statusMap = new Map<string, string>();
+        data.forEach((link: any) => {
+          // Uneori vine populat (link.challenge.id), alteori doar ID (link.challengeId)
+          const cId = link.challenge?.id || link.challengeId;
+          statusMap.set(cId, link.status);
+        });
+        this.userChallengeStatuses.set(statusMap);
       },
       error: (err) => console.error('Could not load user challenges status', err)
     });
   }
 
-  // NEW: Helper pentru template
-  isChallengeActive(challengeId: string): boolean {
-    return this.activeChallengeIds().has(challengeId);
+  getChallengeStatus(challengeId: string): string | undefined {
+    return this.userChallengeStatuses().get(challengeId);
   }
 
-  // --- Logica pentru Throw Challenge ---
+  // --- LOGICĂ START AGAIN (RESET) ---
+
+  onStartAgain(challenge: Challenge, event: Event) {
+    event.stopPropagation();
+    this.challengeToRestart = challenge;
+    this.isRestartModalOpen = true; // Deschide modalul custom
+  }
+
+  // 2. Metoda care se execută când dai "Confirm" în modal
+  confirmRestart() {
+    if (!this.challengeToRestart) return;
+
+    this.isRestartModalOpen = false; // Închide modalul
+    const challenge = this.challengeToRestart;
+    const user = this.auth.currentUser();
+
+    if (!user) return;
+
+    // Logica de ștergere și restart (aceeași ca înainte)
+    this.challengeService.getAllUserChallengeLinks(user.id).subscribe(links => {
+      const linkToDelete = links.find((l: any) => (l.challenge?.id || l.challengeId) === challenge.id);
+
+      if (linkToDelete) {
+        this.challengeService.deleteChallengeUser(linkToDelete.id).subscribe({
+          next: () => {
+            this.openContractModal(challenge);
+
+            // Update UI
+            const newMap = new Map(this.userChallengeStatuses());
+            newMap.delete(challenge.id);
+            this.userChallengeStatuses.set(newMap);
+            this.showToast('Progress reset. Ready to restart!', 'success');
+          },
+          error: () => this.showToast('Could not reset challenge.', 'error')
+        });
+      } else {
+        this.openContractModal(challenge);
+      }
+    });
+  }
+
+  // --- LOGICA THROW CHALLENGE ---
 
   openAssignModal(challenge: Challenge) {
-    this.selectedChallengeToAssign.set(challenge); // Salvează challenge-ul pe care vrei să îl trimiți
-    this.isAssignModalOpen = true; // Deschide modalul
+    this.selectedChallengeToAssign.set(challenge);
+    this.isAssignModalOpen = true;
   }
 
   onFriendAssigned(friend: FriendDTO) {
     const challenge = this.selectedChallengeToAssign();
     if (!challenge) return;
 
-    // Apelăm service-ul cu cele două ID-uri conform semnăturii tale de metodă
     this.challengeService.assignChallenge(challenge.id, friend.id).subscribe({
       next: () => {
-        this.showToast(`Challenge sent to ${friend.username}!`, "success"); // Feedback succes
-        this.isAssignModalOpen = false; // Închide modalul automat
+        this.showToast(`Challenge sent to ${friend.username}!`, "success");
+        this.isAssignModalOpen = false;
         this.selectedChallengeToAssign.set(null);
       },
       error: (err) => {
-        // Gestionare eroare duplicat conform Acceptance Criteria
         const errorMsg = err.error?.message || err.message || "";
         if (errorMsg.includes("already") || err.status === 409) {
           this.showToast(`You already sent this challenge to ${friend.username}`, "error");
@@ -139,7 +189,7 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
-  // --- Logica existenta: Create/Edit/Delete ---
+  // --- LOGICA CREATE/EDIT/DELETE ---
 
   closeCreateModal() {
     this.challengeService.isCreateModalOpen.set(false);
