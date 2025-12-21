@@ -1,0 +1,10 @@
+<div
+  class="badge-card"
+  [class.unlocked]="isUnlocked"
+  [class.locked]="!isUnlocked"
+  [attr.title]="tooltip"> <div class="icon-container">
+  <lucide-icon [name]="badge.iconName" class="badge-icon"></lucide-icon>
+</div>
+
+  <span class="badge-name">{{ badge.name }}</span>
+</div>
