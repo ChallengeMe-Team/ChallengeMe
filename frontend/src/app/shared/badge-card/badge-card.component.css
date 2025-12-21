@@ -1,0 +1,49 @@
+.badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 130px;
+  height: 150px;
+  padding: 1rem;
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+/* Starea Unlocked: Gradient mov/roz și glow */
+.unlocked {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  box-shadow: 0 10px 20px -5px rgba(236, 72, 153, 0.5);
+  color: white;
+}
+
+.unlocked .badge-icon {
+  color: #ffffff;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+}
+
+/* Starea Locked: Grayscale, opacitate redusă și bordură dashed */
+.locked {
+  filter: grayscale(1);
+  opacity: 0.6;
+  border: 2px dashed #4b5563;
+  background: rgba(31, 41, 55, 0.3);
+  color: #9ca3af;
+}
+
+.locked .badge-icon {
+  color: #6b7280;
+}
+
+.badge-name {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.badge-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
