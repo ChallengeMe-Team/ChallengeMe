@@ -55,4 +55,14 @@ public class UserBadgeController {
         service.deleteUserBadge(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/user/{username}")
+    public ResponseEntity<List<UserBadgeDTO>> getBadgesByUser(@PathVariable String username) {
+        List<UserBadgeDTO> userBadges = service.getBadgesByUsername(username)
+                .stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(userBadges);
+    }
 }
