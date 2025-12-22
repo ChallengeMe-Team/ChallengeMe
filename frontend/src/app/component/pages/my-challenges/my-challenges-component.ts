@@ -4,12 +4,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Edit, Trash2, PlusCircle, Check, X, Clock, CheckCircle } from 'lucide-angular';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
-import { Challenge } from '../challenges/challenge.model';
+import { Challenge } from '../../../models/challenge.model';
 import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
 import { ToastComponent } from '../../../shared/toast/toast-component';
 import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/accept-challenge-modal';
 import { ConfirmationModalComponent } from '../../../shared/confirmation-modal/confirmation-modal.component';
 import { CompleteChallengeModalComponent } from '../../complete-challenge-modal/complete-challenge-modal-component';
+import { getCategoryGradient } from '../../../shared/utils/color-utils';
 
 import confetti from 'canvas-confetti';
 
@@ -216,6 +217,10 @@ export class MyChallengesComponent implements OnInit {
       }
     };
     frame();
+  }
+
+  getCategoryStyle(category: string) {
+    return getCategoryGradient(category);
   }
 
   onCreateChallenge(formValues: any) {
