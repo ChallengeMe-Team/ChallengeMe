@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Challenge } from '../component/pages/challenges/challenge.model';
+import { Challenge } from '../models/challenge.model';
 
 @Injectable({
   providedIn: 'root'
