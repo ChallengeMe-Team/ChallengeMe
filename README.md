@@ -71,8 +71,6 @@ It allows the team to share database schema changes (like new tables or columns)
 
   - If a script has a higher version number than what is recorded in the table, Flyway executes it automatically.
 
-**Note**: You no longer need to manually run ``` data.sql``` to create your tables.
-
 The project now uses **_Flyway_** for database versioning and migrations.
 
 Flyway automatically creates the tables when the _Backend application starts_ for the first time.
@@ -198,14 +196,12 @@ The application is now secured with **JWT (JSON Web Token)**.
 
 ### 🔑 Default Login Credentials
 
-After populating the database [data.sql](), you can login with:
+You can login with:
 
 
 **Email**: [emilia@example.com]() (or any other user from the list)
 
 **Password**: [Password_123]()
-
-#### **_Note_**: If any changes are to be made in [data.sql](), please update the login credentials above
 
 ### 🛡️ How it works
 
