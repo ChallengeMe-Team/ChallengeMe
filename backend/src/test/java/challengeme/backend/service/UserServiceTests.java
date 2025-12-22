@@ -9,10 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -121,5 +118,63 @@ class UserServiceTests {
 
         assertDoesNotThrow(() -> userService.deleteUser(userId));
         verify(userRepository).deleteById(userId);
+    }
+
+    //Un Helper pt a crea un User fara erori
+    private User createTestUser(UUID id, String username) {
+        User user = new User();
+        user.setId(id);
+        user.setUsername(username);
+        user.setEmail(username.toLowerCase() + "@email.com");
+        user.setFriendIds(new ArrayList<>());
+        user.setPoints(10);
+        user.setRole("user");
+        return user;
+    }
+
+    @Test
+    void testAddFriend_IsSymmetrical() {
+        // Given
+        User currentUser = createTestUser(userId, "CurrentUser");
+        UUID friendId = UUID.randomUUID();
+        User targetFriend = createTestUser(friendId, "FriendUser");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(currentUser));
+        when(userRepository.findByUsername("FriendUser")).thenReturn(Optional.of(targetFriend));
+
+        // When
+        userService.addFriend(userId, "FriendUser");
+
+        // Then (Acceptance Criteria: A adds B, B effectively adds A)
+        assertTrue(currentUser.getFriendIds().contains(friendId), "B should be in A's list");
+        assertTrue(targetFriend.getFriendIds().contains(userId), "A should be in B's list");
+
+        verify(userRepository).save(currentUser);
+        verify(userRepository).save(targetFriend);
+    }
+
+    @Test
+    void testRemoveFriend_IsSymmetrical() {
+        // Given
+        UUID friendId = UUID.randomUUID();
+        User currentUser = createTestUser(userId, "CurrentUser");
+        User targetFriend = createTestUser(friendId, "FriendUser");
+
+        // Pre-add them as friends
+        currentUser.getFriendIds().add(friendId);
+        targetFriend.getFriendIds().add(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(currentUser));
+        when(userRepository.findById(friendId)).thenReturn(Optional.of(targetFriend));
+
+        // When
+        userService.removeFriend(userId, friendId);
+
+        // Then (Acceptance Criteria: Remove from both lists)
+        assertFalse(currentUser.getFriendIds().contains(friendId));
+        assertFalse(targetFriend.getFriendIds().contains(userId));
+
+        verify(userRepository).save(currentUser);
+        verify(userRepository).save(targetFriend);
     }
 }
