@@ -29,4 +29,7 @@ public class Badge {
     private String description;
 
     private String criteria;
+
+    private String iconUrl;
+    private int pointsReward;
 }

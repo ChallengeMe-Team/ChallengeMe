@@ -18,9 +18,10 @@
   color: white;
 }
 
-.unlocked .badge-icon {
-  color: #ffffff;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+.unlocked {
+  opacity: 1;
+  filter: none;
+  border-color: #fbbf24; /* Un auriu subtil sau culoarea ta de accent */
 }
 
 /* Starea Locked: Grayscale, opacitate redusă și bordură dashed */
