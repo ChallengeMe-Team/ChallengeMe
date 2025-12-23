@@ -1,0 +1,15 @@
+<div class="badge-card group" [title]="description">
+  <div class="icon-container flex items-center justify-center p-3 rounded-full bg-yellow-500/10 mb-2 transition-transform group-hover:scale-110">
+    <lucide-icon [img]="getBadgeIcon()" class="w-8 h-8 text-yellow-400"></lucide-icon>
+  </div>
+
+  <span class="text-xs font-bold text-gray-300 text-center block leading-tight">
+    {{ name }}
+  </span>
+
+  <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-black text-white text-[10px] p-2 rounded shadow-xl border border-gray-700 z-50 w-32 text-center">
+    <p class="font-bold text-yellow-400 mb-1">{{ name }}</p>
+    <p class="text-gray-300">{{ description }}</p>
+    <p class="text-gray-500 mt-1 border-t border-gray-800 pt-1 italic">{{ criteria }}</p>
+  </div>
+</div>
