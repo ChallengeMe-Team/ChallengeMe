@@ -150,27 +150,73 @@ public class UserService {
     // -----------------------------------------------------------
     // ADD FRIEND LOGIC
     // -----------------------------------------------------------
+
     @Transactional
     public void addFriend(UUID currentUserId, String friendUsername) {
-
         User current = getUserById(currentUserId);
 
-        // Rule: cannot add yourself
         if (current.getUsername().equalsIgnoreCase(friendUsername)) {
             throw new RuntimeException("You cannot add yourself");
         }
 
-        // Find target friend
         User friend = userRepository.findByUsername(friendUsername)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Rule: cannot add existing friend
+        // Verificăm dacă există deja relația (într-un singur sens e suficient pentru verificare)
         if (current.getFriendIds().contains(friend.getId())) {
             throw new RuntimeException("User is already your friend");
         }
 
-        // Add
+        // Pasul 1: Adaugă B la A
         current.getFriendIds().add(friend.getId());
+
+        // Pasul 2: Adaugă A la B (Reciprocitate)
+        if (!friend.getFriendIds().contains(current.getId())) {
+            friend.getFriendIds().add(current.getId());
+        }
+
         userRepository.save(current);
+        userRepository.save(friend);
+    }
+    // -----------------------------------------------------------
+    // REMOVE FRIEND LOGIC
+    // -----------------------------------------------------------
+
+    @Transactional
+    public void removeFriend(UUID currentUserId, UUID targetId) {
+        User current = getUserById(currentUserId);
+        User target = getUserById(targetId);
+
+        // Elimină B din lista lui A
+        current.getFriendIds().removeIf(id -> id.equals(targetId));
+
+        // Elimină A din lista lui B
+        target.getFriendIds().removeIf(id -> id.equals(currentUserId));
+
+        userRepository.save(current);
+        userRepository.save(target);
+    }
+
+    @Transactional
+    public Map<String, Integer> syncAllFriendships() {
+        List<User> allUsers = userRepository.findAll();
+        int fixedCount = 0;
+
+        for (User userA : allUsers) {
+            for (UUID friendIdB : new ArrayList<>(userA.getFriendIds())) {
+                Optional<User> userBOpt = userRepository.findById(friendIdB);
+
+                if (userBOpt.isPresent()) {
+                    User userB = userBOpt.get();
+                    // Dacă A îl are pe B, dar B nu îl are pe A
+                    if (!userB.getFriendIds().contains(userA.getId())) {
+                        userB.getFriendIds().add(userA.getId());
+                        userRepository.save(userB);
+                        fixedCount++;
+                    }
+                }
+            }
+        }
+        return Map.of("fixedConnections", fixedCount);
     }
 }
