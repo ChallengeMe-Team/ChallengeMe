@@ -195,7 +195,7 @@ public class UserService {
                 .toList();
 
         int points = user.getPoints() != null ? user.getPoints() : 0;
-        
+
         List<BadgeDTO> badges = generateBadges(user, completed.size());
 
         List<ChallengeHistoryDTO> recentActivity = userChallenges.stream()
