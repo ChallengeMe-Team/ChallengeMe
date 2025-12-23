@@ -1,22 +1,24 @@
 package challengeme.backend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.util.UUID;
+import java.util.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "users")
+@Table(name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "username"),
+                @UniqueConstraint(columnNames = "email")
+        })
 public class User {
 
     @Id
@@ -25,12 +27,16 @@ public class User {
 
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
-    @Column(unique = true) // Important pentru login
+    @Column(unique = true)
     private String username;
+
+    @Column(name = "friend_ids", columnDefinition = "uuid[]")
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<UUID> friendIds = new ArrayList<>();
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
-    @Column(unique = true) // Important pentru login
+    @Column(unique = true)
     private String email;
 
     @NotBlank(message = "Password is required")
@@ -39,6 +45,19 @@ public class User {
 
     private Integer points;
 
-    // Default role
+    private String avatar;
+
     private String role = "user";
+
+    // Getters and Setters explicite pentru siguranță, deși Lombok le generează
+    public List<UUID> getFriendIds() {
+        if (friendIds == null) {
+            friendIds = new ArrayList<>();
+        }
+        return friendIds;
+    }
+
+    public void setFriendIds(List<UUID> friendIds) {
+        this.friendIds = friendIds;
+    }
 }

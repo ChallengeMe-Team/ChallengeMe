@@ -1,8 +1,10 @@
 package challengeme.backend.controller;
 
+import challengeme.backend.dto.ChallengeUserDTO;
 import challengeme.backend.dto.request.create.ChallengeCreateRequest;
 import challengeme.backend.dto.ChallengeDTO;
 import challengeme.backend.dto.request.update.ChallengeUpdateRequest;
+import challengeme.backend.dto.request.update.UpdateChallengeRequest;
 import challengeme.backend.mapper.ChallengeMapper;
 import challengeme.backend.model.Challenge;
 import challengeme.backend.service.ChallengeService;
@@ -55,5 +57,24 @@ public class ChallengeController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.deleteChallenge(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/user/{username}")
+    public List<ChallengeDTO> getByUser(@PathVariable String username) {
+        return service.getChallengesByCreator(username)
+                .stream()
+                .map(mapper::toDTO)
+                .toList();
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ChallengeUserDTO> updateStatus(
+            @PathVariable UUID id,
+            @RequestBody UpdateChallengeRequest request) { // <--- Folosim noul DTO aici
+
+        // Apelezi serviciul (va trebui să actualizezi și serviciul, vezi pasul 3)
+        ChallengeUserDTO updatedChallenge = service.updateStatus(id, request);
+
+        return ResponseEntity.ok(updatedChallenge);
     }
 }

@@ -1,42 +1,64 @@
-import {Component, OnInit, ChangeDetectorRef, inject, signal} from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Challenge, Difficulty } from './challenge.model';
+import { Router } from '@angular/router';
+
+import { Challenge, Difficulty } from '../../../models/challenge.model';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
-import {ChallengeFormComponent} from '../../forms/challenge-form/challenge-form';
-import {ToastComponent} from '../../../shared/toast/toast-component';
-
+import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
+import { ToastComponent } from '../../../shared/toast/toast-component';
+import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/accept-challenge-modal';
+import { AssignChallengeModalComponent } from '../../assign-challenge-modal/assign-challenge-modal';
+import { ChallengeCardComponent } from '../../../shared/challenge-card/challenge-card.component';
+import { ConfirmationModalComponent } from '../../../shared/confirmation-modal/confirmation-modal.component';
+import { FriendDTO } from '../../../services/user.service';
 
 @Component({
   selector: 'app-challenges',
   standalone: true,
-  imports: [CommonModule, ToastComponent, ChallengeFormComponent],
-  templateUrl: './challenges-component.html',
-  styleUrls: ['./challenges-component.css']
+  imports: [
+    CommonModule,
+    ToastComponent,
+    ChallengeFormComponent,
+    AcceptChallengeModalComponent,
+    AssignChallengeModalComponent,
+    ChallengeCardComponent,
+    ConfirmationModalComponent
+  ],
+  templateUrl: './challenges-component.html'
 })
 export class ChallengesComponent implements OnInit {
-  private challengeService = inject(ChallengeService);
+  public challengeService = inject(ChallengeService);
+  public auth = inject(AuthService);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
-  private auth = inject(AuthService);
-
 
   challenges = signal<Challenge[]>([]);
+  userChallengeStatuses = signal<Map<string, string>>(new Map());
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
 
-  // State for modal
-  isCreateModalOpen = signal(false);
   isLoading = signal(false);
   errorMessage = signal('');
+
+  // Modal States
+  isRestartModalOpen = false;
+  challengeToRestart: Challenge | null = null;
   isEditModalOpen = signal(false);
   editChallenge = signal<any | null>(null);
-  toastMessage = signal<string | null>(null);
-  toastType = signal<'success' | 'error'>('success');
   isDeleteModalOpen = signal(false);
   challengeToDelete = signal<Challenge | null>(null);
+  isAcceptModalOpen = false;
+  selectedChallengeForContract: any = null;
+  isAssignModalOpen = false;
+  selectedChallengeToAssign = signal<Challenge | null>(null);
 
+  // Toast State
+  toastMessage = signal<string | null>(null);
+  toastType = signal<'success' | 'error'>('success');
 
   ngOnInit(): void {
     this.loadChallenges();
+    this.loadUserActiveChallenges();
   }
 
   loadChallenges() {
@@ -47,10 +69,25 @@ export class ChallengesComponent implements OnInit {
         this.isLoading.set(false);
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage.set('Eroare la incarcarea datelor.');
+      error: () => {
+        this.errorMessage.set('Error loading data.');
         this.isLoading.set(false);
+      }
+    });
+  }
+
+  loadUserActiveChallenges() {
+    const user = this.auth.currentUser();
+    if (!user) return;
+
+    this.challengeService.getAllUserChallengeLinks(user.id).subscribe({
+      next: (data) => {
+        const statusMap = new Map<string, string>();
+        data.forEach((link: any) => {
+          const cId = link.challenge?.id || link.challengeId;
+          statusMap.set(cId, link.status);
+        });
+        this.userChallengeStatuses.set(statusMap);
       }
     });
   }
@@ -59,92 +96,127 @@ export class ChallengesComponent implements OnInit {
     return this.challenges().filter(c => c.difficulty === difficulty);
   }
 
-  openCreateModal() {
-    this.isCreateModalOpen.set(true);
+  // Action Handlers (Evenimente primite de la ChallengeCard)
+  handleStart(challenge: Challenge) {
+    this.selectedChallengeForContract = challenge;
+    this.isAcceptModalOpen = true;
   }
 
-  closeCreateModal() {
-    this.isCreateModalOpen.set(false);
+  handleRestart(challenge: Challenge) {
+    this.challengeToRestart = challenge;
+    this.isRestartModalOpen = true;
   }
 
-  onChallengeCreated() {
-    this.loadChallenges();
-    this.closeCreateModal();
+  handleAssign(challenge: Challenge) {
+    this.selectedChallengeToAssign.set(challenge);
+    this.isAssignModalOpen = true;
   }
-  onChallengeDoubleClick(challenge: Challenge) {
+
+  handleEdit(challenge: Challenge) {
     const user = this.auth.currentUser();
-
     if (!user || user.username !== challenge.createdBy) {
       this.showToast("You can only edit challenges created by you.", "error");
       return;
     }
-
     this.editChallenge.set(challenge);
     this.isEditModalOpen.set(true);
+  }
+
+  handleDeleteRequest(data: {event: MouseEvent, challenge: Challenge}) {
+    data.event.preventDefault();
+    const user = this.auth.currentUser();
+    if (!user || user.username !== data.challenge.createdBy) {
+      this.showToast("You can only delete challenges created by you.", "error");
+      return;
+    }
+    this.challengeToDelete.set(data.challenge);
+    this.isDeleteModalOpen.set(true);
+  }
+
+  // Service Logic
+  confirmRestart() {
+    if (!this.challengeToRestart) return;
+    this.isRestartModalOpen = false;
+    const challenge = this.challengeToRestart;
+    const user = this.auth.currentUser();
+    if (!user) return;
+
+    this.challengeService.getAllUserChallengeLinks(user.id).subscribe(links => {
+      const linkToDelete = links.find((l: any) => (l.challenge?.id || l.challengeId) === challenge.id);
+      if (linkToDelete) {
+        this.challengeService.deleteChallengeUser(linkToDelete.id).subscribe({
+          next: () => {
+            this.handleStart(challenge);
+            const newMap = new Map(this.userChallengeStatuses());
+            newMap.delete(challenge.id);
+            this.userChallengeStatuses.set(newMap);
+            this.showToast('Progress reset. Ready to restart!', 'success');
+          }
+        });
+      }
+    });
+  }
+
+  onFriendAssigned(friend: FriendDTO) {
+    const challenge = this.selectedChallengeToAssign();
+    if (!challenge) return;
+    this.challengeService.assignChallenge(challenge.id, friend.id).subscribe({
+      next: () => {
+        this.showToast(`Challenge sent to ${friend.username}!`, "success");
+        this.isAssignModalOpen = false;
+      },
+      error: (err) => this.showToast(err.error?.message || "Failed to assign", "error")
+    });
+  }
+
+  onCreateChallenge(formValues: any) {
+    const user = this.auth.currentUser();
+    const newChallenge = { ...formValues, createdBy: user ? user.username : 'Anonymous' };
+    this.challengeService.createChallenge(newChallenge).subscribe({
+      next: () => {
+        this.showToast("Challenge created!", "success");
+        this.challengeService.isCreateModalOpen.set(false);
+        this.loadChallenges();
+      }
+    });
+  }
+
+  onContractSigned(dates: { start: string, end: string }) {
+    if (!this.selectedChallengeForContract) return;
+    this.challengeService.acceptChallenge(this.selectedChallengeForContract.id, dates.start, dates.end).subscribe({
+      next: () => {
+        this.isAcceptModalOpen = false;
+        this.showToast("Commitment signed! 🚀", "success");
+        setTimeout(() => { this.router.navigate(['/my-challenges']); }, 1500);
+      }
+    });
   }
 
   onChallengeUpdated(updated: any) {
     this.challengeService.updateChallenge(updated.id, updated).subscribe({
       next: () => {
-        this.showToast("Challenge updated successfully!", "success");
+        this.showToast("Challenge updated!", "success");
         this.loadChallenges();
         this.isEditModalOpen.set(false);
-      },
-      error: (err) => {
-        this.showToast(err.error?.message || "Error updating challenge.", "error");
       }
     });
   }
-  showToast(message: string, type: 'success' | 'error' = 'error') {
-    this.toastMessage.set(message);
-    this.toastType.set(type);
-    setTimeout(() => {
-      this.toastMessage.set(null);
-    }, 3000);
-  }
-  onRightClick(event: MouseEvent, challenge: Challenge) {
-    // 1. Oprim meniul browserului (Inspect, Save As, etc.)
-    event.preventDefault();
 
-    const user = this.auth.currentUser();
-
-    // 2. Verificam Ownership-ul
-    if (!user || user.username !== challenge.createdBy) {
-      // Cazul A: Nu esti proprietar -> Eroare Rosie
-      this.showToast("You can only delete challenges created by you.", "error");
-      return;
-    }
-
-    // Cazul B: Esti proprietar -> Deschidem fereastra de confirmare
-    this.challengeToDelete.set(challenge);
-    this.isDeleteModalOpen.set(true);
-  }
   confirmDelete() {
     const challenge = this.challengeToDelete();
     if (!challenge) return;
-
-    // Apelam Backend-ul
     this.challengeService.deleteChallenge(challenge.id).subscribe({
       next: () => {
-        // Succes: Mesaj Verde + Scoatem din lista instant (fara reload la toata pagina)
-        this.showToast("Challenge deleted successfully.", "success");
-
-        // Actualizam lista locala (filtram elementul sters)
+        this.showToast("Deleted successfully.", "success");
         this.challenges.update(prev => prev.filter(c => c.id !== challenge.id));
-
-        // Inchidem modala
-        this.closeDeleteModal();
-      },
-      error: (err) => {
-        // Eroare (ex: Backend-ul zice 403 Forbidden daca cineva a "fentat" UI-ul)
-        console.error(err);
-        this.showToast("Error deleting challenge.", "error");
-        this.closeDeleteModal();
+        this.isDeleteModalOpen.set(false);
       }
     });
   }
-  closeDeleteModal() {
-    this.isDeleteModalOpen.set(false);
-    this.challengeToDelete.set(null);
+
+  showToast(message: string, type: 'success' | 'error' = 'error') {
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    setTimeout(() => { this.toastMessage.set(null); }, 3000);
   }
 }

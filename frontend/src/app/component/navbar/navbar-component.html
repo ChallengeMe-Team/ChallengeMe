@@ -1,5 +1,4 @@
 <nav>
-
   <div class="flex-shrink-0 z-10">
     <button (click)="onCreateChallenge()" class="btn-create">
       <lucide-icon [img]="icons.PlusCircle" class="w-5 h-5"></lucide-icon>
@@ -8,7 +7,6 @@
   </div>
 
   <div class="absolute left-1/2 transform -translate-x-1/2 hidden md:flex items-center gap-4">
-
     <a *ngFor="let link of navLinks"
        [routerLink]="link.path"
        routerLinkActive="active"
@@ -16,13 +14,58 @@
        class="nav-btn cursor-pointer">
       {{ link.label }}
     </a>
-
   </div>
 
-  <div class="ml-auto relative z-10">
+  <div class="ml-auto relative z-10 flex items-center gap-4">
 
+    <div class="relative">
+      <button (click)="toggleNotifications()" class="relative p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-white/10">
+        <lucide-icon [img]="icons.Bell" class="w-6 h-6"></lucide-icon>
+        <span *ngIf="unreadCount() > 0"
+              class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white border-2 border-[#14121b]">
+          {{ unreadCount() }}
+        </span>
+      </button>
+
+      <div *ngIf="isNotificationsOpen"
+           class="absolute right-0 top-full mt-2 w-80 bg-[#1a1627] border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in origin-top-right">
+
+        <div class="p-3 border-b border-gray-700 font-bold text-white flex justify-between">
+          <span>Notifications</span>
+        </div>
+
+        <div class="max-h-80 overflow-y-auto custom-scrollbar">
+          <div *ngIf="notifications().length === 0" class="p-6 text-center text-gray-500 text-sm">
+            No new notifications.
+          </div>
+
+          <div *ngFor="let notif of notifications()"
+               (click)="onNotificationClick(notif)"
+               class="p-3 border-b border-gray-700/50 hover:bg-gray-800 cursor-pointer transition flex gap-3 items-start relative group">
+
+            <div class="mt-1 flex-shrink-0">
+              <lucide-icon
+                [img]="getIconForType(notif.type)"
+                [class.text-green-400]="notif.message.includes('Victory')"
+                [class.text-red-400]="notif.message.includes('declined')"
+                [class.text-blue-400]="!notif.message.includes('Victory') && !notif.message.includes('declined') && !notif.isRead"
+                [class.text-gray-500]="notif.isRead"
+                class="w-5 h-5">
+              </lucide-icon>
+            </div>
+
+            <div class="flex-1">
+              <p class="text-sm text-gray-300 group-hover:text-white transition"
+                 [class.font-bold]="!notif.isRead">
+                {{ notif.message }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div (click)="toggleDropdown()"
-         class="flex items-center gap-4 cursor-pointer p-2 rounded-xl border border-transparent transition select-none user-profile-container group">
+         class="flex items-center gap-4 cursor-pointer p-2 rounded-xl border border-transparent transition select-none user-profile-container group hover:bg-white/5">
 
       <div class="hidden md:flex flex-col items-end">
         <span class="text-white font-bold text-base group-hover:text-purple-300 transition">{{ username }}</span>
@@ -33,8 +76,9 @@
       </div>
 
       <div class="relative">
-        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg border-2 border-gray-700 group-hover:border-purple-500 transition">
-          {{ userInitials }}
+        <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-2 border-gray-700 group-hover:border-purple-500 transition overflow-hidden bg-gradient-to-br from-purple-600 to-blue-600">
+          <img *ngIf="user()?.avatar" [src]="'/avatars/' + user().avatar" class="w-full h-full object-cover" alt="Avatar">
+          <span *ngIf="!user()?.avatar">{{ userInitials }}</span>
         </div>
         <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#14121b] rounded-full"></div>
       </div>
@@ -44,38 +88,23 @@
 
     <div *ngIf="isDropdownOpen"
          class="absolute right-0 top-full mt-2 w-64 dropdown-menu animate-fade-in origin-top-right">
-
-      <div class="px-4 py-3 border-b border-gray-700/50 bg-gray-800/30 md:hidden">
-        <p class="text-white font-bold">{{ username }}</p>
-        <p class="text-xs text-yellow-400">🏆 {{ userPoints }} XP</p>
-      </div>
-
       <div class="p-2 space-y-1">
         <a [routerLink]="['/profile']" (click)="isDropdownOpen = false" class="dropdown-item flex items-center gap-2 w-full text-left">
-          <lucide-icon [img]="icons.User" class="w-4 h-4"></lucide-icon>
-          <span>My Profile</span>
+          <lucide-icon [img]="icons.User" class="w-4 h-4"></lucide-icon> <span>My Profile</span>
         </a>
-
         <a [routerLink]="['/my-challenges']" (click)="isDropdownOpen = false" class="dropdown-item flex items-center gap-2 w-full text-left">
-          <lucide-icon [img]="icons.FileText" class="w-4 h-4"></lucide-icon>
-          <span>My Challenges</span>
+          <lucide-icon [img]="icons.FileText" class="w-4 h-4"></lucide-icon> <span>My Challenges</span>
         </a>
-
         <a [routerLink]="['/friends']" (click)="isDropdownOpen = false" class="dropdown-item flex items-center gap-2 w-full text-left">
-          <lucide-icon [img]="icons.Users" class="w-4 h-4"></lucide-icon>
-          <span>Friends</span>
+          <lucide-icon [img]="icons.Users" class="w-4 h-4"></lucide-icon> <span>Friends</span>
         </a>
-
         <a [routerLink]="['/settings']" (click)="isDropdownOpen = false" class="dropdown-item flex items-center gap-2 w-full text-left">
-          <lucide-icon [img]="icons.Settings" class="w-4 h-4"></lucide-icon>
-          <span>Settings</span>
+          <lucide-icon [img]="icons.Settings" class="w-4 h-4"></lucide-icon> <span>Settings</span>
         </a>
       </div>
-
       <div class="border-t border-gray-700/50 p-2 mt-1">
         <button (click)="onLogout()" class="dropdown-item flex items-center gap-2 w-full text-left" style="color: #f87171;">
-          <lucide-icon [img]="icons.LogOut" class="w-4 h-4"></lucide-icon>
-          Log Out
+          <lucide-icon [img]="icons.LogOut" class="w-4 h-4"></lucide-icon> Log Out
         </button>
       </div>
     </div>
@@ -85,5 +114,4 @@
   <button class="md:hidden ml-auto text-white p-2" (click)="isMenuOpen = !isMenuOpen">
     <lucide-icon [img]="icons.Menu" class="w-7 h-7"></lucide-icon>
   </button>
-
 </nav>

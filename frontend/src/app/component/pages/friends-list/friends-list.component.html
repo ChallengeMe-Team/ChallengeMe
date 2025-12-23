@@ -1,0 +1,111 @@
+<div class="friends-container">
+
+  <!-- HEADER (Titlu Mare) -->
+  <div class="header big-header">
+    <h1>
+      My Friends <span class="badge">{{ friends().length }}</span>
+    </h1>
+    <p class="subtitle big-subtitle">Connect, compete, and conquer challenges together.</p>
+  </div>
+
+  <!-- SEARCH WRAPPER  (Bara Lungă + Buton Integrat) -->
+  <div class="search-section">
+    <div class="search-bar-container" [class.focused]="isSearchFocused()">
+
+      <!-- Icon Lupa  -->
+      <span class="search-icon">🔍</span>
+
+      <input
+        type="text"
+        class="add-input big-input"
+        placeholder="Search for users or select from list..."
+        [value]="friendUsername()"
+        (input)="friendUsername.set($any($event.target).value)"
+        (focus)="onInputFocus()"
+        (blur)="onInputBlur()"
+      >
+
+      <!-- Butonul integrat la capătul barei -->
+      <button
+        class="btn-search-action"
+        [disabled]="!friendUsername().trim()"
+        (click)="addFriend(friendUsername())">
+        Add Friend
+      </button>
+    </div>
+
+    <!-- DROPDOWN (Apare când e focusat SAU când e scris ceva) -->
+    @if ((isSearchFocused() || friendUsername()) && filteredUsers().length > 0) {
+      <div class="search-dropdown big-dropdown">
+        @for (user of filteredUsers(); track user.id) {
+
+          <div class="search-result-card"
+               [class.already-friend]="isFriend(user.username)"
+               (mousedown)="addFriend(user.username)">
+            <!-- mousedown se execută înainte de blur -->
+
+            <div class="result-avatar">
+              <img *ngIf="user.avatar" [src]="'avatars/' + user.avatar" class="w-full h-full object-cover" alt="avatar">
+              <span *ngIf="!user.avatar">{{ user.username.charAt(0).toUpperCase() }}</span>
+            </div>
+
+            <div class="result-info">
+              <span class="result-name">{{ user.username }}</span>
+              <span class="result-email">{{ user.email }}</span>
+            </div>
+
+            @if (isFriend(user.username)) {
+              <span class="status-badge">Connected</span>
+            } @else {
+              <span class="add-icon">+</span>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- LOADING STATE -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading your crew...</p>
+    </div>
+  } @else {
+
+    <!-- GRID PRIETENI EXISTENȚI -->
+    <div class="friends-grid">
+      @for (friend of friends(); track friend.id) {
+        <div class="friend-card">
+          <!-- 🔄 AVATAR MARE SAU INITIALA -->
+          <div class="avatar overflow-hidden relative">
+            <!-- Aici folosim friend.avatar acum ca l-am adus din backend -->
+            <img *ngIf="friend.avatar" [src]="'avatars/' + friend.avatar" class="w-full h-full object-cover" alt="avatar">
+            <span *ngIf="!friend.avatar">{{ friend.username.charAt(0).toUpperCase() }}</span>
+          </div>
+
+          <div class="card-info">
+            <h3 class="username">{{ friend.username }}</h3>
+            <div class="stats">
+              <span class="xp">{{ friend.points }} XP</span>
+            </div>
+          </div>
+
+          <button class="btn-profile">View Profile</button>
+
+        </div>
+      } @empty {
+        <div class="empty-state">
+          <div class="empty-icon">👥</div>
+          <h3>No friends yet</h3>
+          <p>Start connecting with people to see them here!</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- TOAST -->
+  @if (showToast()) {
+    <app-toast [message]="toastMessage()" [type]="toastType()"></app-toast>
+  }
+</div>

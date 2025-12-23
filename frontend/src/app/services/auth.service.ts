@@ -1,37 +1,55 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of } from 'rxjs';
+import { Router } from '@angular/router';
+import {Observable, tap, catchError, of, lastValueFrom} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private http = inject(HttpClient);
-  // URL-ul Backend-ului
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private router = inject(Router);
 
-  // Cheia pentru LocalStorage
+  private apiUrl = 'http://localhost:8080/api/auth';
   private readonly TOKEN_KEY = 'auth-token';
 
-  // Signal pentru a tine minte userul curent in toata aplicatia (Reactive)
   currentUser = signal<any>(null);
 
   constructor() {
-    // La pornirea aplicatiei (refresh), incercam sa recuperam userul
-    this.fetchCurrentUser();
   }
 
+  // Aceasta metoda returneaza un Promise. Angular va astepta ca acest Promise
+  // sa se rezolve (resolve()) inainte sa afiseze pagina.
+  initializeSession(): Promise<void> {
+    return new Promise((resolve) => {
+      // 1. Daca nu avem token, nu avem ce verifica.
+      // Rezolvam promisiunea imediat si lasam aplicatia sa porneasca (ca Guest).
+      if (!this.getToken()) {
+        resolve();
+        return;
+      }
+
+      // 2. Daca avem token, intrebam backend-ul cine e userul
+      this.http.get(`${this.apiUrl}/me`).subscribe({
+        next: (user) => {
+          this.currentUser.set(user);
+          resolve(); // Gata, am incarcat userul, aplicatia poate porni
+        },
+        error: () => {
+          // Token expirat sau eroare server -> stergem tokenul
+          this.logout();
+          resolve(); // Gata, aplicatia porneste (dar ca Guest)
+        }
+      });
+    });
+  }
   // --- LOGIN ---
   login(credentials: { emailOrUsername: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
       tap((response: any) => {
-        // Salvam token-ul primit in LocalStorage
         if (response.token) {
           localStorage.setItem(this.TOKEN_KEY, response.token);
         }
-
-        // Actualizam userul in starea aplicatiei
-        // Backend-ul returneaza acum: { token: "...", user: { username: "...", role: "..." } }
         if (response.user) {
           this.currentUser.set(response.user);
         }
@@ -48,8 +66,7 @@ export class AuthService {
   logout() {
     localStorage.removeItem(this.TOKEN_KEY);
     this.currentUser.set(null);
-    // Optional: Aici poti face redirect catre Home
-    // this.router.navigate(['/']);
+    // Nu facem redirect aici, lasam componenta sa decida
   }
 
   // --- UTILITARE ---
@@ -58,25 +75,10 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken(); // Returneaza true daca exista token
-  }
-
-  // --- PERSISTENTA (REFRESH) ---
-  // Aceasta metoda este apelata in constructor pentru a verifica daca token-ul
-  // salvat este inca valid si pentru a recuceri datele userului.
-  private fetchCurrentUser() {
-    if (!this.getToken()) return;
-
-    this.http.get(`${this.apiUrl}/me`).pipe(
-      catchError(() => {
-        // Daca token-ul este expirat sau invalid (401), facem logout automat
-        this.logout();
-        return of(null);
-      })
-    ).subscribe((user) => {
-      if (user) {
-        this.currentUser.set(user);
-      }
-    });
+    // return !!this.getToken();
+    // Înainte verificam doar: return !!this.getToken();
+    // Acum verificăm dacă avem datele utilizatorului încărcate efectiv.
+    // Datorită APP_INITIALIZER, știm sigur că s-a încercat încărcarea lor înainte de acest punct.
+    return !!this.currentUser();
   }
 }
