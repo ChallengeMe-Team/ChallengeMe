@@ -1,15 +1,23 @@
 package challengeme.backend.service;
 
+import challengeme.backend.dto.BadgeDTO;
+import challengeme.backend.dto.ChallengeHistoryDTO;
 import challengeme.backend.dto.FriendDTO;
+import challengeme.backend.dto.UserProfileDTO;
 import challengeme.backend.dto.request.update.UserUpdateRequest;
 import challengeme.backend.exception.UserNotFoundException;
 import challengeme.backend.mapper.UserMapper;
+import challengeme.backend.model.ChallengeUser;
+import challengeme.backend.model.ChallengeUserStatus;
 import challengeme.backend.model.User;
+import challengeme.backend.repository.ChallengeUserRepository;
 import challengeme.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +28,7 @@ import challengeme.backend.dto.request.update.ChangePasswordRequest;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ChallengeUserRepository challengeUserRepository;
     private final UserMapper mapper;
 
     private final PasswordEncoder passwordEncoder;
@@ -172,5 +181,104 @@ public class UserService {
         // Add
         current.getFriendIds().add(friend.getId());
         userRepository.save(current);
+    }
+
+    public UserProfileDTO getCurrentUserProfile() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
+
+        List<ChallengeUser> userChallenges = challengeUserRepository.findByUserId(user.getId());
+
+        List<ChallengeUser> completed = userChallenges.stream()
+                .filter(cu -> cu.getStatus() == ChallengeUserStatus.COMPLETED)
+                .toList();
+
+        int points = user.getPoints() != null ? user.getPoints() : 0;
+
+        // Generăm badge-urile folosind Record-ul tău
+        List<BadgeDTO> badges = generateBadges(user, completed.size());
+
+        List<ChallengeHistoryDTO> recentActivity = userChallenges.stream()
+                .sorted(Comparator.comparing(ChallengeUser::getStartDate).reversed())
+                .limit(5)
+                .map(cu -> new ChallengeHistoryDTO(
+                        cu.getChallenge().getTitle(),
+                        cu.getStatus().toString(),
+                        cu.getDateCompleted() != null ? cu.getDateCompleted().toString() : "Recent"
+                ))
+                .toList();
+
+        // Presupunând că UserProfileDTO este tot Record sau clasă cu constructor total
+        return new UserProfileDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                points,
+                (points / 100) + 1,
+                user.getAvatar(),
+                completed.size(),
+                calculateStreak(completed),
+                badges,
+                recentActivity
+        );
+    }
+
+    // --- Generare Badge-uri folosind Record Constructor ---
+    private List<BadgeDTO> generateBadges(User user, int completedCount) {
+        List<BadgeDTO> badges = new ArrayList<>();
+        int points = user.getPoints() != null ? user.getPoints() : 0;
+
+        // Ordinea în Record: UUID id, String name, String description, String criteria
+        if (completedCount >= 1) {
+            badges.add(new BadgeDTO(
+                    UUID.randomUUID(),
+                    "First Step",
+                    "Completed your first challenge",
+                    "1 Challenge"
+            ));
+        }
+
+        if (completedCount >= 5) {
+            badges.add(new BadgeDTO(
+                    UUID.randomUUID(),
+                    "High Five",
+                    "Completed 5 challenges",
+                    "5 Challenges"
+            ));
+        }
+
+        if (points >= 500) {
+            badges.add(new BadgeDTO(
+                    UUID.randomUUID(),
+                    "Points Master",
+                    "Earned 500+ XP",
+                    "500 XP"
+            ));
+        }
+
+        return badges;
+    }
+
+    private int calculateStreak(List<ChallengeUser> completedChallenges) {
+        if (completedChallenges.isEmpty()) return 0;
+        List<LocalDate> dates = completedChallenges.stream()
+                .map(ChallengeUser::getDateCompleted)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted(Comparator.reverseOrder())
+                .toList();
+        if (dates.isEmpty()) return 0;
+        int streak = 0;
+        LocalDate current = LocalDate.now();
+        if (!dates.contains(current) && !dates.contains(current.minusDays(1))) return 0;
+        LocalDate checkDate = dates.get(0);
+        for (LocalDate date : dates) {
+            if (date.equals(checkDate)) {
+                streak++;
+                checkDate = checkDate.minusDays(1);
+            } else break;
+        }
+        return streak;
     }
 }
