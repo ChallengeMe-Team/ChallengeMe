@@ -3,6 +3,7 @@ package challengeme.backend.controller;
 
 import challengeme.backend.dto.FriendDTO;
 import challengeme.backend.dto.UserDTO;
+import challengeme.backend.dto.UserProfileDTO;
 import challengeme.backend.dto.request.create.UserCreateRequest;
 import challengeme.backend.dto.request.update.UserUpdateRequest;
 import challengeme.backend.mapper.UserMapper;
@@ -177,5 +178,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileDTO> getMyProfile() {
+        return ResponseEntity.ok(userService.getCurrentUserProfile());
     }
 }

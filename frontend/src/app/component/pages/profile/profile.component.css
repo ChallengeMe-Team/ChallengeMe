@@ -1,0 +1,26 @@
+/* src/app/component/pages/profile/profile.component.css */
+
+:host {
+  display: block;
+  background-color: #0f0a1e; /* Fundalul închis conform temei */
+}
+
+.profile-container {
+  min-height: 100vh;
+}
+
+/* Efect de glow pentru sidebar sticky */
+aside > div {
+  box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.2);
+}
+
+/* Stil pentru scrollbar-ul activității recente dacă lista devine prea lungă */
+.activity-feed {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Utilitare pentru XP Bar */
+.xp-progress-bar {
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}

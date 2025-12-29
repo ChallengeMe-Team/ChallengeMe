@@ -10,6 +10,7 @@ import {AuthService} from './services/auth.service';
 import {Router} from '@angular/router';
 import {FriendsListComponent} from './component/pages/friends-list/friends-list.component';
 import { SettingsComponent } from './component/pages/settings/settings-component';
+import {ProfileComponent} from './component/pages/profile/profile.component';
 import { BadgesPageComponent } from "./component/pages/badges-page/badges-page.component";
 
 const guestGuard = () => {
@@ -44,6 +45,11 @@ export const routes: Routes = [
     path: 'auth',
     component: AuthComponent,
     canActivate: [guestGuard] // Accesibil doar dacă NU ești logat
+  },
+  {
+    path: 'profile',
+    component: ProfileComponent,
+    canActivate: [authGuard]
   },
   {
     path: 'friends',
