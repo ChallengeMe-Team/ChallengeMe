@@ -6,5 +6,7 @@ public record BadgeDTO(
         UUID id,
         String name,
         String description,
-        String criteria
+        String criteria,
+        String iconUrl,
+        Integer pointsReward
 ) {}

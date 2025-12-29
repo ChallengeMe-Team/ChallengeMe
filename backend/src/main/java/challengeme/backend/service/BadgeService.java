@@ -37,6 +37,10 @@ public class BadgeService {
         return badgeRepository.save(entity);
     }
 
+    public List<Badge> getUserBadges(String username) {
+        return badgeRepository.findBadgesByUsername(username);
+    }
+
     public void deleteBadge(UUID id) {
         Badge entity = getBadgeById(id); // aruncă BadgeNotFoundException dacă nu există
         badgeRepository.delete(entity);
