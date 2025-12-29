@@ -51,8 +51,8 @@ public class BadgeControllerUnitTests {
     @BeforeEach
     void setup() {
         badgeId = UUID.randomUUID();
-        badge = new Badge(badgeId, "Explorer", "Visited 5 locations", "Visit 5 locations");
-        badgeDTO = new BadgeDTO(badgeId, badge.getName(), badge.getDescription(), badge.getCriteria());
+        badge = new Badge(badgeId, "Explorer", "Visited 5 locations", "Visit 5 locations", null, 10);
+        badgeDTO = new BadgeDTO(badgeId, badge.getName(), badge.getDescription(), badge.getCriteria(), null, null);
 
         mockMvc = MockMvcBuilders.standaloneSetup(badgeController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -101,7 +101,7 @@ public class BadgeControllerUnitTests {
     // --- CREATE ---
     @Test
     void testCreateBadge() throws Exception {
-        BadgeCreateRequest request = new BadgeCreateRequest("Explorer", "Visited 5 locations", "Visit 5 locations");
+        BadgeCreateRequest request = new BadgeCreateRequest("Explorer", "Visited 5 locations", "Visit 5 locations", null, null);
 
         when(badgeMapper.toEntity(any(BadgeCreateRequest.class))).thenReturn(badge);
         when(badgeService.createBadge(badge)).thenReturn(badge);
@@ -120,8 +120,8 @@ public class BadgeControllerUnitTests {
     @Test
     void testUpdateBadge() throws Exception {
         BadgeUpdateRequest request = new BadgeUpdateRequest("Explorer Updated", "Visited 10 locations", "Visit 10 locations");
-        Badge updatedBadge = new Badge(badgeId, request.name(), request.description(), request.criteria());
-        BadgeDTO updatedDTO = new BadgeDTO(badgeId, request.name(), request.description(), request.criteria());
+        Badge updatedBadge = new Badge(badgeId, request.name(), request.description(), request.criteria(), null, 10);
+        BadgeDTO updatedDTO = new BadgeDTO(badgeId, request.name(), request.description(), request.criteria(), null, 10);
 
         when(badgeService.updateBadge(eq(badgeId), any(BadgeUpdateRequest.class))).thenReturn(updatedBadge);
         when(badgeMapper.toDTO(updatedBadge)).thenReturn(updatedDTO);

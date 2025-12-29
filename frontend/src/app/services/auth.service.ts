@@ -81,4 +81,10 @@ export class AuthService {
     // Datorită APP_INITIALIZER, știm sigur că s-a încercat încărcarea lor înainte de acest punct.
     return !!this.currentUser();
   }
+
+  getUsername(): string | null {
+    // Dacă variabila ta se numește 'user', folosește this.user()
+    // Dacă se numește 'currentUser', folosește this.currentUser()
+    return this.currentUser()?.username || null;
+  }
 }

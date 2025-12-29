@@ -65,6 +65,25 @@ public class UserController {
     }
 
     // -----------------------------------------------------------
+    // REMOVE friend to list
+    // -----------------------------------------------------------
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<?> removeFriend(@PathVariable UUID id, @PathVariable UUID friendId) {
+        try {
+            userService.removeFriend(id, friendId);
+            return ResponseEntity.ok(Map.of("message", "Friend removed successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Consistency Check
+    @PostMapping("/sync-friends")
+    public ResponseEntity<Map<String, Integer>> syncFriends() {
+        return ResponseEntity.ok(userService.syncAllFriendships());
+    }
+
+    // -----------------------------------------------------------
     // DEFAULT CRUD
     // -----------------------------------------------------------
     @GetMapping

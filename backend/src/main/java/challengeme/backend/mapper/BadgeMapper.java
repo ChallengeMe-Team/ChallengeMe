@@ -10,11 +10,16 @@ import org.springframework.stereotype.Component;
 public class BadgeMapper {
 
     public BadgeDTO toDTO(Badge entity) {
+        if (entity == null) {
+            return null;
+        }
         return new BadgeDTO(
                 entity.getId(),
                 entity.getName(),
                 entity.getDescription(),
-                entity.getCriteria()
+                entity.getCriteria(),
+                entity.getIconUrl(),
+                entity.getPointsReward()
         );
     }
 
@@ -23,6 +28,8 @@ public class BadgeMapper {
         entity.setName(request.name());
         entity.setDescription(request.description());
         entity.setCriteria(request.criteria());
+        entity.setIconUrl(request.iconUrl());
+        entity.setPointsReward(request.pointsReward());
         return entity;
     }
 
