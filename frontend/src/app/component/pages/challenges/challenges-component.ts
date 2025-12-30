@@ -219,4 +219,20 @@ export class ChallengesComponent implements OnInit {
     this.toastType.set(type);
     setTimeout(() => { this.toastMessage.set(null); }, 3000);
   }
+
+  getCategoryClass(category: string): string {
+    const mapping: { [key: string]: string } = {
+      'Fitness': 'bg-fuchsia-500',
+      'Health': 'bg-rose-600',
+      'Mindfulness': 'bg-blue-400',
+      'Education': 'bg-purple-600',
+      'Coding': 'bg-indigo-600',
+      'Creativity': 'bg-amber-500',
+      'Social': 'bg-orange-500',
+      'Food': 'bg-yellow-600',
+      'Lifestyle': 'bg-emerald-500'
+    };
+    // Returnează culoarea din mapare sau o culoare gri implicită dacă categoria nu este găsită
+    return mapping[category] || 'bg-gray-500';
+  }
 }

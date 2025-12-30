@@ -2,7 +2,7 @@
      (dblclick)="edit.emit(challenge)"
      (contextmenu)="delete.emit({event: $event, challenge: challenge})">
 
-  <span class="badge text-xs sm:text-sm px-4 py-1.5 shadow-xl" [ngStyle]="getCategoryStyle(challenge.category)">
+  <span class="badge text-xs sm:text-sm px-4 py-1.5 shadow-xl" [ngClass]="categoryClass">
     {{ challenge.category }}
   </span>
 

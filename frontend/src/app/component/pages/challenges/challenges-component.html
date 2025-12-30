@@ -17,6 +17,7 @@
           *ngFor="let challenge of getChallengesByDifficulty(difficulty)"
           [challenge]="challenge"
           [status]="userChallengeStatuses().get(challenge.id)"
+          [categoryClass]="getCategoryClass(challenge.category)"
           (start)="handleStart($event)"
           (restart)="handleRestart($event)"
           (assign)="handleAssign($event)"

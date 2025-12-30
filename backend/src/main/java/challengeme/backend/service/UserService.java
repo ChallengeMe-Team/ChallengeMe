@@ -6,11 +6,12 @@ import challengeme.backend.dto.FriendDTO;
 import challengeme.backend.dto.UserProfileDTO;
 import challengeme.backend.dto.request.update.UserUpdateRequest;
 import challengeme.backend.exception.UserNotFoundException;
+import challengeme.backend.mapper.BadgeMapper;
 import challengeme.backend.mapper.UserMapper;
-import challengeme.backend.model.ChallengeUser;
-import challengeme.backend.model.ChallengeUserStatus;
-import challengeme.backend.model.User;
+import challengeme.backend.model.*;
+import challengeme.backend.repository.BadgeRepository;
 import challengeme.backend.repository.ChallengeUserRepository;
+import challengeme.backend.repository.UserBadgeRepository;
 import challengeme.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,15 +30,15 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ChallengeUserRepository challengeUserRepository;
+    private final BadgeRepository badgeRepository;
     private final UserMapper mapper;
-
+    private final BadgeMapper badgeMapper;
     private final PasswordEncoder passwordEncoder;
-
-    //Am adăugat ChallengeService pentru sincronizare ---
     private final ChallengeService challengeService;
+    private final UserBadgeRepository userBadgeRepository;
 
     // -----------------------------------------------------------
-    // BASIC CRUD
+    // BASIC CRUD & AUTHENTICATION
     // -----------------------------------------------------------
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -56,31 +57,23 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    // Update User with Uniqueness Check
-    @Transactional // Recomandat Transactional aici
+    @Transactional
     public User updateUser(UUID id, UserUpdateRequest request) {
         User user = getUserById(id);
-
-        // Salvăm username-ul vechi ÎNAINTE de update
         String oldUsername = user.getUsername();
         boolean usernameChanged = false;
 
-        // 1. Update Username
-        // Folosim request.username() fără "get" (fiind Record)
         if (request.username() != null && !request.username().isBlank()) {
             if (!request.username().equals(user.getUsername())) {
                 if (userRepository.existsByUsername(request.username())) {
                     throw new RuntimeException("Username already taken");
                 }
                 user.setUsername(request.username());
-                usernameChanged = true; // Marcăm că s-a schimbat
+                usernameChanged = true;
             }
         }
 
-        // 2. Update Email
-        // Folosim request.email() fără "get"
         if (request.email() != null && !request.email().isBlank()) {
-            // Verificăm dacă emailul e diferit și dacă e deja luat
             if (!request.email().equals(user.getEmail())) {
                 if (userRepository.existsByEmail(request.email())) {
                     throw new RuntimeException("Email already taken");
@@ -89,23 +82,19 @@ public class UserService {
             }
         }
 
-        // 3. Update Avatar
-        // Folosim request.avatar() fără "get"
         if (request.avatar() != null) {
             user.setAvatar(request.avatar());
         }
 
-        // Salvăm userul
         User updatedUser = userRepository.save(user);
 
-        // 4. SINCRONIZARE
         if (usernameChanged) {
-            // Dacă și-a schimbat numele, actualizăm toate provocările create de el
             challengeService.synchronizeUsername(oldUsername, updatedUser.getUsername());
         }
 
         return updatedUser;
-    } // Aici se închide metoda updateUser (aveai o acoladă în plus înainte)
+    }
+
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
@@ -114,213 +103,205 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
-
     @Transactional
     public void changePassword(UUID userId, ChangePasswordRequest request) {
         User user = getUserById(userId);
-
-        // Verific daca parola curenta (raw) se potriveste cu cea din baza de date (hash)
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
             throw new RuntimeException("Incorrect current password");
         }
-
-        // Criptez noua parola
-        String newHash = passwordEncoder.encode(request.newPassword());
-        user.setPassword(newHash);
-
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
     }
 
-    // -----------------------------------------------------------
-    // SEARCH USER BY USERNAME
-    // -----------------------------------------------------------
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
-    // -----------------------------------------------------------
-    // GET FRIENDS OF USER
-    // -----------------------------------------------------------
     public List<FriendDTO> getUserFriends(UUID currentUserId) {
         User currentUser = getUserById(currentUserId);
-
         List<UUID> friendIds = currentUser.getFriendIds();
         if (friendIds == null || friendIds.isEmpty()) {
             return new ArrayList<>();
         }
-
-        List<User> friends = userRepository.findAllById(friendIds);
-
-        return friends.stream()
+        return userRepository.findAllById(friendIds).stream()
                 .map(mapper::toFriendDTO)
                 .collect(Collectors.toList());
     }
 
-    // -----------------------------------------------------------
-    // ADD FRIEND LOGIC
-    // -----------------------------------------------------------
-
     @Transactional
     public void addFriend(UUID currentUserId, String friendUsername) {
         User current = getUserById(currentUserId);
-
         if (current.getUsername().equalsIgnoreCase(friendUsername)) {
             throw new RuntimeException("You cannot add yourself");
         }
-
         User friend = userRepository.findByUsername(friendUsername)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Verificăm dacă există deja relația (într-un singur sens e suficient pentru verificare)
         if (current.getFriendIds().contains(friend.getId())) {
             throw new RuntimeException("User is already your friend");
         }
-
-        // Pasul 1: Adaugă B la A
         current.getFriendIds().add(friend.getId());
-
-        // Pasul 2: Adaugă A la B (Reciprocitate)
         if (!friend.getFriendIds().contains(current.getId())) {
             friend.getFriendIds().add(current.getId());
         }
-
         userRepository.save(current);
         userRepository.save(friend);
     }
-    // -----------------------------------------------------------
-    // REMOVE FRIEND LOGIC
-    // -----------------------------------------------------------
 
     @Transactional
     public void removeFriend(UUID currentUserId, UUID targetId) {
         User current = getUserById(currentUserId);
         User target = getUserById(targetId);
-
-        // Elimină B din lista lui A
         current.getFriendIds().removeIf(id -> id.equals(targetId));
-
-        // Elimină A din lista lui B
         target.getFriendIds().removeIf(id -> id.equals(currentUserId));
-
         userRepository.save(current);
         userRepository.save(target);
     }
 
-    @Transactional
-    public Map<String, Integer> syncAllFriendships() {
-        List<User> allUsers = userRepository.findAll();
-        int fixedCount = 0;
-
-        for (User userA : allUsers) {
-            for (UUID friendIdB : new ArrayList<>(userA.getFriendIds())) {
-                Optional<User> userBOpt = userRepository.findById(friendIdB);
-
-                if (userBOpt.isPresent()) {
-                    User userB = userBOpt.get();
-                    // Dacă A îl are pe B, dar B nu îl are pe A
-                    if (!userB.getFriendIds().contains(userA.getId())) {
-                        userB.getFriendIds().add(userA.getId());
-                        userRepository.save(userB);
-                        fixedCount++;
-                    }
-                }
-            }
-        }
-        return Map.of("fixedConnections", fixedCount);
-    }
-
+    // -----------------------------------------------------------
+    // PROFILE & ACHIEVEMENTS LOGIC
+    // -----------------------------------------------------------
     public UserProfileDTO getCurrentUserProfile() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
 
         List<ChallengeUser> userChallenges = challengeUserRepository.findByUserId(user.getId());
-
         List<ChallengeUser> completed = userChallenges.stream()
                 .filter(cu -> cu.getStatus() == ChallengeUserStatus.COMPLETED)
                 .toList();
 
+        Map<String, Integer> skills = completed.stream()
+                .collect(Collectors.groupingBy(
+                        cu -> cu.getChallenge().getCategory(),
+                        Collectors.summingInt(cu -> cu.getChallenge().getPoints())
+                ));
+
         int points = user.getPoints() != null ? user.getPoints() : 0;
 
-        List<BadgeDTO> badges = generateBadges(user, completed.size());
+        // Această metodă va returna DTO-uri cu ID-urile REALE și va salva în DB
+        List<BadgeDTO> badges = generateBadges(user, completed);
 
-        List<ChallengeHistoryDTO> recentActivity = userChallenges.stream()
-                .sorted(Comparator.comparing(ChallengeUser::getStartDate).reversed())
-                .limit(5)
-                .map(cu -> new ChallengeHistoryDTO(
-                        cu.getChallenge().getTitle(),
-                        cu.getStatus().toString(),
-                        cu.getDateCompleted() != null ? cu.getDateCompleted().toString() : "Recent"
-                ))
+        // ACTIVITATE RECENTĂ: Combinăm Challenge-urile cu Badge-urile deblocate
+        List<UserBadge> userBadges = userBadgeRepository.findAllByUser_Username(username);
+        List<ChallengeHistoryDTO> combinedActivity = new ArrayList<>();
+
+        // Adăugăm provocările
+        userChallenges.forEach(cu -> combinedActivity.add(new ChallengeHistoryDTO(
+                cu.getChallenge().getTitle(),
+                cu.getStatus().toString(),
+                cu.getDateCompleted() != null ? cu.getDateCompleted().toString() : cu.getStartDate().toString()
+        )));
+
+        // Adăugăm badge-urile deblocate cu status special "BADGE_UNLOCKED"
+        userBadges.forEach(ub -> combinedActivity.add(new ChallengeHistoryDTO(
+                ub.getBadge().getName(),
+                "BADGE_UNLOCKED",
+                ub.getDateAwarded().toString()
+        )));
+
+        // Sortăm descrescător după dată și limităm la 10 pentru scroll
+        List<ChallengeHistoryDTO> sortedActivity = combinedActivity.stream()
+                .sorted(Comparator.comparing(ChallengeHistoryDTO::date).reversed())
+                .limit(10)
                 .toList();
 
         return new UserProfileDTO(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                points,
-                (points / 100) + 1,
-                user.getAvatar(),
-                completed.size(),
-                calculateStreak(completed),
-                badges,
-                recentActivity
+                user.getId(), user.getUsername(), user.getEmail(), points,
+                (points / 100) + 1, user.getAvatar(), completed.size(),
+                calculateStreak(completed), badges, sortedActivity, skills
         );
     }
 
-    private List<BadgeDTO> generateBadges(User user, int completedCount) {
-        List<BadgeDTO> badges = new ArrayList<>();
-        int points = user.getPoints() != null ? user.getPoints() : 0;
+    public List<BadgeDTO> generateBadges(User user, List<ChallengeUser> completedChallenges) {
+        List<BadgeDTO> ownedDTOs = new ArrayList<>();
+        List<Badge> allPossibleBadges = badgeRepository.findAll();
 
-        if (completedCount >= 1) {
-            badges.add(new BadgeDTO(
-                    UUID.randomUUID(),
-                    "First Step",
-                    "Completed your first challenge",
-                    "1 Challenge"
-            ));
+        if (completedChallenges.size() >= 1) {
+            findAndAddBadge(user, ownedDTOs, allPossibleBadges, "First Step");
         }
 
-        if (completedCount >= 5) {
-            badges.add(new BadgeDTO(
-                    UUID.randomUUID(),
-                    "High Five",
-                    "Completed 5 challenges",
-                    "5 Challenges"
-            ));
+        long fitnessCount = completedChallenges.stream()
+                .filter(cu -> "Fitness".equalsIgnoreCase(cu.getChallenge().getCategory())).count();
+        if (fitnessCount >= 3) {
+            findAndAddBadge(user, ownedDTOs, allPossibleBadges, "Marathoner");
         }
 
-        if (points >= 500) {
-            badges.add(new BadgeDTO(
-                    UUID.randomUUID(),
-                    "Points Master",
-                    "Earned 500+ XP",
-                    "500 XP"
-            ));
+        long mindfulnessCount = completedChallenges.stream()
+                .filter(cu -> "Mindfulness".equalsIgnoreCase(cu.getChallenge().getCategory())).count();
+        if (mindfulnessCount >= 5) {
+            findAndAddBadge(user, ownedDTOs, allPossibleBadges, "Zen Master");
         }
 
-        return badges;
+        long eduCount = completedChallenges.stream()
+                .filter(cu -> "Education".equalsIgnoreCase(cu.getChallenge().getCategory())).count();
+        if (eduCount >= 3) {
+            findAndAddBadge(user, ownedDTOs, allPossibleBadges, "Polyglot");
+        }
+
+        long codingCount = completedChallenges.stream()
+                .filter(cu -> "Coding".equalsIgnoreCase(cu.getChallenge().getCategory())).count();
+        if (codingCount >= 3) {
+            findAndAddBadge(user, ownedDTOs, allPossibleBadges, "Code Ninja");
+        }
+
+        boolean hasChef = completedChallenges.stream()
+                .anyMatch(cu -> "Weekend Chef".equalsIgnoreCase(cu.getChallenge().getTitle()));
+        if (hasChef) {
+            findAndAddBadge(user, ownedDTOs, allPossibleBadges, "Weekend Chef");
+        }
+
+        return ownedDTOs;
+    }
+
+    private void findAndAddBadge(User user, List<BadgeDTO> targetList, List<Badge> sourceList, String badgeName) {
+        sourceList.stream()
+                .filter(b -> b.getName().equalsIgnoreCase(badgeName))
+                .findFirst()
+                .ifPresent(badge -> {
+                    if (!userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge.getId())) {
+                        UserBadge ub = new UserBadge();
+                        ub.setUser(user);
+                        ub.setBadge(badge);
+                        ub.setDateAwarded(LocalDate.now());
+                        userBadgeRepository.save(ub);
+                    }
+                    targetList.add(badgeMapper.toDTO(badge));
+                });
     }
 
     private int calculateStreak(List<ChallengeUser> completedChallenges) {
         if (completedChallenges.isEmpty()) return 0;
         List<LocalDate> dates = completedChallenges.stream()
-                .map(ChallengeUser::getDateCompleted)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted(Comparator.reverseOrder())
-                .toList();
+                .map(ChallengeUser::getDateCompleted).filter(Objects::nonNull)
+                .distinct().sorted(Comparator.reverseOrder()).toList();
         if (dates.isEmpty()) return 0;
         int streak = 0;
         LocalDate current = LocalDate.now();
         if (!dates.contains(current) && !dates.contains(current.minusDays(1))) return 0;
         LocalDate checkDate = dates.get(0);
         for (LocalDate date : dates) {
-            if (date.equals(checkDate)) {
-                streak++;
-                checkDate = checkDate.minusDays(1);
-            } else break;
+            if (date.equals(checkDate)) { streak++; checkDate = checkDate.minusDays(1); } else break;
         }
         return streak;
+    }
+
+    @Transactional
+    public Map<String, Integer> syncAllFriendships() {
+        List<User> allUsers = userRepository.findAll();
+        int fixedCount = 0;
+        for (User userA : allUsers) {
+            if (userA.getFriendIds() == null) continue;
+            for (UUID friendIdB : new ArrayList<>(userA.getFriendIds())) {
+                userRepository.findById(friendIdB).ifPresent(userB -> {
+                    if (userB.getFriendIds() == null) userB.setFriendIds(new ArrayList<>());
+                    if (!userB.getFriendIds().contains(userA.getId())) {
+                        userB.getFriendIds().add(userA.getId());
+                        userRepository.save(userB);
+                    }
+                });
+            }
+        }
+        return Map.of("fixedConnections", fixedCount);
     }
 }

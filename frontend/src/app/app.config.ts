@@ -28,7 +28,6 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor])
     ),
 
-
     importProvidersFrom(
       LucideAngularModule.pick({ Trophy, Award, Star, Shield, Medal })
     ),
