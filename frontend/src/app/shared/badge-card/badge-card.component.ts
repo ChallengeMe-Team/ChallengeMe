@@ -15,15 +15,9 @@ export class BadgeCardComponent {
   @Input() isUnlocked: boolean = false;
 
   get tooltip(): string {
-    // MODIFICAT: Am scos 'criteria' care cauza eroarea
-    return this.badge.description;
+    if (!this.badge) return '';
+    const criteriaText = this.badge.criteria ? ` (${this.badge.criteria})` : '';
+    return `${this.badge.description}${criteriaText}`;
   }
 
-  handleMissingImage(event: Event) {
-    const imgElement = event.target as HTMLImageElement;
-    // 1. Oprim bucla infinită (anulăm handler-ul de eroare)
-    imgElement.onerror = null;
-    // 2. Setăm calea ABSOLUTĂ către imaginea default
-    imgElement.src = '/assets/badges/default.png';
-  }
 }

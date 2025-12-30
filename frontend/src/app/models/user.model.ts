@@ -11,6 +11,7 @@ export interface UserProfile {
   currentStreak: number;
   badges: Badge[];
   recentActivity: ActivityHistory[];
+  skillBreakdown: { [key: string]: number };
 }
 
 export interface ActivityHistory {

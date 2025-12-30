@@ -5,7 +5,8 @@
       <div class="bg-[#1a1627] rounded-2xl p-6 border border-gray-800 sticky top-24 shadow-2xl">
         <div class="flex flex-col items-center">
           <div class="w-32 h-32 rounded-full bg-gradient-to-tr from-purple-600 to-blue-500 p-1 mb-4">
-            <img [src]="user.avatar ? 'avatars/' + user.avatar : 'avatars/cat.png'" class="w-full h-full rounded-full object-cover bg-gray-900 border-4 border-gray-900">
+            <img [src]="user.avatar ? 'avatars/' + user.avatar : 'avatars/cat.png'"
+                 class="w-full h-full rounded-full object-cover bg-gray-900 border-4 border-gray-900">
           </div>
           <h2 class="text-2xl font-bold">{{ user.username }}</h2>
           <p class="text-purple-400 font-semibold mb-6">Level {{ user.level }}</p>
@@ -17,11 +18,13 @@
             <span>{{ (user.level * 100) }} XP</span>
           </div>
           <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r from-purple-500 to-blue-500" [style.width.%]="progressPercent"></div>
+            <div class="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-1000"
+                 [style.width.%]="progressPercent"></div>
           </div>
         </div>
 
-        <button (click)="router.navigate(['/settings'])" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 transition border border-gray-700">
+        <button (click)="router.navigate(['/settings'])"
+                class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 transition border border-gray-700">
           <lucide-icon [img]="icons.Settings" class="w-4 h-4"></lucide-icon>
           Edit Profile
         </button>
@@ -48,44 +51,76 @@
         </div>
       </div>
 
+      <section class="bg-[#1a1627] p-6 rounded-xl border border-gray-800">
+        <h3 class="text-xl font-bold mb-6 text-gray-200">Skill Breakdown</h3>
+        <div class="space-y-4" *ngIf="profile()?.skillBreakdown as skills">
+          <div *ngFor="let skill of skills | keyvalue">
+            <div class="flex justify-between text-sm mb-1">
+              <span class="font-medium text-gray-300">{{ skill.key }}</span>
+              <span class="text-purple-400">{{ skill.value }} pts</span>
+            </div>
+            <div class="h-3 bg-gray-800 rounded-full overflow-hidden">
+              <div class="h-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.5)]"
+                   [ngStyle]="{
+                     'width.%': (skill.value / 500) * 100,
+                     'background-color': getCategoryColor(skill.key)
+                   }">
+              </div>
+            </div>
+          </div>
+          <div *ngIf="(skills | keyvalue).length === 0" class="text-gray-500 italic text-sm text-center py-4">
+            No points earned in any category yet.
+          </div>
+        </div>
+      </section>
+
       <section>
         <h3 class="text-xl font-bold mb-6 text-gray-200">Trophy Case</h3>
-        <div *ngIf="user.badges.length > 0; else noBadges" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div *ngIf="user.badges.length > 0; else noBadges"
+             class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-h-[350px] overflow-y-auto custom-scrollbar p-1">
           <app-badge *ngFor="let b of user.badges" [name]="b.name" [description]="b.description"></app-badge>
         </div>
         <ng-template #noBadges>
-          <div class="p-8 text-center bg-[#1a1627]/50 rounded-xl border border-dashed border-gray-700 text-gray-500 italic">No trophies yet.</div>
+          <div class="p-10 text-center bg-[#1a1627]/50 rounded-xl border border-dashed border-gray-700 text-gray-500 italic">
+            <lucide-icon [img]="icons.Trophy" class="w-12 h-12 mx-auto mb-2 opacity-10"></lucide-icon>
+            No trophies yet. Complete challenges to earn them!
+          </div>
         </ng-template>
       </section>
 
       <section>
         <h3 class="text-xl font-bold mb-4">Recent Activity</h3>
-        <div class="bg-[#1a1627] rounded-xl border border-gray-800 divide-y divide-gray-800">
-          <div *ngFor="let act of user.recentActivity" class="p-4 flex justify-between hover:bg-white/5 transition">
+        <div class="bg-[#1a1627] rounded-xl border border-gray-800 divide-y divide-gray-800 max-h-[350px] overflow-y-auto custom-scrollbar shadow-inner">
 
+          <div *ngFor="let act of user.recentActivity" class="p-4 flex justify-between items-center hover:bg-white/5 transition group">
             <div class="flex items-center gap-3">
-              <div class="w-2 h-2 rounded-full"
+              <div class="w-2 h-2 rounded-full shadow-[0_0_5px_currentColor]"
                    [ngClass]="{
-                'bg-green-500': act.status === 'COMPLETED',
-                'bg-blue-500': act.status === 'ACCEPTED',
-                'bg-yellow-500': act.status === 'PENDING'
-             }">
+              'text-green-500 bg-green-500': act.status === 'COMPLETED',
+              'text-blue-500 bg-blue-500': act.status === 'ACCEPTED',
+              'text-yellow-500 bg-yellow-500 animate-pulse': act.status === 'BADGE_UNLOCKED',
+              'text-gray-500 bg-gray-500': act.status === 'PENDING'
+           }">
               </div>
 
               <span>
           <ng-container [ngSwitch]="act.status">
-            <span *ngSwitchCase="'COMPLETED'" class="text-gray-400">Finished</span>
+            <span *ngSwitchCase="'COMPLETED'" class="text-green-600 font-bold">Finished</span>
             <span *ngSwitchCase="'ACCEPTED'" class="text-gray-400">Started</span>
+            <span *ngSwitchCase="'BADGE_UNLOCKED'" class="text-yellow-500 font-bold ">Unlocked</span>
             <span *ngSwitchDefault class="text-gray-400">Assigned</span>
           </ng-container>
-          <strong class="text-white ml-1">'{{ act.challengeTitle }}'</strong>
+
+          <strong class="text-white ml-1">
+            {{ act.status === 'BADGE_UNLOCKED' ? '"' + act.challengeTitle + '" Badge' : '\'' + act.challengeTitle + '\'' }}
+          </strong>
         </span>
             </div>
 
-            <span class="text-gray-500 text-sm">{{ act.date }}</span>
+            <span class="text-gray-500 text-sm font-medium">{{ act.date | timeAgo }}</span>
           </div>
 
-          <div *ngIf="user.recentActivity.length === 0" class="p-6 text-center text-gray-500">
+          <div *ngIf="user.recentActivity.length === 0" class="p-8 text-center text-gray-500 italic">
             No recent activity found.
           </div>
         </div>

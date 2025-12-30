@@ -3,10 +3,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 130px;
-  height: 150px;
-  padding: 1rem;
-  border-radius: 1rem;
+  /* Mărim dimensiunea întregului card */
+  width: 180px;
+  height: 240px;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
 }
@@ -45,6 +46,17 @@
 }
 
 .badge-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  /* Mărim iconița de la 2.5rem (~40px) la 6rem (~96px) */
+  width: 6rem;
+  height: 6rem;
+  object-fit: contain; /* Esențial pentru a nu deforma imaginea */
+}
+
+.icon-container {
+  width: 100%;
+  height: 100px; /* Container fix pentru aliniere perfectă */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
 }

@@ -1,6 +1,7 @@
 package challengeme.backend.dto;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public record UserProfileDTO(
@@ -13,5 +14,6 @@ public record UserProfileDTO(
         int completedChallengesCount,
         int currentStreak,
         List<BadgeDTO> badges,
-        List<ChallengeHistoryDTO> recentActivity
+        List<ChallengeHistoryDTO> recentActivity,
+        Map<String, Integer> skillBreakdown
 ) {}

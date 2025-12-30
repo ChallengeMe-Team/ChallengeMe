@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface UserBadgeRepository extends JpaRepository<UserBadge, UUID> {
     List<UserBadge> findAllByUser_Username(String username);
+
+    boolean existsByUserIdAndBadgeId(UUID userId, UUID badgeId);
 }

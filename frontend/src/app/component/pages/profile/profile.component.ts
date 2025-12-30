@@ -5,11 +5,12 @@ import { UserService } from '../../../services/user.service';
 import { UserProfile } from '../../../models/user.model';
 import { BadgeComponent } from '../../badge/badge.component';
 import { LucideAngularModule, Settings, Zap, Trophy, CheckCircle } from 'lucide-angular';
+import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, BadgeComponent],
+  imports: [CommonModule, LucideAngularModule, BadgeComponent, TimeAgoPipe],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
@@ -30,6 +31,21 @@ export class ProfileComponent implements OnInit {
       },
       error: () => this.isLoading.set(false)
     });
+  }
+
+  getCategoryColor(category: string): string {
+    const colors: { [key: string]: string } = {
+      'Fitness': '#d946ef',    // Fuchsia
+      'Food': '#f59e0b',       // Chihlimbar
+      'Health': '#ef4444',     // Roșu
+      'Mindfulness': '#06b6d4', // Cyan
+      'Education': '#8b5cf6',  // Mov
+      'Creativity': '#ec4899', // Roz
+      'Coding': '#6366f1',     // Indigo
+      'Lifestyle': '#10b981',  // Verde
+      'Social': '#f97316'      // Portocaliu
+    };
+    return colors[category] || '#6b7280'; // Gri default
   }
 
   // XP Progress (Exemplu: 100 XP per Level)

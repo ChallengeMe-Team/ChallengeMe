@@ -3,18 +3,20 @@ import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { BadgeService } from '../../../services/badge.service';
 import { AuthService } from '../../../services/auth.service'; // Asigură-te că calea e corectă
+import { LucideAngularModule, Zap } from 'lucide-angular';
 import { BadgeDisplay } from '../../../models/badge.model';
 
 @Component({
   selector: 'app-badges-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './badges-page.component.html',
   styleUrls: ['./badges-page.component.css']
 })
 export class BadgesPageComponent implements OnInit {
   badgeList: BadgeDisplay[] = [];
   isLoading = signal(true);
+  readonly icons = { Zap };
 
   constructor(
     private badgeService: BadgeService,
@@ -37,7 +39,10 @@ export class BadgesPageComponent implements OnInit {
     }).subscribe({
       next: ({ allBadges, userBadges }) => {
         this.badgeList = allBadges.map(badge => {
+          // Verificăm dacă ID-ul badge-ului curent se află în lista de deținute
+          // userBadges vine de la /api/badges/user/{username}
           const isOwned = userBadges.some(owned => owned.id === badge.id);
+
           return {
             badge: badge,
             isUnlocked: isOwned
