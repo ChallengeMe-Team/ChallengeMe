@@ -1,0 +1,46 @@
+<section class="relative overflow-hidden rounded-2xl bg-[#0f0a1e] p-8 shadow-2xl border border-white/10 mt-6 animate-fade-in">
+  <div class="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-purple-600/20 blur-[100px]"></div>
+  <div class="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-blue-600/20 blur-[100px]"></div>
+
+  <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+
+    <div class="space-y-4">
+      <div class="space-y-1">
+        <h2 class="text-gray-400 text-lg font-medium">Welcome back,
+          <span class="text-white font-bold">{{ username() }}</span>!
+        </h2>
+        <div class="flex items-center gap-3">
+          <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+            Level {{ level() }}
+          </h1>
+          <span class="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-bold uppercase tracking-wider">
+            {{ socialProofMessage() }}
+          </span>
+        </div>
+      </div>
+
+      <p class="text-gray-400 text-sm">
+        <span class="text-purple-400 font-bold">{{ xpNeededForNextLevel() }} XP</span> until Level {{ level() + 1 }}
+      </p>
+    </div>
+
+    <div class="w-full md:w-1/2 space-y-3">
+      <div class="flex justify-between text-xs font-bold uppercase tracking-widest">
+        <span class="text-purple-400">Current XP: {{ xpInCurrentLevel() }}</span>
+        <span class="text-gray-500">Next Goal: 100 XP</span>
+      </div>
+
+      <div class="h-4 w-full bg-gray-800/50 rounded-full border border-white/5 overflow-hidden p-0.5">
+        <div
+          class="h-full rounded-full transition-all duration-1000 ease-out bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+          [style.width.%]="progressPercentage()">
+        </div>
+      </div>
+
+      <p class="text-[10px] text-gray-500 text-right italic uppercase font-medium">
+        Total Accumulated: {{ points() }} Points
+      </p>
+    </div>
+
+  </div>
+</section>
