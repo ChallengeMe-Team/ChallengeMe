@@ -1,10 +1,12 @@
 package challengeme.backend.controller;
 
 import challengeme.backend.dto.LeaderboardDTO;
+import challengeme.backend.dto.LeaderboardResponseDTO;
 import challengeme.backend.dto.request.create.LeaderboardCreateRequest;
 import challengeme.backend.dto.request.update.LeaderboardUpdateRequest;
 import challengeme.backend.mapper.LeaderboardMapper;
 import challengeme.backend.model.Leaderboard;
+import challengeme.backend.model.LeaderboardRange;
 import challengeme.backend.service.LeaderboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,8 +33,9 @@ public class LeaderboardController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LeaderboardDTO>> all() {
-        return ResponseEntity.ok(service.getAll().stream().map(mapper::toDTO).collect(Collectors.toList()));
+    public ResponseEntity<List<LeaderboardResponseDTO>> getLeaderboard(
+            @RequestParam(value = "range", defaultValue = "ALL_TIME") LeaderboardRange range) {
+        return ResponseEntity.ok(service.getFilteredLeaderboard(range));
     }
 
     @GetMapping("/sorted")
