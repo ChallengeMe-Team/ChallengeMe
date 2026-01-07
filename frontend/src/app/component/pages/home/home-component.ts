@@ -1,11 +1,12 @@
 import {Component, ChangeDetectionStrategy, Output, EventEmitter} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import {HeroSectionComponent} from '../../hero-section/hero-section.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HeroSectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-component.html',
   styleUrls: ['./home-component.css']
