@@ -83,33 +83,41 @@ public class LeaderboardService {
     }
 
     public List<LeaderboardResponseDTO> getFilteredLeaderboard(LeaderboardRange range) {
+
+        List<Object[]> results;
+
         if (range == LeaderboardRange.ALL_TIME) {
-            return getSorted().stream()
-                    .map(e -> new LeaderboardResponseDTO(
-                            e.getRank(),
-                            e.getUser().getUsername(),
-                            e.getUser().getAvatar(),
-                            (long) e.getTotalPoints()))
-                    .toList();
+            // CAZUL 1: ALL TIME
+            // Luăm datele direct din tabela 'users' (coloana points).
+            // Asta include toți userii care au XP, indiferent de unde l-au obținut.
+            results = userRepository.findGlobalLeaderboard();
+        } else {
+            // CAZUL 2: WEEKLY / MONTHLY
+            // Calculăm dinamic activitatea din 'challenge_users'.
+            LocalDate startDate = switch (range) {
+                case WEEKLY -> LocalDate.now().minusDays(7);
+                case MONTHLY -> LocalDate.now().minusMonths(1);
+                default -> LocalDate.now(); // Fallback
+            };
+            results = challengeUserRepository.aggregateRankings(startDate);
         }
 
-        // Calculăm data de start
-        LocalDate startDate = switch (range) {
-            case WEEKLY -> LocalDate.now().minusDays(7);
-            case MONTHLY -> LocalDate.now().minusMonths(1);
-            default -> LocalDate.now().minusYears(100);
-        };
-
-        List<Object[]> results = challengeUserRepository.aggregateRankings(startDate);
+        // Maparea rezultatelor este identică pentru ambele cazuri
         List<LeaderboardResponseDTO> ranking = new ArrayList<>();
 
         for (int i = 0; i < results.size(); i++) {
             Object[] row = results.get(i);
+
+            // Verificare sigură pentru cast
+            // Nota: u.points din UserRepository este probabil int sau Integer,
+            // iar SUM() din ChallengeRepo poate fi Long. Le tratăm pe ambele ca Number.
+            Long points = (row[2] instanceof Number) ? ((Number) row[2]).longValue() : 0L;
+
             ranking.add(new LeaderboardResponseDTO(
-                    i + 1,                   // Rank calculat pe loc
+                    i + 1,                   // Rank
                     (String) row[0],         // username
                     (String) row[1],         // avatar
-                    (Long) row[2]            // total points sumate
+                    points                   // total points
             ));
         }
         return ranking;
