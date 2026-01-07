@@ -11,19 +11,14 @@ h3 {
   letter-spacing: 1px;
 }
 
+/* STIL UNIVERSAL BADGE */
 .badge {
-  @apply absolute top-4 right-4 text-xs font-semibold px-3 py-1 rounded-full text-white;
+  @apply absolute top-4 right-4 text-[10px] uppercase tracking-tighter font-black px-2.5 py-1 rounded-md text-white shadow-lg;
+  /* Mix-blend-mode sau un mic overlay pot ajuta la lizibilitate dacă e nevoie */
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.badge-fitness {
-  @apply bg-gradient-to-r from-green-400 to-emerald-500/70;
+/* Efect de strălucire discret pentru carduri */
+.grid > div {
+  border: 1px solid rgba(139, 92, 246, 0.1);
 }
-
-.badge-education {
-  @apply bg-gradient-to-r from-blue-400 to-cyan-500/70;
-}
-
-.badge-coding {
-  @apply bg-gradient-to-r from-pink-400 to-purple-500/70;
-}
-

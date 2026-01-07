@@ -48,6 +48,10 @@ public class UserBadgeService {
         return repository.save(userBadge);
     }
 
+    public List<UserBadge> getBadgesByUsername(String username) {
+        return repository.findAllByUser_Username(username);
+    }
+
     public UserBadge updateUserBadge(UUID id, UserBadgeUpdateRequest request) {
         UserBadge existing = findUserBadge(id);
         if (request.getDateAwarded() != null) {

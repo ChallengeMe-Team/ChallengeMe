@@ -37,6 +37,12 @@ public class BadgeController {
         return ResponseEntity.ok(mapper.toDTO(service.getBadgeById(id)));
     }
 
+    @GetMapping("/user/{username}")
+    public ResponseEntity<List<Badge>> getUserBadges(@PathVariable String username) {
+        // Returnăm direct entitatea pentru simplitate în acest task
+        return ResponseEntity.ok(service.getUserBadges(username));
+    }
+
     @PostMapping
     public ResponseEntity<BadgeDTO> create(@Valid @RequestBody BadgeCreateRequest request) {
         Badge entity = mapper.toEntity(request);

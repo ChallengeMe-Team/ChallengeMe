@@ -21,6 +21,7 @@ public class ChallengeUserDTO {
     private String category;            // Categorie
     private String difficulty;          // Dificultate
     private String challengeCreatedBy;  // Cine a creat provocarea inițial
+    private String assignedByUsername;
 
     // --- Status & Dates ---
     private ChallengeUserStatus status;

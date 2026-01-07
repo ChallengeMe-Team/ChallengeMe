@@ -1,48 +1,56 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, timer, Subscription, switchMap, retry } from 'rxjs';
 import { NotificationDTO } from '../models/notification.model';
-
-// // Definim modelul direct aici pentru simplitate, sau într-un fișier separat
-// export interface NotificationDTO {
-//   id: string;
-//   message: string;
-//   type: string; // 'CHALLENGE_REQ', 'FRIEND_REQ', etc.
-//   isRead: boolean;
-//   createdAt: string;
-//   relatedUserId?: string; // ID-ul celui care a trimis
-//   relatedChallengeId?: string; // ID-ul provocării
-// }
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class NotificationService {
+export class NotificationService implements OnDestroy {
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
   private apiUrl = 'http://localhost:8080/api/notifications';
 
-  // Semnal pentru a ține count-ul actualizat în timp real în Navbar
   unreadCount = signal(0);
+  private pollingSub?: Subscription;
 
-  // 1. Get User Notifications
+  // 1. Pornim împrospătarea automată (ex: la fiecare 30 de secunde)
+  startPolling(userId: string) {
+    if (this.pollingSub) return; // Evităm dublarea dacă e deja pornit
+
+    this.pollingSub = timer(0, 30000).pipe( // 0 = pornește imediat, 30000ms = interval
+      switchMap(() => this.getUserNotifications(userId)),
+      retry() // Continuă chiar dacă o cerere eșuează temporar
+    ).subscribe();
+  }
+
+  // 2. Oprim polling-ul (util la Logout)
+  stopPolling() {
+    if (this.pollingSub) {
+      this.pollingSub.unsubscribe();
+      this.pollingSub = undefined;
+    }
+  }
+
   getUserNotifications(userId: string): Observable<NotificationDTO[]> {
     return this.http.get<NotificationDTO[]>(`${this.apiUrl}/user/${userId}`).pipe(
       tap(notifications => {
-        // Actualizăm automat numărul de notificări necitite
         const count = notifications.filter(n => !n.isRead).length;
         this.unreadCount.set(count);
       })
     );
   }
 
-  // 2. Mark as Read
   markAsRead(notificationId: string): Observable<NotificationDTO> {
-    // Trimitem un obiect parțial, backend-ul se așteaptă la NotificationUpdateRequest
     return this.http.patch<NotificationDTO>(`${this.apiUrl}/${notificationId}`, { isRead: true }).pipe(
       tap(() => {
-        // Scădem contorul local
         this.unreadCount.update(c => Math.max(0, c - 1));
       })
     );
+  }
+
+  ngOnDestroy() {
+    this.stopPolling();
   }
 }

@@ -60,10 +60,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Permite auth
                         .requestMatchers("/api/auth/**").permitAll()
+
+//                        .requestMatchers("/api/userbadges/**").permitAll()
                         // Permite verificarea disponibilitatii fara token (fix 403 Forbidden)
                         .requestMatchers("/api/users/check-username", "/api/users/check-email").permitAll()
                         // Orice altceva cere autentificare
                         .anyRequest().authenticated()
+
+
                 );
 
         http.authenticationProvider(authenticationProvider());

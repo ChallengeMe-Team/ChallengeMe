@@ -46,7 +46,11 @@
             <div class="mt-1 flex-shrink-0">
               <lucide-icon
                 [img]="getIconForType(notif.type)"
-                [class]="notif.isRead ? 'text-gray-500 w-5 h-5' : 'text-blue-400 w-5 h-5'">
+                [class.text-green-400]="notif.message.includes('Victory')"
+                [class.text-red-400]="notif.message.includes('declined')"
+                [class.text-blue-400]="!notif.message.includes('Victory') && !notif.message.includes('declined') && !notif.isRead"
+                [class.text-gray-500]="notif.isRead"
+                class="w-5 h-5">
               </lucide-icon>
             </div>
 
@@ -55,13 +59,7 @@
                  [class.font-bold]="!notif.isRead">
                 {{ notif.message }}
               </p>
-
-              <p class="text-xs text-gray-500 mt-1">
-                {{ notif.timestamp | timeAgo }}
-              </p>
             </div>
-
-            <div *ngIf="!notif.isRead" class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
           </div>
         </div>
       </div>

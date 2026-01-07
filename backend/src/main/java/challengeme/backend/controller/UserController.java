@@ -3,6 +3,7 @@ package challengeme.backend.controller;
 
 import challengeme.backend.dto.FriendDTO;
 import challengeme.backend.dto.UserDTO;
+import challengeme.backend.dto.UserProfileDTO;
 import challengeme.backend.dto.request.create.UserCreateRequest;
 import challengeme.backend.dto.request.update.UserUpdateRequest;
 import challengeme.backend.mapper.UserMapper;
@@ -61,6 +62,25 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 
         }
+    }
+
+    // -----------------------------------------------------------
+    // REMOVE friend to list
+    // -----------------------------------------------------------
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<?> removeFriend(@PathVariable UUID id, @PathVariable UUID friendId) {
+        try {
+            userService.removeFriend(id, friendId);
+            return ResponseEntity.ok(Map.of("message", "Friend removed successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Consistency Check
+    @PostMapping("/sync-friends")
+    public ResponseEntity<Map<String, Integer>> syncFriends() {
+        return ResponseEntity.ok(userService.syncAllFriendships());
     }
 
     // -----------------------------------------------------------
@@ -158,5 +178,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileDTO> getMyProfile() {
+        return ResponseEntity.ok(userService.getCurrentUserProfile());
     }
 }

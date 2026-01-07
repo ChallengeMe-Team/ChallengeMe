@@ -1,0 +1,62 @@
+.badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Mărim dimensiunea întregului card */
+  width: 180px;
+  height: 240px;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+/* Starea Unlocked: Gradient mov/roz și glow */
+.unlocked {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  box-shadow: 0 10px 20px -5px rgba(236, 72, 153, 0.5);
+  color: white;
+}
+
+.unlocked {
+  opacity: 1;
+  filter: none;
+  border-color: #fbbf24; /* Un auriu subtil sau culoarea ta de accent */
+}
+
+/* Starea Locked: Grayscale, opacitate redusă și bordură dashed */
+.locked {
+  filter: grayscale(1);
+  opacity: 0.6;
+  border: 2px dashed #4b5563;
+  background: rgba(31, 41, 55, 0.3);
+  color: #9ca3af;
+}
+
+.locked .badge-icon {
+  color: #6b7280;
+}
+
+.badge-name {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.badge-icon {
+  /* Mărim iconița de la 2.5rem (~40px) la 6rem (~96px) */
+  width: 6rem;
+  height: 6rem;
+  object-fit: contain; /* Esențial pentru a nu deforma imaginea */
+}
+
+.icon-container {
+  width: 100%;
+  height: 100px; /* Container fix pentru aliniere perfectă */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}

@@ -1,16 +1,15 @@
-import { ApplicationConfig, APP_INITIALIZER } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER, importProvidersFrom } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
-import { authInterceptor } from './auth.interceptor'; // Asigură-te că path-ul este corect
+import { authInterceptor } from './auth.interceptor';
 import { provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 
+// --- IMPORT PENTRU COMPATIBILITATE LUCIDE ---
+import { LucideAngularModule, Trophy, Award, Star, Shield, Medal } from 'lucide-angular';
 
-// --- NOU: IMPORT PENTRU SERVICIUL DE AUTENTIFICARE ---
 import { AuthService } from './services/auth.service';
 
-// --- NOU: FUNCTIA FACTORY PENTRU INITIALIZARE ---
-// Această funcție apelează logica de restaurare a sesiunii din AuthService și o returnează ca Promise.
 export function initializeApp(authService: AuthService): () => Promise<void> {
   return () => authService.initializeSession();
 }
@@ -23,20 +22,20 @@ export const appConfig: ApplicationConfig = {
     // Configurarea routerului
     provideRouter(routes, withComponentInputBinding()),
 
-    // Configurarea clientului HTTP cu Interceptorul nostru
+    // Configurarea clientului HTTP
     provideHttpClient(
       withFetch(),
       withInterceptors([authInterceptor])
     ),
 
-    // ----------------------------------------------------------------------
-    // BLOCUL CRUCIAL: APP_INITIALIZER
-    // Rulează initializeApp (care apelează initializeSession) înainte de a randa componentele
-    // ----------------------------------------------------------------------
+    importProvidersFrom(
+      LucideAngularModule.pick({ Trophy, Award, Star, Shield, Medal })
+    ),
+
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,
-      deps: [AuthService], // Angular injectează automat AuthService
+      deps: [AuthService],
       multi: true,
     }
   ]

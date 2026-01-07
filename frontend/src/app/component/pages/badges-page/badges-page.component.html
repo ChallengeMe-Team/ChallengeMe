@@ -1,0 +1,43 @@
+<div class="container mx-auto p-6 min-h-screen">
+  <h1 class="text-3xl font-bold text-white mb-2">Achievements</h1>
+  <p class="text-gray-400 mb-8">Unlock badges by completing challenges!</p>
+
+  @if (isLoading()) {
+    <div class="text-white text-center mt-10">
+      Loading achievements...
+    </div>
+  } @else {
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 animate-fade-in">
+
+      @for (item of badgeList; track item.badge.id) {
+        <div class="relative p-8 min-h-[300px] rounded-2xl border flex flex-col items-center text-center transition-all duration-300 hover:scale-105 group"
+             [ngClass]="item.isUnlocked
+                ? 'bg-[#1a1627] border-purple-500 shadow-xl shadow-purple-500/20'
+                : 'bg-gray-900/50 border-gray-800 opacity-60 grayscale'">
+
+          <div class="w-32 h-32 mb-6 flex items-center justify-center">
+            <img [src]="item.badge.iconUrl"
+                 [alt]="item.badge.name"
+                 class="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-transform group-hover:scale-110">
+          </div>
+
+          <h3 class="text-xl font-bold text-white mb-2">{{ item.badge.name }}</h3>
+          <p class="text-sm text-gray-400 mb-6 h-12 overflow-hidden">{{ item.badge.description }}</p>
+
+          <div class="mt-auto flex flex-col gap-2 w-full">
+            <span class="text-sm font-bold text-yellow-500 flex items-center justify-center gap-1">
+                  <lucide-icon [img]="icons.Zap" class="w-4 h-4"></lucide-icon>
+                  +{{ item.badge.pointsReward }} XP
+            </span>
+            <div class="py-2 rounded-lg text-xs font-bold uppercase tracking-widest w-full border"
+                 [ngClass]="item.isUnlocked
+                    ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                    : 'bg-gray-800 text-gray-500 border-gray-700'">
+              {{ item.isUnlocked ? 'Unlocked' : 'Locked' }}
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

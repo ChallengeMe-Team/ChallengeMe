@@ -1,15 +1,16 @@
-import { Component, OnInit, ChangeDetectorRef, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
-import { Challenge, Difficulty } from './challenge.model';
+import { Challenge, Difficulty } from '../../../models/challenge.model';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
 import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
 import { ToastComponent } from '../../../shared/toast/toast-component';
 import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/accept-challenge-modal';
-// Import corectat conform structurii tale de directoare
 import { AssignChallengeModalComponent } from '../../assign-challenge-modal/assign-challenge-modal';
+import { ChallengeCardComponent } from '../../../shared/challenge-card/challenge-card.component';
+import { ConfirmationModalComponent } from '../../../shared/confirmation-modal/confirmation-modal.component';
 import { FriendDTO } from '../../../services/user.service';
 
 @Component({
@@ -20,45 +21,40 @@ import { FriendDTO } from '../../../services/user.service';
     ToastComponent,
     ChallengeFormComponent,
     AcceptChallengeModalComponent,
-    AssignChallengeModalComponent // Adăugat în lista de imports
+    AssignChallengeModalComponent,
+    ChallengeCardComponent,
+    ConfirmationModalComponent
   ],
-  templateUrl: './challenges-component.html',
-  styleUrls: ['./challenges-component.css']
+  templateUrl: './challenges-component.html'
 })
 export class ChallengesComponent implements OnInit {
   public challengeService = inject(ChallengeService);
-  private cdr = inject(ChangeDetectorRef);
-  private auth = inject(AuthService);
+  public auth = inject(AuthService);
   private router = inject(Router);
-
-  activeChallengeIds = signal<Set<string>>(new Set());
+  private cdr = inject(ChangeDetectorRef);
 
   challenges = signal<Challenge[]>([]);
+  userChallengeStatuses = signal<Map<string, string>>(new Map());
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
 
-  // State general
   isLoading = signal(false);
   errorMessage = signal('');
 
-  // Edit & Create Modals
+  // Modal States
+  isRestartModalOpen = false;
+  challengeToRestart: Challenge | null = null;
   isEditModalOpen = signal(false);
   editChallenge = signal<any | null>(null);
-
-  // Toast
-  toastMessage = signal<string | null>(null);
-  toastType = signal<'success' | 'error'>('success');
-
-  // Delete Modal
   isDeleteModalOpen = signal(false);
   challengeToDelete = signal<Challenge | null>(null);
-
-  // Accept/Contract Modal
   isAcceptModalOpen = false;
   selectedChallengeForContract: any = null;
-
-  // --- State pentru Assign Challenge Modal ---
   isAssignModalOpen = false;
   selectedChallengeToAssign = signal<Challenge | null>(null);
+
+  // Toast State
+  toastMessage = signal<string | null>(null);
+  toastType = signal<'success' | 'error'>('success');
 
   ngOnInit(): void {
     this.loadChallenges();
@@ -73,10 +69,25 @@ export class ChallengesComponent implements OnInit {
         this.isLoading.set(false);
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage.set('Eroare la incarcarea datelor.');
+      error: () => {
+        this.errorMessage.set('Error loading data.');
         this.isLoading.set(false);
+      }
+    });
+  }
+
+  loadUserActiveChallenges() {
+    const user = this.auth.currentUser();
+    if (!user) return;
+
+    this.challengeService.getAllUserChallengeLinks(user.id).subscribe({
+      next: (data) => {
+        const statusMap = new Map<string, string>();
+        data.forEach((link: any) => {
+          const cId = link.challenge?.id || link.challengeId;
+          statusMap.set(cId, link.status);
+        });
+        this.userChallengeStatuses.set(statusMap);
       }
     });
   }
@@ -85,89 +96,23 @@ export class ChallengesComponent implements OnInit {
     return this.challenges().filter(c => c.difficulty === difficulty);
   }
 
-  // NEW: Încarcă relațiile user-challenge existente
-  loadUserActiveChallenges() {
-    const user = this.auth.currentUser();
-    if (!user) return;
-
-    this.challengeService.getAllUserChallengeLinks(user.id).subscribe({
-      next: (data) => {
-        // Colectăm ID-urile challenge-urilor într-un Set pentru căutare rapidă
-        // data este un array de ChallengeUserDTO sau entități care conțin obiectul 'challenge' sau 'challengeId'
-        const ids = new Set(data.map((link: any) =>
-          // Verificăm structura: poate fi link.challenge.id sau link.challengeId direct
-          link.challenge?.id || link.challengeId
-        ));
-        this.activeChallengeIds.set(ids);
-      },
-      error: (err) => console.error('Could not load user challenges status', err)
-    });
+  // Action Handlers (Evenimente primite de la ChallengeCard)
+  handleStart(challenge: Challenge) {
+    this.selectedChallengeForContract = challenge;
+    this.isAcceptModalOpen = true;
   }
 
-  // NEW: Helper pentru template
-  isChallengeActive(challengeId: string): boolean {
-    return this.activeChallengeIds().has(challengeId);
+  handleRestart(challenge: Challenge) {
+    this.challengeToRestart = challenge;
+    this.isRestartModalOpen = true;
   }
 
-  // --- Logica pentru Throw Challenge ---
-
-  openAssignModal(challenge: Challenge) {
-    this.selectedChallengeToAssign.set(challenge); // Salvează challenge-ul pe care vrei să îl trimiți
-    this.isAssignModalOpen = true; // Deschide modalul
+  handleAssign(challenge: Challenge) {
+    this.selectedChallengeToAssign.set(challenge);
+    this.isAssignModalOpen = true;
   }
 
-  onFriendAssigned(friend: FriendDTO) {
-    const challenge = this.selectedChallengeToAssign();
-    if (!challenge) return;
-
-    // Apelăm service-ul cu cele două ID-uri conform semnăturii tale de metodă
-    this.challengeService.assignChallenge(challenge.id, friend.id).subscribe({
-      next: () => {
-        this.showToast(`Challenge sent to ${friend.username}!`, "success"); // Feedback succes
-        this.isAssignModalOpen = false; // Închide modalul automat
-        this.selectedChallengeToAssign.set(null);
-      },
-      error: (err) => {
-        // Gestionare eroare duplicat conform Acceptance Criteria
-        const errorMsg = err.error?.message || err.message || "";
-        if (errorMsg.includes("already") || err.status === 409) {
-          this.showToast(`You already sent this challenge to ${friend.username}`, "error");
-        } else {
-          this.showToast("Failed to assign challenge.", "error");
-        }
-      }
-    });
-  }
-
-  // --- Logica existenta: Create/Edit/Delete ---
-
-  closeCreateModal() {
-    this.challengeService.isCreateModalOpen.set(false);
-  }
-
-  onCreateChallenge(formValues: any) {
-    const user = this.auth.currentUser();
-    const newChallenge = {
-      ...formValues,
-      createdBy: user ? user.username : 'Anonymous'
-    };
-
-    this.isLoading.set(true);
-    this.challengeService.createChallenge(newChallenge).subscribe({
-      next: () => {
-        this.showToast("Challenge created successfully!", "success");
-        this.closeCreateModal();
-        this.loadChallenges();
-      },
-      error: (err) => {
-        console.error(err);
-        this.showToast("Error creating challenge.", "error");
-        this.isLoading.set(false);
-      }
-    });
-  }
-
-  onChallengeDoubleClick(challenge: Challenge) {
+  handleEdit(challenge: Challenge) {
     const user = this.auth.currentUser();
     if (!user || user.username !== challenge.createdBy) {
       this.showToast("You can only edit challenges created by you.", "error");
@@ -177,30 +122,72 @@ export class ChallengesComponent implements OnInit {
     this.isEditModalOpen.set(true);
   }
 
-  openContractModal(challenge: any) {
-    this.selectedChallengeForContract = challenge;
-    this.isAcceptModalOpen = true;
+  handleDeleteRequest(data: {event: MouseEvent, challenge: Challenge}) {
+    data.event.preventDefault();
+    const user = this.auth.currentUser();
+    if (!user || user.username !== data.challenge.createdBy) {
+      this.showToast("You can only delete challenges created by you.", "error");
+      return;
+    }
+    this.challengeToDelete.set(data.challenge);
+    this.isDeleteModalOpen.set(true);
+  }
+
+  // Service Logic
+  confirmRestart() {
+    if (!this.challengeToRestart) return;
+    this.isRestartModalOpen = false;
+    const challenge = this.challengeToRestart;
+    const user = this.auth.currentUser();
+    if (!user) return;
+
+    this.challengeService.getAllUserChallengeLinks(user.id).subscribe(links => {
+      const linkToDelete = links.find((l: any) => (l.challenge?.id || l.challengeId) === challenge.id);
+      if (linkToDelete) {
+        this.challengeService.deleteChallengeUser(linkToDelete.id).subscribe({
+          next: () => {
+            this.handleStart(challenge);
+            const newMap = new Map(this.userChallengeStatuses());
+            newMap.delete(challenge.id);
+            this.userChallengeStatuses.set(newMap);
+            this.showToast('Progress reset. Ready to restart!', 'success');
+          }
+        });
+      }
+    });
+  }
+
+  onFriendAssigned(friend: FriendDTO) {
+    const challenge = this.selectedChallengeToAssign();
+    if (!challenge) return;
+    this.challengeService.assignChallenge(challenge.id, friend.id).subscribe({
+      next: () => {
+        this.showToast(`Challenge sent to ${friend.username}!`, "success");
+        this.isAssignModalOpen = false;
+      },
+      error: (err) => this.showToast(err.error?.message || "Failed to assign", "error")
+    });
+  }
+
+  onCreateChallenge(formValues: any) {
+    const user = this.auth.currentUser();
+    const newChallenge = { ...formValues, createdBy: user ? user.username : 'Anonymous' };
+    this.challengeService.createChallenge(newChallenge).subscribe({
+      next: () => {
+        this.showToast("Challenge created!", "success");
+        this.challengeService.isCreateModalOpen.set(false);
+        this.loadChallenges();
+      }
+    });
   }
 
   onContractSigned(dates: { start: string, end: string }) {
     if (!this.selectedChallengeForContract) return;
-
-    this.challengeService.acceptChallenge(
-      this.selectedChallengeForContract.id,
-      dates.start,
-      dates.end
-    ).subscribe({
+    this.challengeService.acceptChallenge(this.selectedChallengeForContract.id, dates.start, dates.end).subscribe({
       next: () => {
         this.isAcceptModalOpen = false;
-        this.showToast("Commitment signed! Good luck! 🚀", "success");
-        setTimeout(() => {
-          this.router.navigate(['/my-challenges']);
-        }, 1500);
-        this.loadUserActiveChallenges();
-      },
-      error: (err) => {
-        console.error(err);
-        this.showToast(err.error?.message || "Failed to accept challenge.", "error");
+        this.showToast("Commitment signed! 🚀", "success");
+        setTimeout(() => { this.router.navigate(['/my-challenges']); }, 1500);
       }
     });
   }
@@ -208,12 +195,21 @@ export class ChallengesComponent implements OnInit {
   onChallengeUpdated(updated: any) {
     this.challengeService.updateChallenge(updated.id, updated).subscribe({
       next: () => {
-        this.showToast("Challenge updated successfully!", "success");
+        this.showToast("Challenge updated!", "success");
         this.loadChallenges();
         this.isEditModalOpen.set(false);
-      },
-      error: (err) => {
-        this.showToast(err.error?.message || "Error updating challenge.", "error");
+      }
+    });
+  }
+
+  confirmDelete() {
+    const challenge = this.challengeToDelete();
+    if (!challenge) return;
+    this.challengeService.deleteChallenge(challenge.id).subscribe({
+      next: () => {
+        this.showToast("Deleted successfully.", "success");
+        this.challenges.update(prev => prev.filter(c => c.id !== challenge.id));
+        this.isDeleteModalOpen.set(false);
       }
     });
   }
@@ -221,42 +217,22 @@ export class ChallengesComponent implements OnInit {
   showToast(message: string, type: 'success' | 'error' = 'error') {
     this.toastMessage.set(message);
     this.toastType.set(type);
-    setTimeout(() => {
-      this.toastMessage.set(null);
-    }, 3000);
+    setTimeout(() => { this.toastMessage.set(null); }, 3000);
   }
 
-  onRightClick(event: MouseEvent, challenge: Challenge) {
-    event.preventDefault();
-    const user = this.auth.currentUser();
-    if (!user || user.username !== challenge.createdBy) {
-      this.showToast("You can only delete challenges created by you.", "error");
-      return;
-    }
-    this.challengeToDelete.set(challenge);
-    this.isDeleteModalOpen.set(true);
-  }
-
-  confirmDelete() {
-    const challenge = this.challengeToDelete();
-    if (!challenge) return;
-
-    this.challengeService.deleteChallenge(challenge.id).subscribe({
-      next: () => {
-        this.showToast("Challenge deleted successfully.", "success");
-        this.challenges.update(prev => prev.filter(c => c.id !== challenge.id));
-        this.closeDeleteModal();
-      },
-      error: (err) => {
-        console.error(err);
-        this.showToast("Error deleting challenge.", "error");
-        this.closeDeleteModal();
-      }
-    });
-  }
-
-  closeDeleteModal() {
-    this.isDeleteModalOpen.set(false);
-    this.challengeToDelete.set(null);
+  getCategoryClass(category: string): string {
+    const mapping: { [key: string]: string } = {
+      'Fitness': 'bg-fuchsia-500',
+      'Health': 'bg-rose-600',
+      'Mindfulness': 'bg-blue-400',
+      'Education': 'bg-purple-600',
+      'Coding': 'bg-indigo-600',
+      'Creativity': 'bg-amber-500',
+      'Social': 'bg-orange-500',
+      'Food': 'bg-yellow-600',
+      'Lifestyle': 'bg-emerald-500'
+    };
+    // Returnează culoarea din mapare sau o culoare gri implicită dacă categoria nu este găsită
+    return mapping[category] || 'bg-gray-500';
   }
 }

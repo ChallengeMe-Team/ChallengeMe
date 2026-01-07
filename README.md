@@ -17,10 +17,9 @@ This guide explains how to **set up and run the ChallengeMe project** (backend +
 
 Follow the steps carefully.
 
-## 1️⃣ 🗄️Database Setup (PostgreSQL)
-To run the backend locally, you need a PostgreSQL database.
-There are two ways to install and run it — **the recommended method is using Docker**.
-
+## 1️⃣ 🗄️Database Setup (Docker Compose & Flyway)
+To run the project locally, you need a PostgreSQL database. 
+The recommended method is using **Docker Compose**, which automates the entire infrastructure setup.
 ### ✅ Recommended Option: PostgreSQL via Docker
 
 #### 1️⃣ Requirements
@@ -33,17 +32,18 @@ Check if Docker is installed: (in terminal)
 docker --version
 ```
 
-#### 2️⃣ Start PostgreSQL using Docker
-Run this command:
+#### 2️⃣ Start the Database
+
+The ```bash docker-compose.yml ``` is located in the ```bash backend ``` directory.
+
+From your terminal, navigate there and run:
 ```bash
-docker run --name challengeme-db \
-  -e POSTGRES_PASSWORD=password \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_DB=challengeme \
-  -p 5432:5432 \
-  -d postgres:15
+cd backend
+docker-compose up -d
 ```
-This creates a PostgreSQL instance with:
+This creates a PostgreSQL instance with the following default settings:
+
+-container name: challengeme-db
 
 - username: postgres
 
@@ -57,93 +57,54 @@ Check if the container is running:
 ```bash
 docker ps
 ```
-Stop database:
-```bash
-docker stop challengeme-db
-```
 
-Start database (***!!! Everytime the project is started***)
-```bash
-docker start challengeme-db
-```
+#### 3️⃣ Database Migrations (Flyway)
+Flyway is an **open-source** database migration tool. 
 
-#### 3️⃣ Populate Database with Sample Data
-After starting the database, populate it with initial data so that everyone has the same users, badges, challenges, leaderboard, and notifications.
-```bash
-# Windows PowerShell 
-# !!! CHANGE THE PATH OF THE data.sql FILE WITH THE ONE ON YOUR COMPUTER
-type D:\ChallengeMe\backend\data.sql | docker exec -i challengeme-db psql -U postgres -d challengeme
-```
+It allows the team to share database schema changes (like new tables or columns) just like we share code.
 
-#### 4️⃣ Database Verification & Management
-Use these commands to check if your database is correctly set up and running.
+**How it works:**
 
+  - When the Backend starts, Flyway scans the ```src/main/resources/db/migration``` folder for SQL scripts.
+
+  - It checks a special table in the database called ```flyway_schema_history```.
+
+  - If a script has a higher version number than what is recorded in the table, Flyway executes it automatically.
+
+The project now uses **_Flyway_** for database versioning and migrations.
+
+Flyway automatically creates the tables when the _Backend application starts_ for the first time.
+
+Migration scripts are located in 
+```backend/src/main/resources/db/migration```.
+
+#### 4️⃣ Naming Conventions for Migration Files
+Flyway relies on **a strict naming convention** to order migrations correctly. 
+
+If the name is incorrect, the migration will be ignored or cause an error.
+
+**File Format:** ```V<Version>__<Description>.sql```
+
+| Part        | Rule                                                               | Example                              |
+|-------------|--------------------------------------------------------------------|--------------------------------------|
+| Prefix      | Must start with a capital ```V```                                  | ```V...```                           |
+| Version     | Unique numeric version (use dots or underscores)                   | ```V1__```, ```V1.1__```, ```V2__``` |
+| Separator   | Two underscores ```(__)```                                         | ```V1__Init```                       |
+| Description | Brief text describing the change (words separated by underscores)  | ```V1__Create_users_table```         |
+| Extension   | Must end in ```.sql```                                             | ```.sql```                           |
+
+#### 5️⃣ Database Management Commands
 
 ```Bash
-#Check tables in the database: 
-# This lists all existing tables to ensure the schema was created.
+# Check if the database is running:
+docker ps
+
+# Stop the database and remove containers:
+docker-compose down
+
+# Check existing tables (to verify Flyway migration):
 docker exec -it challengeme-db psql -U postgres -d challengeme -c "\dt"
 ```
-
-```Bash
-#Check data in a specific table: 
-# For example, to view all registered users:
-docker exec -it challengeme-db psql -U postgres -d challengeme -c "SELECT * FROM users"
-````
-
-### 🟦 Alternative Option: Local PostgreSQL + pgAdmin 4
-If you prefer not to use Docker, install PostgreSQL manually.
-
-#### 1️⃣ Install PostgreSQL
-
-Download from: https://www.postgresql.org/download/
-
-Make sure the setup includes:
-  - PostgreSQL Server
-  - pgAdmin 4
-
-#### 2️⃣ Verify Installation
-```bash
-psql --version
-```
-
-#### 3️⃣ Create the Database in pgAdmin
-
-1. Open **pgAdmin 4**
-
-2. Connect to your local PostgreSQL server (default user: **postgres**)
-
-3. Right-click Databases → Create → Database
-
-4. Name it: ***challengeme***
-
-#### 4️⃣ How to run the databae (using pgAdmin):
-
-``` bash
-# Windows
-net start postgresql-x64-15
-```
-```bash
-# Linux
-sudo service postgresql start
-```
-```bash
-# macOS
-brew services start postgresql
-```
-
-#### 5️⃣ Populate Database with Sample Data
-
-After starting the database, populate it with initial data so that everyone has the same users, badges, challenges, leaderboard, and notifications.
-
-Using ***pgAdmin***:
-
-- Open **pgAdmin 4** and connect to **challengeme**.
-
-- Go to **Tools → Query Tool**.
-
-- Open ***backend/data.sql*** and run it.
----
 
 ## 2️⃣ Prerequisites
 
@@ -235,14 +196,12 @@ The application is now secured with **JWT (JSON Web Token)**.
 
 ### 🔑 Default Login Credentials
 
-After populating the database [data.sql](), you can login with:
+You can login with:
 
 
 **Email**: [emilia@example.com]() (or any other user from the list)
 
 **Password**: [Password_123]()
-
-#### **_Note_**: If any changes are to be made in [data.sql](), please update the login credentials above
 
 ### 🛡️ How it works
 
