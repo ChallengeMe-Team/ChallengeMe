@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,19 @@ import java.util.UUID;
 @Repository
 public interface ChallengeUserRepository extends JpaRepository<ChallengeUser, UUID> {
     List<ChallengeUser> findByUserId(UUID userId);
+
+    // --- QUERY PENTRU LEADERBOARD DINAMIC ---
+    @Query("""
+        SELECT u.username, u.avatar, SUM(c.points) as total
+        FROM ChallengeUser cu
+        JOIN cu.user u
+        JOIN cu.challenge c
+        WHERE cu.status = challengeme.backend.model.ChallengeUserStatus.COMPLETED
+          AND cu.dateCompleted >= :startDate
+        GROUP BY u.id, u.username, u.avatar
+        ORDER BY total DESC
+    """)
+    List<Object[]> aggregateRankings(@Param("startDate") LocalDate startDate);
 
     boolean existsByUserIdAndChallengeId(UUID userId, UUID challengeId);
 
