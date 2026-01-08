@@ -58,16 +58,6 @@
 
 <!-- User Stats Section (Aligned below hero) -->
 <section class="max-w-7xl mx-auto -mt-16 relative z-30 px-4 sm:px-6 lg:px-8">
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div *ngFor="let stat of stats; trackBy: trackByLabel" class="p-5 rounded-xl shadow-xl transition-transform hover:scale-105 border border-white/10" [ngStyle]="{'background-color': stat.bgColor}">
-      <div class="flex items-center gap-4">
-        <span [innerHTML]="stat.icon" class="w-8 h-8" [ngClass]="stat.color"></span>
-        <div>
-          <p class="text-sm text-gray-300">{{ stat.label }}</p>
-          <p class="text-2xl font-bold text-white">{{ stat.value }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
+  <app-stats-grid></app-stats-grid>
 </section>
 

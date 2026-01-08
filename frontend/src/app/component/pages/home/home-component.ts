@@ -2,11 +2,12 @@ import {Component, ChangeDetectionStrategy, Output, EventEmitter} from '@angular
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import {HeroSectionComponent} from '../../hero-section/hero-section.component';
+import { StatsGridComponent } from '../../stats-grid/stats-grid.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, HeroSectionComponent],
+  imports: [CommonModule, HeroSectionComponent, StatsGridComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-component.html',
   styleUrls: ['./home-component.css']
