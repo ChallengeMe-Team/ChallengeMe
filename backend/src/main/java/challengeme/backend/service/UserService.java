@@ -4,6 +4,7 @@ import challengeme.backend.dto.BadgeDTO;
 import challengeme.backend.dto.ChallengeHistoryDTO;
 import challengeme.backend.dto.FriendDTO;
 import challengeme.backend.dto.UserProfileDTO;
+import challengeme.backend.dto.request.create.NotificationCreateRequest; // Added Import
 import challengeme.backend.dto.request.update.UserUpdateRequest;
 import challengeme.backend.exception.UserNotFoundException;
 import challengeme.backend.mapper.BadgeMapper;
@@ -36,6 +37,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ChallengeService challengeService;
     private final UserBadgeRepository userBadgeRepository;
+    private final NotificationService notificationService;
 
     // -----------------------------------------------------------
     // BASIC CRUD & AUTHENTICATION
@@ -217,7 +219,7 @@ public class UserService {
         List<BadgeDTO> ownedDTOs = new ArrayList<>();
         List<Badge> allPossibleBadges = badgeRepository.findAll();
 
-        if (completedChallenges.size() >= 1) {
+        if (!completedChallenges.isEmpty()) {
             findAndAddBadge(user, ownedDTOs, allPossibleBadges, "First Step");
         }
 
@@ -259,12 +261,22 @@ public class UserService {
                 .filter(b -> b.getName().equalsIgnoreCase(badgeName))
                 .findFirst()
                 .ifPresent(badge -> {
+                    // Verificăm că notificarea se trimite doar o dată per badge
+                    // Ne bazăm pe existența in Baza de Date. Dacă nu este,o creăm și o trimitem.
                     if (!userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge.getId())) {
                         UserBadge ub = new UserBadge();
                         ub.setUser(user);
                         ub.setBadge(badge);
                         ub.setDateAwarded(LocalDate.now());
                         userBadgeRepository.save(ub);
+
+                        String message = "Congratulations! You've unlocked the " + badge.getName() + " badge!";
+                        NotificationCreateRequest notifRequest = new NotificationCreateRequest(
+                                user.getId(),
+                                message,
+                                NotificationType.BADGE
+                        );
+                        notificationService.createNotification(notifRequest);
                     }
                     targetList.add(badgeMapper.toDTO(badge));
                 });
@@ -279,7 +291,7 @@ public class UserService {
         int streak = 0;
         LocalDate current = LocalDate.now();
         if (!dates.contains(current) && !dates.contains(current.minusDays(1))) return 0;
-        LocalDate checkDate = dates.get(0);
+        LocalDate checkDate = dates.getFirst();
         for (LocalDate date : dates) {
             if (date.equals(checkDate)) { streak++; checkDate = checkDate.minusDays(1); } else break;
         }
