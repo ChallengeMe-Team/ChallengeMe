@@ -4,6 +4,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Edit, Trash2, PlusCircle, Check, X, Clock, CheckCircle } from 'lucide-angular';
 import { ChallengeService } from '../../../services/challenge.service';
 import { AuthService } from '../../../services/auth.service';
+import { BadgeService } from '../../../services/badge.service';
+import { AchievementService } from '../../../services/achievement.service';
 import { Challenge } from '../../../models/challenge.model';
 import { ChallengeFormComponent } from '../../forms/challenge-form/challenge-form';
 import { ToastComponent } from '../../../shared/toast/toast-component';
@@ -11,6 +13,7 @@ import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/acce
 import { ConfirmationModalComponent } from '../../../shared/confirmation-modal/confirmation-modal.component';
 import { CompleteChallengeModalComponent } from '../../complete-challenge-modal/complete-challenge-modal-component';
 import { getCategoryGradient } from '../../../shared/utils/color-utils';
+import { firstValueFrom } from 'rxjs'; // Helper for async/await
 
 import confetti from 'canvas-confetti';
 
@@ -32,6 +35,9 @@ import confetti from 'canvas-confetti';
 export class MyChallengesComponent implements OnInit {
   public challengeService = inject(ChallengeService);
   public auth = inject(AuthService);
+  public badgeService = inject(BadgeService);
+  public achievementService = inject(AchievementService);
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -168,32 +174,62 @@ export class MyChallengesComponent implements OnInit {
     this.isCompleteModalOpen = true;
   }
 
-  onChallengeCompleted() {
+  async onChallengeCompleted() {
     if (!this.selectedChallengeForCompletion) return;
+    const currentUser = this.auth.currentUser();
+    if (!currentUser) return;
 
-    const payload = { status: 'COMPLETED' };
+    try {
+      // get badges before completion
 
-    this.challengeService.updateChallengeUser(this.selectedChallengeForCompletion.id, payload).subscribe({
-      next: () => {
-        this.triggerSuccessAnimation();
-        this.showToast(`Victory! +${this.selectedChallengeForCompletion.points} XP Earned! 🏆`, 'success');
-        this.isCompleteModalOpen = false;
-        this.activeChallenges.update(prev => prev.filter(c => c.id !== this.selectedChallengeForCompletion.id));
+      const oldBadges = await firstValueFrom(this.badgeService.getUserBadges(currentUser.username));
 
-        const currentUser = this.auth.currentUser();
-        if (currentUser) {
-          const newPoints = (currentUser.points || 0) + (this.selectedChallengeForCompletion.points || 0);
-          this.auth.currentUser.set({ ...currentUser, points: newPoints });
-        }
-      },
-      error: () => {
-        this.showToast('Failed to complete challenge.', 'error');
+      // complete the challenge
+      const payload = { status: 'COMPLETED' };
+      await firstValueFrom(this.challengeService.updateChallengeUser(this.selectedChallengeForCompletion.id, payload));
+
+      // get badges after completion
+      const newBadges = await firstValueFrom(this.badgeService.getUserBadges(currentUser.username));
+
+      // update local state (remove from list, update points)
+      this.activeChallenges.update(prev => prev.filter(c => c.id !== this.selectedChallengeForCompletion.id));
+      const newPoints = (currentUser.points || 0) + (this.selectedChallengeForCompletion.points || 0);
+      this.auth.currentUser.set({ ...currentUser, points: newPoints });
+
+      // compare badges
+      const newlyEarnedBadge = this.findNewBadge(oldBadges, newBadges);
+
+      this.isCompleteModalOpen = false;
+
+      if (newlyEarnedBadge) {
+        // new badge scenario
+        const badgeName = newlyEarnedBadge.badge?.name || 'New Badge';
+        this.showToast(`New Badge Unlocked: ${badgeName}! 🏆`, 'success');
+
+        // trigger the service (Confetti + Redirect)
+        this.achievementService.celebrateNewBadge();
+      } else {
+        // standard scenario
+        this.showToast(`Victory! +${this.selectedChallengeForCompletion.points} XP Earned!`, 'success');
+        this.triggerSuccessAnimation(); // standard small confetti
       }
-    });
+
+    } catch (err) {
+      console.error(err);
+      this.showToast('Failed to complete challenge.', 'error');
+    }
   }
 
+  // Helper to diff arrays
+  private findNewBadge(oldList: any[], newList: any[]): any | undefined {
+    if (!newList || !oldList) return undefined;
+    // Find an item in newList that doesn't exist in oldList (by ID)
+    return newList.find(newItem => !oldList.some(oldItem => oldItem.id === newItem.id));
+  }
+
+  // Original confetti for standard victories
   private triggerSuccessAnimation() {
-    const duration = 3 * 1000;
+    const duration = 2 * 1000;
     const end = Date.now() + duration;
 
     const frame = () => {
@@ -277,4 +313,4 @@ export class MyChallengesComponent implements OnInit {
     this.toastType.set(type);
     setTimeout(() => this.toastMessage.set(null), 3000);
   }
-} //
+}
