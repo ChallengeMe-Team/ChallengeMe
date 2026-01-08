@@ -1,74 +1,181 @@
-<section class="leaderboard-container text-white">
-  <h2 class="title">
-    <i class="fa-solid fa-trophy"></i> Top Challengers
-  </h2>
+<div class="leaderboard-container">
 
-  <!-- ==== PODIUM ==== -->
-  <div class="podium-wrapper">
-    <!-- Rank 2 (stânga) -->
-    <div
-      class="podium-item second-place animate-podium"
-      *ngIf="podium[1]"
-      [style.animation-delay]="'1.0s'"
-    >
-      <div class="rank rank-2">2</div>
-      <div class="avatar">{{ podium[1].username.slice(0,2).toUpperCase() }}</div>
-      <h3>{{ podium[1].username }}</h3>
-      <p class="points">{{ podium[1].points }}</p>
-      <small>{{ podium[1].completedChallenges }} challenges</small>
-    </div>
+  <h1 class="title">Leaderboard</h1>
 
-    <!-- Rank 1 (mijloc) -->
-    <div
-      class="podium-item first-place animate-podium"
-      *ngIf="podium[0]"
-      [style.animation-delay]="'0.3s'"
-    >
-      <div class="rank rank-1">1</div>
-      <div class="avatar">{{ podium[0].username.slice(0,2).toUpperCase() }}</div>
-      <h3>{{ podium[0].username }}</h3>
-      <p class="points">{{ podium[0].points }}</p>
-      <small>{{ podium[0].completedChallenges }} challenges</small>
-    </div>
+  <div class="flex justify-center mb-12">
+    <div class="bg-slate-800 p-1 rounded-full inline-flex border border-slate-700">
 
-    <!-- Rank 3 (dreapta) -->
-    <div
-      class="podium-item third-place animate-podium"
-      *ngIf="podium[2]"
-      [style.animation-delay]="'1.7s'"
-    >
-      <div class="rank rank-3">3</div>
-      <div class="avatar">{{ podium[2].username.slice(0,2).toUpperCase() }}</div>
-      <h3>{{ podium[2].username }}</h3>
-      <p class="points">{{ podium[2].points }}</p>
-      <small>{{ podium[2].completedChallenges }} challenges</small>
+      <button (click)="setRange(RangeType.WEEKLY)"
+              class="range-btn"
+              [class.active]="currentRange() === RangeType.WEEKLY">
+        Weekly
+      </button>
+
+      <button (click)="setRange(RangeType.MONTHLY)"
+              class="range-btn"
+              [class.active]="currentRange() === RangeType.MONTHLY">
+        Monthly
+      </button>
+
+      <button (click)="setRange(RangeType.ALL_TIME)"
+              class="range-btn"
+              [class.active]="currentRange() === RangeType.ALL_TIME">
+        All Time
+      </button>
+
     </div>
   </div>
 
-  <!-- ==== RESTUL CLASAMENTULUI ==== -->
-  <div class="table-container animate-table" [style.animation-delay]="'2.4s'">
-    <table class="leaderboard-table">
-      <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Player</th>
-        <th>Challenges</th>
-        <th>Points</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr *ngFor="let entry of rest">
-        <td>#{{ entry.rank }}</td>
+
+  <div *ngIf="leaderboardEntries().length > 0" class="podium-wrapper animate-podium">
+
+    <div *ngIf="leaderboardEntries()[1] as second" class="podium-item second-place">
+      <div class="rank text-slate-400 opacity-20 text-4xl font-black absolute bottom-0">2</div>
+
+      <div class="avatar-podium">
+        <img *ngIf="second.avatar"
+             [src]="second.avatar"
+             (error)="second.avatar = null"
+             alt="Avatar">
+        <span *ngIf="!second.avatar">{{ second.username.charAt(0) | uppercase }}</span>
+      </div>
+
+      <div class="podium-name">{{ second.username }}</div>
+      <div class="podium-points">{{ second.totalPoints }} XP</div>
+    </div>
+
+    <div *ngIf="leaderboardEntries()[0] as first" class="podium-item first-place">
+      <div class="crown">👑</div>
+      <div class="rank text-yellow-500 opacity-20 text-5xl font-black absolute bottom-0">1</div>
+
+      <div class="avatar-podium ring-4 ring-yellow-400">
+        <img *ngIf="first.avatar"
+             [src]="first.avatar"
+             (error)="first.avatar = null"
+             alt="Avatar">
+        <span *ngIf="!first.avatar">{{ first.username.charAt(0) | uppercase }}</span>
+      </div>
+
+      <div class="podium-name text-lg">{{ first.username }}</div>
+      <div class="podium-points text-yellow-200">{{ first.totalPoints }} XP</div>
+
+      <div *ngIf="first.username === currentUser()?.username"
+           class="absolute -top-16 w-full text-center text-[10px] font-bold text-yellow-400 animate-bounce tracking-widest">
+        THIS IS YOU!
+      </div>
+    </div>
+
+    <div *ngIf="leaderboardEntries()[2] as third" class="podium-item third-place">
+      <div class="rank text-orange-900 opacity-20 text-4xl font-black absolute bottom-0">3</div>
+
+      <div class="avatar-podium">
+        <img *ngIf="third.avatar"
+             [src]="third.avatar"
+             (error)="third.avatar = null"
+             alt="Avatar">
+        <span *ngIf="!third.avatar">{{ third.username.charAt(0) | uppercase }}</span>
+      </div>
+
+      <div class="podium-name">{{ third.username }}</div>
+      <div class="podium-points">{{ third.totalPoints }} XP</div>
+    </div>
+
+  </div>
+
+
+  <table class="leaderboard-table">
+    <thead>
+    <tr>
+      <th class="w-16 text-center">#</th>
+      <th>Player</th>
+      <th class="text-right">XP Points</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    <ng-container *ngFor="let entry of leaderboardEntries(); let i = index">
+      <tr *ngIf="i > 2"
+          class="table-row"
+          [class.current-user-row]="entry.username === currentUser()?.username">
+
+        <td class="text-center font-bold text-slate-400 text-lg">
+          {{ entry.rank }}
+        </td>
+
         <td>
           <div class="table-player">
-            <div class="avatar-small">{{ entry.username.slice(0,2).toUpperCase() }}</div>
-            <span>{{ entry.username }}</span>
+            <div class="avatar-small">
+              <img *ngIf="entry.avatar"
+                   [src]="entry.avatar"
+                   (error)="entry.avatar = null"
+                   alt="Avatar">
+              <span *ngIf="!entry.avatar">{{ entry.username.charAt(0) | uppercase }}</span>
+            </div>
+
+            <div class="flex items-center">
+              <span class="font-semibold text-slate-200">{{ entry.username }}</span>
+
+              <span *ngIf="entry.username === currentUser()?.username" class="you-tag">
+                  YOU
+                </span>
+            </div>
           </div>
         </td>
-        <td>{{ entry.completedChallenges }}</td>
-        <td class="gradient-text">{{ entry.points }}</td>
+
+        <td class="text-right">
+          <span class="points">{{ entry.totalPoints }} XP</span>
+        </td>
+
       </tr>
-      </tbody>
-    </table>
+    </ng-container>
+
+    <tr *ngIf="leaderboardEntries().length === 0">
+      <td colspan="3" class="text-center py-10 text-slate-500 italic">
+        No champions found in this timeline yet.
+      </td>
+    </tr>
+
+    </tbody>
+  </table>
+
+</div>
+
+
+<div *ngIf="!isUserInTopList()" class="sticky-footer">
+  <div class="sticky-content">
+
+    <div class="flex items-center gap-4">
+      <span class="text-slate-400 font-bold text-xl w-8 text-center">
+        {{ myRankData() ? '#' + myRankData()?.rank : '-' }}
+      </span>
+
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-purple-600 border-2 border-purple-400 flex items-center justify-center overflow-hidden shadow-lg shadow-purple-500/30">
+          <img *ngIf="myRankData()?.avatar || currentUser()?.avatar as userAvatar"
+               [src]="userAvatar"
+               (error)="myRankData() ? myRankData()!.avatar = null : null"
+               class="w-full h-full object-cover">
+
+          <span *ngIf="!(myRankData()?.avatar || currentUser()?.avatar)" class="text-white font-bold">
+             {{ currentUser()?.username?.charAt(0) | uppercase }}
+           </span>
+        </div>
+
+        <div>
+          <p class="text-white font-bold text-sm">That's You!</p>
+          <p class="text-[10px] text-purple-300 uppercase tracking-wide font-bold">
+            {{ myRankData() ? 'Keep Pushing 🚀' : 'Complete a challenge to join! ⚔️' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-right">
+      <span class="block text-2xl font-bold text-white font-mono">
+        {{ myRankData() ? myRankData()?.totalPoints : (currentUser()?.points || 0) }}
+      </span>
+      <span class="text-[10px] text-purple-400 uppercase font-bold tracking-widest">Total XP</span>
+    </div>
+
   </div>
-</section>
+</div>

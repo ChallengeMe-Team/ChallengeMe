@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {AuthService} from '../../../services/auth.service';
+import {LeaderboardService} from '../../../services/leaderboard.service';
+import {LeaderboardEntry, LeaderboardRange} from '../../../models/leaderboard.model';
 
 @Component({
   selector: 'app-leaderboard',
@@ -8,34 +11,60 @@ import { CommonModule } from '@angular/common';
   templateUrl: './leaderboard-component.html',
   styleUrls: ['./leaderboard-component.css']
 })
-export class LeaderboardComponent {
-  players = [
-    { rank: 1, username: 'ChampionX', points: 2450, completedChallenges: 28 },
-    { rank: 2, username: 'MotivatedMike', points: 2100, completedChallenges: 24 },
-    { rank: 3, username: 'FitnessFreak', points: 1850, completedChallenges: 21 },
-    { rank: 4, username: 'ProductivePro', points: 1620, completedChallenges: 19 },
-    { rank: 5, username: 'ChallengeSeeker', points: 1480, completedChallenges: 17 },
-    { rank: 6, username: 'GoalCrusher', points: 1390, completedChallenges: 16 }
-  ];
+export class LeaderboardComponent implements OnInit {
+  private authService = inject(AuthService);
+  private leaderboardService = inject(LeaderboardService);
 
-  podium = this.players.slice(0, 3);
-  rest = this.players.slice(3);
+  // Userul logat
+  currentUser = this.authService.currentUser;
 
-  getPodiumHeight(rank: number) {
-    switch (rank) {
-      case 1: return '200px';
-      case 2: return '160px';
-      case 3: return '140px';
-      default: return '100px';
-    }
+  // State
+  leaderboardEntries = signal<LeaderboardEntry[]>([]);
+  currentRange = signal<LeaderboardRange>(LeaderboardRange.ALL_TIME);
+
+  // Expunem enum-ul pentru HTML
+  public RangeType = LeaderboardRange;
+
+  // COMPUTED: Găsim rank-ul meu direct din lista descărcată
+  myRankData = computed(() => {
+    const user = this.currentUser();
+    const list = this.leaderboardEntries();
+
+    if (!user || list.length === 0) return null;
+
+    // Căutăm intrarea care are username-ul meu
+    return list.find(entry => entry.username === user.username) || null;
+  });
+
+  imageErrorFooter = false;
+  // COMPUTED: Verificăm dacă sunt vizibil în primele X intrări (ex: top 100)
+  // Deoarece backend-ul tău returnează TOATĂ lista, "visible" înseamnă
+  // pur și simplu dacă utilizatorul a scrollat până acolo.
+  // Dar pentru "Sticky Footer", verificăm dacă sunt în primii 10 (ca exemplu).
+  isUserInTopList = computed(() => {
+    const myData = this.myRankData();
+    if (!myData) return false;
+    // Dacă rangul meu e mai mic sau egal cu 10, nu arătam footer-ul
+    return myData.rank <= 10;
+  });
+
+  ngOnInit() {
+    this.loadData();
   }
 
-  getPodiumClass(rank: number) {
-    switch (rank) {
-      case 1: return 'first-place';
-      case 2: return 'second-place';
-      case 3: return 'third-place';
-      default: return '';
-    }
+  // Schimbarea tab-urilor (Weekly / Monthly / All Time)
+  setRange(range: LeaderboardRange) {
+    this.currentRange.set(range);
+    this.loadData();
+  }
+
+  loadData() {
+    this.leaderboardService.getLeaderboard(this.currentRange())
+      .subscribe({
+        next: (data) => {
+          this.leaderboardEntries.set(data);
+        },
+        error: (err) => console.error('Failed to load leaderboard', err)
+      });
   }
 }
