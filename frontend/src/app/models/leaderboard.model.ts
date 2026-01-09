@@ -1,6 +1,7 @@
 export enum LeaderboardRange {
   WEEKLY = 'WEEKLY',
   MONTHLY = 'MONTHLY',
+  LAST_6_MONTHS = 'LAST_6_MONTHS',
   ALL_TIME = 'ALL_TIME'
 }
 
