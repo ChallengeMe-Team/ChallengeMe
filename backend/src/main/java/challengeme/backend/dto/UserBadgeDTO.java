@@ -13,5 +13,9 @@ public class UserBadgeDTO {
     private String username;
     private UUID badgeId;
     private String badgeName;
+    private String description;
+    private String iconUrl;
+    private Integer pointsReward;
+
     private LocalDate dateAwarded;
 }

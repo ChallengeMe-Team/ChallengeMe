@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Challenge } from '../../models/challenge.model';
-import { LucideAngularModule, CheckCircle, RotateCcw } from 'lucide-angular';
+import { LucideAngularModule, CheckCircle, RotateCcw, Play } from 'lucide-angular';
 
 @Component({
   selector: 'app-challenge-card',
@@ -13,7 +13,8 @@ import { LucideAngularModule, CheckCircle, RotateCcw } from 'lucide-angular';
 export class ChallengeCardComponent {
   @Input({ required: true }) challenge!: Challenge;
   @Input() status: string | undefined;
-  @Input() categoryClass: string = 'bg-gray-500'; // Valoare primită de la părinte
+  @Input() categoryClass: string = 'bg-gray-500';
+  @Input() compact: boolean = false; // Input nou pt Mini Mode
 
   @Output() start = new EventEmitter<Challenge>();
   @Output() restart = new EventEmitter<Challenge>();
@@ -21,5 +22,7 @@ export class ChallengeCardComponent {
   @Output() edit = new EventEmitter<Challenge>();
   @Output() delete = new EventEmitter<{event: MouseEvent, challenge: Challenge}>();
 
-  readonly icons = { CheckCircle, RotateCcw };
+  @Output() continue = new EventEmitter<Challenge>();
+
+  readonly icons = { CheckCircle, RotateCcw, Play };
 }
