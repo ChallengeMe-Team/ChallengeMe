@@ -21,6 +21,7 @@ export class LeaderboardComponent implements OnInit {
   // State
   leaderboardEntries = signal<LeaderboardEntry[]>([]);
   currentRange = signal<LeaderboardRange>(LeaderboardRange.ALL_TIME);
+  isLoading = signal<boolean>(false);
 
   // Expunem enum-ul pentru HTML
   public RangeType = LeaderboardRange;
@@ -59,12 +60,17 @@ export class LeaderboardComponent implements OnInit {
   }
 
   loadData() {
+    this.isLoading.set(true); // Activeaza spinner-ul la inceput
     this.leaderboardService.getLeaderboard(this.currentRange())
       .subscribe({
         next: (data) => {
           this.leaderboardEntries.set(data);
+          this.isLoading.set(false); // Dezactiveaza spinner-ul cand vin datele
         },
-        error: (err) => console.error('Failed to load leaderboard', err)
+        error: (err) => {
+          console.error('Failed to load leaderboard', err);
+          this.isLoading.set(false); // Dezactiveaza in caz de eroare
+        }
       });
   }
 }
