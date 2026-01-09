@@ -1,0 +1,33 @@
+<div class="stats-container">
+
+  <div class="stat-card points-card">
+    <div class="icon-wrapper">
+      <lucide-icon [img]="zapIcon" class="w-8 h-8"></lucide-icon>
+    </div>
+    <div class="stat-content">
+      <span class="stat-value">{{ displayPoints }}</span>
+      <span class="stat-label">Total XP</span>
+    </div>
+  </div>
+
+  <div class="stat-card challenges-card">
+    <div class="icon-wrapper">
+      <lucide-icon [img]="checkIcon" class="w-8 h-8"></lucide-icon>
+    </div>
+    <div class="stat-content">
+      <span class="stat-value">{{ displayChallenges }}</span>
+      <span class="stat-label">Missions Done</span>
+    </div>
+  </div>
+
+  <div class="stat-card badges-card">
+    <div class="icon-wrapper">
+      <lucide-icon [img]="awardIcon" class="w-8 h-8"></lucide-icon>
+    </div>
+    <div class="stat-content">
+      <span class="stat-value">{{ displayBadges }}</span>
+      <span class="stat-label">Badges Earned</span>
+    </div>
+  </div>
+
+</div>
