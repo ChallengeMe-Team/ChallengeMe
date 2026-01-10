@@ -1,13 +1,16 @@
 import {Component, ChangeDetectionStrategy, Output, EventEmitter} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import {CommonModule} from '@angular/common';
+import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {HeroSectionComponent} from '../../hero-section/hero-section.component';
-import { StatsGridComponent } from '../../stats-grid/stats-grid.component';
+import {StatsGridComponent} from '../../stats-grid/stats-grid.component';
+import {ActiveChallengesComponent} from './active-challenges/active-challenges.component';
+import {BadgeShowcaseComponent} from './badge-showcase/badge-showcase.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, HeroSectionComponent, StatsGridComponent],
+  imports: [CommonModule, HeroSectionComponent, StatsGridComponent, ActiveChallengesComponent,
+    BadgeShowcaseComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-component.html',
   styleUrls: ['./home-component.css']
@@ -48,12 +51,13 @@ export class HomeComponent {
       class="lucide lucide-award"><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.11"/></svg>`);
 
     this.stats = [
-      { icon: TrophyIcon, label: 'Total Points', value: '1,250', color: 'text-yellow-400', bgColor: '#3b2f56' },
-      { icon: TargetIcon, label: 'Challenges Completed', value: '18', color: 'text-green-400', bgColor: '#1f4738' },
-      { icon: TrendingUpIcon, label: 'Current Streak', value: '7 days', color: 'text-orange-400', bgColor: '#5e4b2d' },
-      { icon: AwardIcon, label: 'Badges Earned', value: '5', color: 'text-pink-400', bgColor: '#5a274a' }
+      {icon: TrophyIcon, label: 'Total Points', value: '1,250', color: 'text-yellow-400', bgColor: '#3b2f56'},
+      {icon: TargetIcon, label: 'Challenges Completed', value: '18', color: 'text-green-400', bgColor: '#1f4738'},
+      {icon: TrendingUpIcon, label: 'Current Streak', value: '7 days', color: 'text-orange-400', bgColor: '#5e4b2d'},
+      {icon: AwardIcon, label: 'Badges Earned', value: '5', color: 'text-pink-400', bgColor: '#5a274a'}
     ];
   }
+
   trackByLabel(index: number, item: any) {
     return item.label;
   }

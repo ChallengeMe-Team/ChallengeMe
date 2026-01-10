@@ -15,6 +15,9 @@ public class UserBadgeMapper {
                 entity.getUser().getUsername(),
                 entity.getBadge().getId(),
                 entity.getBadge().getName(),
+                entity.getBadge().getDescription(),
+                entity.getBadge().getIconUrl(),
+                entity.getBadge().getPointsReward(),
                 entity.getDateAwarded()
         );
     }
