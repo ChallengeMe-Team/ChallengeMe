@@ -7,10 +7,22 @@
 
     <div class="modal-body">
       <label>Challenge Title</label>
-      <input type="text" [(ngModel)]="challenge.title" placeholder="e.g., Walk 10,000 steps" />
+      <input
+        type="text"
+        [(ngModel)]="challenge.title"
+        (input)="validateField('title')"
+        [class.border-red-500]="errors.title"
+        [class.input-error]="errors.title"
+        placeholder="e.g., Walk 10,000 steps" />
+      <p *ngIf="errors.title" class="error-msg">{{ errors.title }}</p>
 
       <label>Description</label>
-      <textarea [(ngModel)]="challenge.description" placeholder="Describe your challenge..."></textarea>
+      <textarea
+        [(ngModel)]="challenge.description"
+        (input)="validateField('description')"
+        [class.input-error]="errors.description"
+        placeholder="Describe your challenge..."></textarea>
+      <p *ngIf="errors.description" class="error-msg">{{ errors.description }}</p>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -32,7 +44,11 @@
 
       <div class="modal-actions">
         <button class="cancel-btn" (click)="cancel.emit()">Cancel</button>
-        <button class="create-btn" (click)="onSubmit()">
+
+        <button
+          class="create-btn"
+          [disabled]="isFormInvalid"
+          (click)="onSubmit()">
           {{ mode === 'edit' ? 'Save Changes' : 'Create Challenge' }}
         </button>
       </div>
