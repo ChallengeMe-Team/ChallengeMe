@@ -9,6 +9,7 @@ import {
   EventEmitter, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PlusCircle } from 'lucide-angular';
 import { HeroSectionComponent } from '../../hero-section/hero-section.component';
 import { StatsGridComponent } from '../../stats-grid/stats-grid.component';
 import { ActiveChallengesComponent } from './active-challenges/active-challenges.component';
@@ -32,6 +33,7 @@ import {AuthService} from '../../../services/auth.service';
     LucideAngularModule,
     CompleteChallengeModalComponent
   ],
+
   changeDetection: ChangeDetectionStrategy.Default,
   templateUrl: './home-component.html',
   styleUrls: ['./home-component.css']
@@ -44,6 +46,10 @@ export class HomeComponent implements OnInit, AfterViewInit {
   private authService = inject(AuthService);
 
   isLoading = signal(true);
+
+  readonly icons = {
+    PlusCircle: PlusCircle,
+  };
 
   readonly zapIcon = Zap;
 

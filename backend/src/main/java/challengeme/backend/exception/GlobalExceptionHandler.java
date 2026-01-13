@@ -16,23 +16,19 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. Validation errors (unic!)
+    // 1. Validation errors
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
-        Map<String, String> fieldErrors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .collect(Collectors.toMap(
-                        err -> err.getField(),
-                        err -> err.getDefaultMessage() != null ? err.getDefaultMessage() : "Invalid value"
-                ));
+    public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        // Luăm mesajul de eroare din adnotarea @ValidContent
+        String errorMessage = ex.getBindingResult().getAllErrors().stream()
+                .map(err -> err.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation failed");
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", 400);
-        body.put("errors", fieldErrors);
-        body.put("message", "Validation failed");
+        Map<String, String> response = new HashMap<>();
+        response.put("error", errorMessage); // Cheia "error" cerută în Acceptance Criteria
 
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     // 2. Not found – UNIC și GLOBAL
@@ -85,4 +81,5 @@ public class GlobalExceptionHandler {
         body.put("message", "A apărut o eroare neașteptată pe server.");
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
 }
