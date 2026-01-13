@@ -1,0 +1,52 @@
+<div class="absolute right-0 top-full mt-4 w-95 bg-[#1a1627] border border-gray-700 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden z-[100] animate-fade-in origin-top-right backdrop-blur-xl">
+
+  <div class="p-5 border-b border-gray-700 flex justify-between items-center bg-white/5">
+    <span class="font-black text-white uppercase tracking-widest text-[14px]">Notifications Center</span>
+
+    <button *ngIf="notifications().length > 0"
+            (click)="markAllAsRead(); $event.stopPropagation()"
+            class="text-[11px] text-purple-400 font-bold cursor-pointer hover:text-purple-300 hover:underline transition-all uppercase">
+      Mark all as read
+    </button>
+  </div>
+
+  <div class="max-h-[480px] overflow-y-auto custom-scrollbar">
+    @if (notifications().length === 0) {
+      <div class="p-12 text-center flex flex-col items-center gap-4">
+        <div class="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center">
+          <lucide-icon name="bell-off" class="w-8 h-8 text-gray-600"></lucide-icon>
+        </div>
+        <p class="text-gray-500 text-sm font-medium italic">Your inbox is empty.</p>
+      </div>
+    }
+
+    @for (notif of notifications(); track notif.id) {
+      <div (click)="onNotificationClick(notif)"
+           class="notification-row p-5 border-b border-gray-700/30 cursor-pointer flex gap-4 items-start relative group transition-colors"
+           [class.bg-white/5]="!notif.isRead">
+
+      <div class="p-2.5 rounded-xl bg-gray-800/80 group-hover:scale-110 transition-transform shadow-inner">
+        <lucide-icon [img]="getIconForType(notif.type)" [class]="getTypeColor(notif.type)" class="w-6 h-6"></lucide-icon>
+      </div>
+
+      <div class="flex flex-col gap-1.5 flex-1 pr-4">
+        <p class="text-[14px] leading-relaxed tracking-tight"
+           [class.text-white]="!notif.isRead"
+           [class.text-gray-400]="notif.isRead"
+           [innerHTML]="formatMessage(notif.message)">
+        </p>
+
+        <div class="flex items-center gap-2">
+            <span class="text-[9px] font-black uppercase tracking-tighter opacity-60" [class]="getTypeColor(notif.type)">
+              {{ notif.type }}
+            </span>
+        </div>
+      </div>
+
+      @if (!notif.isRead) {
+        <div class="unread-dot absolute right-4 top-1/2 -translate-y-1/2"></div>
+      }
+      </div>
+    }
+  </div>
+</div>

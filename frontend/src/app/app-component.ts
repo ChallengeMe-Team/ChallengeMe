@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
+import {Component, ChangeDetectionStrategy, inject, computed, ChangeDetectorRef, effect} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {NavigationEnd, Router, RouterOutlet} from '@angular/router';
 import { NavbarComponent } from './component/navbar/navbar-component';
@@ -7,7 +7,7 @@ import { ToastComponent } from './shared/toast/toast-component';
 import { AuthComponent } from './component/auth/auth-component';
 import { AuthService } from './services/auth.service';
 import {filter} from 'rxjs';
-
+import { NotificationService } from './services/notification.service';
 
 
 @Component({
@@ -26,7 +26,24 @@ import {filter} from 'rxjs';
 })
 export class AppComponent {
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
+
+  constructor() {
+    // Folosim un effect pentru a monitoriza starea login-ului
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (user) {
+        console.log('User logged in, starting notification polling...');
+        this.notificationService.startPolling(user.id);
+      } else {
+        this.notificationService.stopPolling();
+      }
+    });
+  }
+
   private router = inject(Router);
+
+  private cdr = inject(ChangeDetectorRef); // Adaugă această linie
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
@@ -69,7 +86,13 @@ export class AppComponent {
     this.toastMessage = message;
     this.toastType = type;
     this.toastVisible = true;
-    setTimeout(() => this.toastVisible = false, 3000);
+
+    this.cdr.detectChanges(); // FORȚEAZĂ afișarea mesajului în UI
+
+    setTimeout(() => {
+      this.toastVisible = false;
+      this.cdr.detectChanges(); // FORȚEAZĂ ascunderea mesajului
+    }, 3000);
   }
 
   onActivate(componentRef: any) {

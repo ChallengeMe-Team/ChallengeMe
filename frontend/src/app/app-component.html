@@ -1,16 +1,11 @@
 @if (showNavbar) {
-<app-navbar
-  (createChallengeRequest)="openForm()"
-  (toastRequest)="showToast($event.message, $event.type)">
-</app-navbar>
+  <app-navbar
+    class="relative z-[100]"
+    (toastRequest)="showToast($event.message, $event.type)">
+  </app-navbar>
 }
-<main class="min-h-screen bg-[#0f0e13] text-white"
-      [class.pt-24]="showNavbar"
-      [class.p-8]="showNavbar"
-      [class.flex]="!showNavbar"
-      [class.items-center]="!showNavbar"
-      [class.justify-center]="!showNavbar">
 
+<main class="min-h-screen relative text-white bg-transparent" [class.pt-24]="showNavbar">
   <router-outlet (activate)="onActivate($event)"></router-outlet>
 </main>
 

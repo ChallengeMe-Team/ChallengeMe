@@ -2,71 +2,70 @@
 
   <div>
     <label for="username">Username</label>
-    <input id="username" type="text" formControlName="username" placeholder="Alege un nume de utilizator" />
+    <input id="username" type="text" formControlName="username" placeholder="Choose a username" />
 
     @if (username?.touched && username?.invalid) {
       <div class="error-message">
         @if (username?.errors?.['required']) {
-          Numele de utilizator este obligatoriu.
+          Username is required.
         } @else if (username?.errors?.['minlength']) {
-          Numele trebuie să aibă minim 3 caractere.
+          Must be at least 3 characters.
         }
       </div>
     }
   </div>
 
   <div>
-    <label for="email">Adresă Email</label>
-    <input id="email" type="email" formControlName="email" placeholder="Adresa ta de email" />
+    <label for="email">Email Address</label>
+    <input id="email" type="email" formControlName="email" placeholder="Your email address" />
 
     @if (email?.touched && email?.invalid) {
       <div class="error-message">
-        @if (email?.errors?.['required']) {
-          Adresa de email este obligatorie.
-        } @else if (email?.errors?.['email']) {
-          Formatul adresei de email este invalid.
-        }
+        @if (email?.errors?.['required'])
+        { Email is required. }
+        @else if (email?.errors?.['email'])
+        { Invalid email format. }
       </div>
     }
   </div>
 
   <div>
-    <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Parolă</label>
-    <input id="password" type="password" formControlName="password" placeholder="Minim 6 caractere"
+    <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+    <input id="password" type="password" formControlName="password" placeholder="Minimum 6 characters"
            class="w-full bg-[#2d2b42] border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-purple-500 transition-colors" />
 
     @if (password?.touched || password?.dirty) {
     <div class="mt-3 bg-[#1a1627] p-3 rounded-lg border border-gray-700 text-sm shadow-inner">
-      <p class="text-gray-400 mb-2 font-semibold text-xs uppercase tracking-wider">Cerințe parolă:</p>
+      <p class="text-gray-400 mb-2 font-semibold text-xs uppercase tracking-wider">Password Requirements:</p>
       <ul class="space-y-1">
         <li class="flex items-center gap-2 transition-colors duration-300"
             [ngClass]="passwordCriteria.length ? 'text-green-400' : 'text-gray-400'">
           <span class="text-lg leading-none">{{ passwordCriteria.length ? '✓' : '•' }}</span>
-          Minim 6 caractere
+          Minimum 6 characters
         </li>
 
         <li class="flex items-center gap-2 transition-colors duration-300"
             [ngClass]="passwordCriteria.upper ? 'text-green-400' : 'text-gray-400'">
           <span class="text-lg leading-none">{{ passwordCriteria.upper ? '✓' : '•' }}</span>
-          O literă mare (A-Z)
+          One uppercase letter (A-Z)
         </li>
 
         <li class="flex items-center gap-2 transition-colors duration-300"
             [ngClass]="passwordCriteria.lower ? 'text-green-400' : 'text-gray-400'">
           <span class="text-lg leading-none">{{ passwordCriteria.lower ? '✓' : '•' }}</span>
-          O literă mică (a-z)
+          One lowercase letter (a-z)
         </li>
 
         <li class="flex items-center gap-2 transition-colors duration-300"
             [ngClass]="passwordCriteria.digit ? 'text-green-400' : 'text-gray-400'">
           <span class="text-lg leading-none">{{ passwordCriteria.digit ? '✓' : '•' }}</span>
-          O cifră (0-9)
+          One digit (0-9)
         </li>
 
         <li class="flex items-center gap-2 transition-colors duration-300"
             [ngClass]="passwordCriteria.symbol ? 'text-green-400' : 'text-gray-400'">
           <span class="text-lg leading-none">{{ passwordCriteria.symbol ? '✓' : '•' }}</span>
-          Un simbol special (!@#$%)
+          One special symbol (!@#$%)
         </li>
       </ul>
     </div>
@@ -74,21 +73,21 @@
 
     @if (password?.touched && password?.hasError('required')) {
     <div class="text-red-500 text-sm mt-1">
-      Parola este obligatorie.
+      The password is mandatory.
     </div>
     }
   </div>
 
   <div>
-    <label for="passwordConfirmation">Confirmă Parola</label>
-    <input id="passwordConfirmation" type="password" formControlName="passwordConfirmation" placeholder="Reintrodu parola" />
+    <label for="passwordConfirmation">Confirm the password</label>
+    <input id="passwordConfirmation" type="password" formControlName="passwordConfirmation" placeholder="Confirm the password" />
 
     @if (passwordConfirmation?.touched && (passwordConfirmation?.invalid || signupForm.errors?.['passwordMismatch'])) {
       <div class="error-message">
         @if (passwordConfirmation?.errors?.['required']) {
-          Confirmarea parolei este obligatorie.
+          Confirmation is required.
         } @else if (signupForm.errors?.['passwordMismatch']) {
-          Parolele nu se potrivesc.
+          Passwords do not match.
         }
       </div>
     }
@@ -97,7 +96,7 @@
   <button type="submit"
           [disabled]="signupForm.invalid"
           class="w-full px-4 py-3 rounded-xl gradient-text-button mt-6 font-bold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
-    Creează Cont
+    Create Account
   </button>
 
 </form>

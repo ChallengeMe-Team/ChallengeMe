@@ -13,14 +13,16 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import java.util.List;
 
-// Configurația principală - leagă totul
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableMethodSecurity
@@ -31,10 +33,16 @@ public class SecurityConfig {
     private final AuthTokenFilter authTokenFilter;
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        // Această metodă este cea mai sigură pentru Spring Boot 3
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(passwordEncoder()); // Legătura critică pentru BCrypt
         return authProvider;
     }
 
@@ -44,30 +52,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // CORS trebuie să fie primul!
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Permite OPTIONS (pre-flight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Permite auth
                         .requestMatchers("/api/auth/**").permitAll()
-
-//                        .requestMatchers("/api/userbadges/**").permitAll()
-                        // Permite verificarea disponibilitatii fara token (fix 403 Forbidden)
                         .requestMatchers("/api/users/check-username", "/api/users/check-email").permitAll()
-                        // Orice altceva cere autentificare
+                        .requestMatchers("/api/notifications/**").authenticated()
+                        .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().authenticated()
-
-
                 );
 
         http.authenticationProvider(authenticationProvider());
@@ -77,10 +73,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    UrlBasedCorsConfigurationSource corsConfigurationSource() {
+    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Specify the exact origin of your frontend
-        configuration.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:4200/"));
+        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization"));

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -29,6 +29,8 @@ export class StatsGridComponent implements OnInit {
   private badgeService = inject(BadgeService);
   private userService = inject(UserService);
 
+  private cdr = inject(ChangeDetectorRef); // 2. Injectează ChangeDetectorRef
+
   displayPoints: number = 0;
   displayChallenges: number = 0;
   displayBadges: number = 0;
@@ -36,35 +38,31 @@ export class StatsGridComponent implements OnInit {
   isLoading: boolean = true;
 
   ngOnInit(): void {
-    const username = this.authService.getUsername();
-
-    if (!username) {
-      console.error('User not logged in');
-      return;
-    }
-
-    forkJoin({
-      userProfile: this.userService.getProfile(),
-      challenges: this.challengeService.getUserChallenges(username),
-      badges: this.badgeService.getUserBadges(username)
-    }).pipe(
-      map(data => {
-        return {
-          points: data.userProfile.points,
-          completedChallengesCount: (data.challenges as any[]).filter(c => c.status === 'COMPLETED').length,
-          badgesCount: data.badges.length
-        };
-      })
-    ).subscribe({
-      next: (stats) => {
+    // Chemăm doar profilul, deoarece acesta conține deja punctele, numărul de misiuni și insignele
+    this.userService.getProfile().subscribe({
+      next: (userProfile) => {
         this.isLoading = false;
-        this.animateValue(stats.points, (val) => this.displayPoints = val);
-        this.animateValue(stats.completedChallengesCount, (val) => this.displayChallenges = val);
-        this.animateValue(stats.badgesCount, (val) => this.displayBadges = val);
+
+        // Sincronizare directă cu câmpurile din JSON-ul tău
+        this.animateValue(userProfile.points, (val) => {
+          this.displayPoints = val;
+          this.cdr.detectChanges();
+        });
+
+        this.animateValue(userProfile.completedChallengesCount, (val) => {
+          this.displayChallenges = val;
+          this.cdr.detectChanges();
+        });
+
+        this.animateValue(userProfile.badges.length, (val) => {
+          this.displayBadges = val;
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
-        console.error('Error loading stats', err);
+        console.error('Error loading profile', err);
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }

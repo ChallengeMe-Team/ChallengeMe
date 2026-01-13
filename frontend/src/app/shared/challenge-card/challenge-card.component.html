@@ -38,9 +38,17 @@
       </button>
 
       <ng-container *ngIf="!compact">
+
         <button *ngIf="!status" (click)="start.emit(challenge); $event.stopPropagation()"
                 class="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-sm hover:brightness-110 hover:scale-105 transition-all">
           Start 🚀
+        </button>
+
+        <button *ngIf="status === 'COMPLETED'" (click)="restart.emit(challenge); $event.stopPropagation()"
+                class="px-4 py-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600 text-gray-300 border border-white/10 font-medium text-sm transition-all flex items-center gap-2"
+                title="Start Again">
+          <span>Redo</span>
+          <lucide-icon name="rotate-ccw" class="w-4 h-4"></lucide-icon>
         </button>
 
         <div *ngIf="['PENDING', 'RECEIVED', 'ACCEPTED', 'IN_PROGRESS'].includes(status || '')"

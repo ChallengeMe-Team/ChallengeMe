@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 
 import { Challenge, Difficulty } from '../../../models/challenge.model';
 import { ChallengeService } from '../../../services/challenge.service';
@@ -32,6 +32,14 @@ export class ChallengesComponent implements OnInit {
   public auth = inject(AuthService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+
+  constructor(private route: ActivatedRoute) {
+    this.route.queryParams.subscribe(params => {
+      if (params['openModal'] === 'true') {
+        this.challengeService.isCreateModalOpen.set(true);
+      }
+    });
+  }
 
   challenges = signal<Challenge[]>([]);
   userChallengeStatuses = signal<Map<string, string>>(new Map());
@@ -133,26 +141,38 @@ export class ChallengesComponent implements OnInit {
     this.isDeleteModalOpen.set(true);
   }
 
-  // Service Logic
   confirmRestart() {
     if (!this.challengeToRestart) return;
-    this.isRestartModalOpen = false;
+
     const challenge = this.challengeToRestart;
     const user = this.auth.currentUser();
     if (!user) return;
 
+    this.isRestartModalOpen = false; // Închidem modalul de confirmare
+
+    // 1. Căutăm link-ul existent
     this.challengeService.getAllUserChallengeLinks(user.id).subscribe(links => {
       const linkToDelete = links.find((l: any) => (l.challenge?.id || l.challengeId) === challenge.id);
+
       if (linkToDelete) {
+        // 2. Ștergem înregistrarea veche pentru a permite una nouă
         this.challengeService.deleteChallengeUser(linkToDelete.id).subscribe({
           next: () => {
-            this.handleStart(challenge);
+            // 3. Actualizăm UI-ul local (ștergem statusul 'COMPLETED' din mapă)
             const newMap = new Map(this.userChallengeStatuses());
             newMap.delete(challenge.id);
             this.userChallengeStatuses.set(newMap);
-            this.showToast('Progress reset. Ready to restart!', 'success');
-          }
+
+            // 4. Deschidem automat modalul de START (cel cu semnarea contractului)
+            this.handleStart(challenge);
+
+            this.showToast('Ready to level up! Set your new dates.', 'success');
+          },
+          error: () => this.showToast('Something went wrong. Please try again.', 'error')
         });
+      } else {
+        // Dacă dintr-un motiv anume nu găsim link-ul, totuși încercăm să pornim provocarea
+        this.handleStart(challenge);
       }
     });
   }

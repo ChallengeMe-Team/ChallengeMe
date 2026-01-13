@@ -61,4 +61,10 @@ public class NotificationController {
         service.deleteNotification(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/user/{userId}/mark-all-read")
+    public ResponseEntity<Void> markAllAsRead(@PathVariable UUID userId) {
+        service.markAllNotificationsAsRead(userId);
+        return ResponseEntity.ok().build();
+    }
 }

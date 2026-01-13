@@ -4,6 +4,7 @@ import challengeme.backend.exception.NotificationNotFoundException;
 import challengeme.backend.mapper.NotificationMapper;
 import challengeme.backend.model.Notification;
 import challengeme.backend.repository.NotificationRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import challengeme.backend.dto.request.update.NotificationUpdateRequest;
@@ -46,5 +47,12 @@ public class NotificationService {
     public void deleteNotification(UUID id) {
         Notification entity = getNotificationById(id); // aruncă excepție dacă nu există
         notificationRepository.delete(entity);
+    }
+
+    @Transactional
+    public void markAllNotificationsAsRead(UUID userId) {
+        List<Notification> notifications = notificationRepository.findByUserId(userId);
+        notifications.forEach(n -> n.setRead(true));
+        notificationRepository.saveAll(notifications);
     }
 }

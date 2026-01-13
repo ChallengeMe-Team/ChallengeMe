@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import static challengeme.backend.model.LeaderboardRange.MONTHLY;
 import static challengeme.backend.model.LeaderboardRange.WEEKLY;
+import static challengeme.backend.model.LeaderboardRange.LAST_6_MONTHS;
 
 @Service
 @RequiredArgsConstructor
@@ -97,6 +98,7 @@ public class LeaderboardService {
             LocalDate startDate = switch (range) {
                 case WEEKLY -> LocalDate.now().minusDays(7);
                 case MONTHLY -> LocalDate.now().minusMonths(1);
+                case LAST_6_MONTHS -> LocalDate.now().minusMonths(6);
                 default -> LocalDate.now(); // Fallback
             };
             results = challengeUserRepository.aggregateRankings(startDate);

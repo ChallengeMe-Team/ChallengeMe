@@ -1,12 +1,15 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Challenge } from '../../models/challenge.model';
-import { LucideAngularModule, CheckCircle, RotateCcw, Play } from 'lucide-angular';
+import {LucideAngularModule, CheckCircle, RotateCcw, Play, LucideIconProvider, LUCIDE_ICONS} from 'lucide-angular';
 
 @Component({
   selector: 'app-challenge-card',
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
+  providers: [
+    { provide: LUCIDE_ICONS, useValue: new LucideIconProvider({ RotateCcw }) }
+  ],
   templateUrl: './challenge-card.component.html',
   styleUrls: ['./challenge-card.component.css']
 })

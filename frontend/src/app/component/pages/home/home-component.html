@@ -1,76 +1,73 @@
+<div *ngIf="isLoading()" class="fixed inset-0 z-[100] bg-[#0b0716] flex flex-col items-center justify-center">
+  <div class="w-16 h-16 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+  <p class="mt-4 text-purple-400 font-medium animate-pulse">Loading your legend...</p>
+</div>
 
-<!-- Hero Section: Transform Tasks Into Epic Challenges -->
-<section class="hero-bg py-24 px-4 text-center rounded-xl shadow-2xl relative overflow-hidden mt-8 animate-fade-in">
-  <!-- Background Overlays -->
-  <div class="absolute inset-0 bg-black/60 z-10 hero-gradient-animation"></div>
+<div class="home-master-wrapper" [class.opacity-0]="isLoading()">
 
-  <!-- Trofee subtile in fundal -->
-  <div class="absolute inset-0 z-0 opacity-20 trophy-pattern"></div>
+  <div class="hero-gradient-animation"></div>
+  <div class="trophy-pattern"></div>
 
-  <!-- Content -->
-  <div class="relative z-20 max-w-4xl mx-auto space-y-6">
+  <div class="relative z-10 transition-opacity duration-700 pointer-events-auto">
 
-    <span class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-700 rounded-full shadow-md backdrop-blur-sm">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2 text-purple-400"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      Turn Your Goals Into Games
-    </span>
+    <section class="relative min-h-[85vh] flex flex-col items-center justify-center overflow-hidden py-20 px-4 mt-8 reveal-on-scroll">
+      <div class="relative z-20 max-w-5xl mx-auto text-center space-y-8">
+        <div class="space-y-4">
+          <span class="inline-flex items-center px-6 py-3 text-base font-bold text-white bg-indigo-700/40 backdrop-blur-md border-2 border-indigo-500/30 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.3)] animate-pulse">
+            <lucide-icon [img]="zapIcon" class="w-5 h-5 mr-2 text-yellow-400"></lucide-icon>
+            Turn Your Goals Into Games
+            </span>
 
-    <h1 class="text-6xl font-extrabold text-white leading-tight">
-      Transform Tasks Into
-      <span class="text-transparent bg-clip-text gradient-hero">Epic Challenges</span>
-    </h1>
+          <h1 class="text-6xl md:text-8xl font-black text-white leading-tight epic-glow">
+            Transform Tasks Into <br>
+            <span class="text-transparent bg-clip-text gradient-hero">Epic Challenges</span>
+          </h1>
+        </div>
 
-    <p class="text-xl text-gray-300 max-w-3xl mx-auto">
-      Join thousands of challengers who are crushing their goals through gamified motivation. Create challenges, compete with friends, and unlock your potential.
-    </p>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <app-hero-section></app-hero-section>
-    </div>
-    <div class="flex justify-center gap-4 pt-4">
-      <button
-        (click)="onStartChallenge()"
-        class="px-8 py-3 text-lg font-bold text-white rounded-full shadow-lg transition-transform hover:scale-105 gradient-hero">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             class="w-5 h-5 mr-2 inline">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-5.63 5.63a1 1 0 0 1-7.07-7.07l5.63-5.63a6 6 0 0 1 7.94-7.94l-3.77 3.77Z"/>
-        </svg>
-        Start a Challenge
-      </button>
+        <div class="max-w-3xl mx-auto glass-card rounded-3xl p-2 shadow-2xl transition-transform hover:scale-[1.01]">
+          <app-hero-section></app-hero-section>
+        </div>
 
-      <button
-        (click)="onExploreChallenges()"
-        class="px-8 py-3 text-lg font-bold text-white rounded-full shadow-lg transition-transform hover:scale-105 bg-gray-700 hover:bg-gray-600">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             class="w-5 h-5 mr-2">
-          <path d="M17 3a2.85 2.85 0 0 0 .7 1.25l3 3a2.85 2.85 0 0 0 0 4l-9.5 9.5-6.6-6.6L14 7l3-4z"/>
-          <path d="M7.5 7.5L4 4"/>
-        </svg>
-        Explore Challenges
-      </button>
+        <div class="flex flex-wrap justify-center gap-6 pt-4">
+          <button
+            (click)="onStartChallenge()"
+            class="btn-action btn-start">
+            Start Challenge
+          </button>
 
-    </div>
-  </div>
-</section>
+          <button
+            (click)="onExploreChallenges()"
+            class="btn-action btn-explore">
+            Explore World
+          </button>
+        </div>
+      </div>
+    </section>
 
-<!-- User Stats Section (Aligned below hero) -->
-<section class="max-w-7xl mx-auto -mt-16 relative z-30 px-4 sm:px-6 lg:px-8 mb-12">
-  <app-stats-grid></app-stats-grid>
-</section>
+    <section class="max-w-7xl mx-auto -mt-20 relative z-30 px-4 mb-24 reveal-on-scroll delay-100">
+      <app-stats-grid></app-stats-grid>
+    </section>
 
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-    <div class="lg:col-span-2">
-      <app-active-challenges></app-active-challenges>
-    </div>
-
-    <div class="lg:col-span-1">
-      <app-badge-showcase></app-badge-showcase>
-    </div>
+    <section class="max-w-7xl mx-auto px-4 pb-20 reveal-on-scroll delay-200">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 glass-card rounded-2xl p-1">
+          <div class="lg:col-span-2 glass-card rounded-2xl p-1">
+            <app-active-challenges (openPortal)="handleOpenCompletion($event)"></app-active-challenges>
+          </div>
+        </div>
+        <div class="lg:col-span-1 glass-card rounded-2xl p-1">
+          <app-badge-showcase></app-badge-showcase>
+        </div>
+      </div>
+    </section>
 
   </div>
-</section>
+</div>
+
+<app-complete-challenge-modal
+  [isVisible]="isCompletionModalVisible"
+  [challengeTitle]="selectedChallengeForCompletion?.title || ''"
+  [xpReward]="selectedChallengeForCompletion?.points || 0"
+  (close)="isCompletionModalVisible = false"
+  (confirmCompletion)="handleClaimSuccess()">
+</app-complete-challenge-modal>

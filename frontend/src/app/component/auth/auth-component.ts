@@ -7,6 +7,7 @@ import { SignupFormComponent } from './signup-form/signup-form-component';
 
 import { AuthService } from '../../services/auth.service';
 import { LucideAngularModule, LUCIDE_ICONS, LucideIconProvider, Loader2 } from 'lucide-angular';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-auth-container',
@@ -43,16 +44,24 @@ export class AuthComponent {
     this.authService.signup(data).pipe(
       finalize(() => this.isLoading.set(false))
     ).subscribe({
-      next: () => {
-        this.toastEvent.emit({ message: `Cont creat cu succes! Te poți autentifica.`, type: 'success' });
+      next: (res) => {
+        // 1. MAI ÎNTÂI emitem evenimentul pentru Toast
+        this.toastEvent.emit({
+          message: 'Account created successfully! You can now log in.',
+          type: 'success'
+        });
+
+        // 2. Apoi schimbăm modul formularului (trece la Login)
         this.isLoginMode.set(true);
       },
       error: (err) => {
-        const errorMessage = typeof err.error === 'string' ? err.error : 'Eroare la înregistrare. Verifică datele.';
+        const errorMessage = typeof err.error === 'string' ? err.error : 'Registration failed. Please check your data.';
         this.toastEvent.emit({ message: errorMessage, type: 'error' });
       }
     });
   }
+
+  private router = inject(Router);
 
   handleLogin(credentials: any) {
     this.isLoading.set(true);
@@ -63,18 +72,18 @@ export class AuthComponent {
       next: (response) => {
         const user = response.user;
         this.toastEvent.emit({
-          message: `Autentificare reușită! Bine ai revenit, ${user.username}!`,
+          message: `Login successful! Welcome back, ${response.user.username}!`,
           type: 'success'
         });
+
+        this.router.navigate(['/']);
+
         this.authSuccess.emit(user);
       },
       error: (err) => {
         console.error('Login error:', err);
-        this.toastEvent.emit({
-          message: `Email sau parolă incorecte.`,
-          type: 'error'
-        });
-      }
+        this.toastEvent.emit({ message: 'Invalid email/username or password.', type: 'error' });
+        }
     });
   }
 }

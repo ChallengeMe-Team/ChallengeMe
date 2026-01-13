@@ -7,11 +7,13 @@ import {FormsModule} from '@angular/forms';
 import { computed } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { UserDTO } from '../../../services/user.service';
+import { UserQuickViewComponent } from '../../../shared/user-quick-view/user-quick-view.component';
+import { UserProfile } from '../../../models/user.model'; // Folosim modelul tău existent
 
 @Component({
   selector: 'app-friends-list',
   standalone: true,
-  imports: [CommonModule, ToastComponent, FormsModule],
+  imports: [CommonModule, ToastComponent, FormsModule, UserQuickViewComponent],
   templateUrl: './friends-list.component.html',
   styleUrl: './friends-list.component.css'
 })
@@ -155,5 +157,32 @@ export class FriendsListComponent implements OnInit {
     this.toastType.set(type);
     this.showToast.set(true);
     setTimeout(() => this.showToast.set(false), 3000);
+  }
+
+  selectedFriendProfile = signal<UserProfile | null>(null);
+  isModalOpen = signal(false);
+  isModalLoading = signal(false);
+
+  viewFriendProfile(friendId: string) {
+    this.isModalOpen.set(true);
+    this.isModalLoading.set(true);
+    this.selectedFriendProfile.set(null);
+
+    this.userService.getUserProfileById(friendId).subscribe({
+      next: (profile) => {
+        this.selectedFriendProfile.set(profile);
+        this.isModalLoading.set(false);
+      },
+      error: () => {
+        this.show("Could not load friend's profile", 'error');
+        this.closeModal();
+      }
+    });
+  }
+
+  closeModal() {
+    this.isModalOpen.set(false);
+    // Opțional resetăm profilul după ce se termină animația de închidere
+    setTimeout(() => this.selectedFriendProfile.set(null), 200);
   }
 }

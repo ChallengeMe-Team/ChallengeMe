@@ -10,17 +10,6 @@
   font-family: 'Inter', sans-serif;
 }
 
-.title {
-  text-align: center;
-  font-size: 2.5rem;
-  font-weight: 900;
-  margin-bottom: 2rem;
-  background: linear-gradient(90deg, #a855f7, #3b82f6);
-  -webkit-background-clip: text;
-  color: transparent;
-  letter-spacing: -1px;
-}
-
 /*
    2. SWITCHER (TAB-URI)
 */

@@ -1,64 +1,152 @@
-import {Component, ChangeDetectionStrategy, Output, EventEmitter} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
-import {HeroSectionComponent} from '../../hero-section/hero-section.component';
-import {StatsGridComponent} from '../../stats-grid/stats-grid.component';
-import {ActiveChallengesComponent} from './active-challenges/active-challenges.component';
-import {BadgeShowcaseComponent} from './badge-showcase/badge-showcase.component';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  OnInit,
+  signal,
+  ElementRef,
+  AfterViewInit,
+  Output,
+  EventEmitter, inject
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HeroSectionComponent } from '../../hero-section/hero-section.component';
+import { StatsGridComponent } from '../../stats-grid/stats-grid.component';
+import { ActiveChallengesComponent } from './active-challenges/active-challenges.component';
+import { BadgeShowcaseComponent } from './badge-showcase/badge-showcase.component';
+import {LucideAngularModule, Zap} from 'lucide-angular';
+import { Router } from '@angular/router';
+import {CompleteChallengeModalComponent} from '../../complete-challenge-modal/complete-challenge-modal-component';
+import confetti from 'canvas-confetti';
+import {ChallengeService} from '../../../services/challenge.service';
+import {AuthService} from '../../../services/auth.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, HeroSectionComponent, StatsGridComponent, ActiveChallengesComponent,
-    BadgeShowcaseComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CommonModule,
+    HeroSectionComponent,
+    StatsGridComponent,
+    ActiveChallengesComponent,
+    BadgeShowcaseComponent,
+    LucideAngularModule,
+    CompleteChallengeModalComponent
+  ],
+  changeDetection: ChangeDetectionStrategy.Default,
   templateUrl: './home-component.html',
   styleUrls: ['./home-component.css']
 })
-export class HomeComponent {
-  @Output() startChallengeRequest = new EventEmitter<void>();
+export class HomeComponent implements OnInit, AfterViewInit {
+  constructor(private el: ElementRef) {}
 
-  onStartChallenge() {
-    this.startChallengeRequest.emit();
+  private router = inject(Router); // Injectează Router-ul pentru navigare
+  private challengeService = inject(ChallengeService); // Injectăm serviciul care controlează modalul
+  private authService = inject(AuthService);
+
+  isLoading = signal(true);
+
+  readonly zapIcon = Zap;
+
+  // Starea pentru modalul de finalizare
+  isCompletionModalVisible = false;
+  selectedChallengeForCompletion: any = null;
+
+  ngOnInit() {
+    // Timp scurt de loading pentru a asigura randarea componentelor copil
+    setTimeout(() => this.isLoading.set(false), 400);
   }
 
+  ngAfterViewInit() {
+    // Initializam observatorul pentru animatiile la scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal-visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    const sections = this.el.nativeElement.querySelectorAll('.reveal-on-scroll');
+    sections.forEach((section: HTMLElement) => observer.observe(section));
+  }
+
+  @Output() startChallengeRequest = new EventEmitter<void>();
   @Output() exploreChallenges = new EventEmitter<void>();
 
-  onExploreChallenges() {
-    this.exploreChallenges.emit();
+  onStartChallenge() {
+    console.log('Redirecționare către Challenges pentru deschidere formular...');
+    this.router.navigate(['/challenges'], { queryParams: { openModal: 'true' } });
+    // Am adăugat un queryParam în caz că vrei să forțezi deschiderea din cod acolo
   }
 
-  stats: { icon: SafeHtml; label: string; value: string; color: string; bgColor: string; }[];
+  onExploreChallenges() { this.router.navigate(['/challenges']); }
 
-  constructor(private sanitizer: DomSanitizer) {
-    const svg = (code: string) => this.sanitizer.bypassSecurityTrustHtml(code);
-
-    const TrophyIcon = svg(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="lucide lucide-trophy"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4v3a5 5 0 0 0 10 0V4"/>
-      <path d="M17 8a5 5 0 0 0 5-5H2a5 5 0 0 0 5 5"/></svg>`);
-
-    const TargetIcon = svg(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="lucide lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`);
-
-    const TrendingUpIcon = svg(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="lucide lucide-trending-up"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`);
-
-    const AwardIcon = svg(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="lucide lucide-award"><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.11"/></svg>`);
-
-    this.stats = [
-      {icon: TrophyIcon, label: 'Total Points', value: '1,250', color: 'text-yellow-400', bgColor: '#3b2f56'},
-      {icon: TargetIcon, label: 'Challenges Completed', value: '18', color: 'text-green-400', bgColor: '#1f4738'},
-      {icon: TrendingUpIcon, label: 'Current Streak', value: '7 days', color: 'text-orange-400', bgColor: '#5e4b2d'},
-      {icon: AwardIcon, label: 'Badges Earned', value: '5', color: 'text-pink-400', bgColor: '#5a274a'}
-    ];
+  // Metodă pentru a deschide modalul (va fi apelată de butonul verde)
+  handleOpenCompletion(challenge: any) {
+    this.selectedChallengeForCompletion = challenge;
+    this.isCompletionModalVisible = true;
   }
 
-  trackByLabel(index: number, item: any) {
-    return item.label;
+  handleClaimSuccess() {
+    if (!this.selectedChallengeForCompletion) return;
+
+    const currentUser = this.authService.currentUser();
+    if (!currentUser) return;
+
+    // Folosim ID-ul de legătură (8888...) pentru URL-ul de API
+    const challengeUserId = this.selectedChallengeForCompletion.id;
+
+    this.challengeService.updateChallengeUser(challengeUserId, { status: 'COMPLETED' }).subscribe({
+      next: () => {
+        this.isCompletionModalVisible = false;
+        this.triggerWinConfetti();
+
+        // EXTRAGEM PUNCTELE: Acestea se află în mappedChallenge conform mapării tale din ActiveChallenges
+        const earnedXP = this.selectedChallengeForCompletion.mappedChallenge?.points || 0;
+
+        const newPoints = (currentUser.points || 0) + earnedXP;
+        this.authService.currentUser.set({ ...currentUser, points: newPoints });
+
+        console.log('Victory! XP adăugat:', earnedXP);
+
+        // Opțional: În loc de reload, poți naviga scurt pentru a forța reîmprospătarea componentelor
+        this.refreshActiveChallenges();
+      },
+      error: (err) => console.error('Eroare la salvarea victoriei:', err)
+    });
+  }
+
+// Metodă pentru a forța reîncărcarea listei de quest-uri active
+  private refreshActiveChallenges() {
+    // Dacă ActiveChallengesComponent ascultă de un semnal sau are o metodă de refresh, o apelăm aici.
+    // Alternativa simplă este un refresh de pagină sau re-navigare:
+    window.location.reload();
+  }
+
+  private triggerWinConfetti() {
+    const duration = 3 * 1000;
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#a855f7', '#6366f1']
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#a855f7', '#6366f1']
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    frame();
   }
 }

@@ -2,17 +2,17 @@
 -- Users
 -- ===========================
 INSERT INTO users (id, username, email, password, points, role, avatar) VALUES
-                                                                            ('11111111-1111-1111-1111-111111111111', 'emilia', 'emilia@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 120, 'user', 'cat.png'),
-                                                                            ('22222222-2222-2222-2222-222222222222', 'roger', 'roger@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 200, 'user', 'gamer.png'),
-                                                                            ('33333333-3333-3333-3333-333333333333', 'calin', 'calin@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 180, 'user', 'dog.png'),
-                                                                            ('44444444-4444-4444-4444-444444444444', 'alex', 'alex@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 90, 'user', 'monster.png'),
-                                                                            ('55555555-5555-5555-5555-555555555555', 'iustin', 'iustin@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 75, 'user', 'ninja.png'),
-                                                                            ('66666666-6666-6666-6666-666666666666', 'emanuel', 'emanuel@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 130, 'user', 'robot.png'),
-                                                                            ('77777777-7777-7777-7777-777777777777', 'stefan', 'stefan@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 110, 'user', 'gamer.png'),
-                                                                            ('88888888-8888-8888-8888-888888888888', 'tudor', 'tudor@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 95, 'user', 'dog.png'),
-                                                                            ('99999999-9999-9999-9999-999999999999', 'ana', 'ana@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 60, 'user', 'cat.png'),
-                                                                            ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'maria', 'maria@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 50, 'user', 'gamer.png'),
-                                                                            ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'george', 'george@example.com', '$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 40, 'user', 'robot.png');
+                                                                            ('11111111-1111-1111-1111-111111111111', 'emilia', 'emilia@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 120, 'user', 'cat.png'),
+                                                                            ('22222222-2222-2222-2222-222222222222', 'roger', 'roger@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 200, 'user', 'gamer.png'),
+                                                                            ('33333333-3333-3333-3333-333333333333', 'calin', 'calin@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 180, 'user', 'dog.png'),
+                                                                            ('44444444-4444-4444-4444-444444444444', 'alex', 'alex@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 90, 'user', 'monster.png'),
+                                                                            ('55555555-5555-5555-5555-555555555555', 'iustin', 'iustin@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 75, 'user', 'ninja.png'),
+                                                                            ('66666666-6666-6666-6666-666666666666', 'emanuel', 'emanuel@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 130, 'user', 'robot.png'),
+                                                                            ('77777777-7777-7777-7777-777777777777', 'stefan', 'stefan@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 110, 'user', 'gamer.png'),
+                                                                            ('88888888-8888-8888-8888-888888888888', 'tudor', 'tudor@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 95, 'user', 'dog.png'),
+                                                                            ('99999999-9999-9999-9999-999999999999', 'ana', 'ana@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 60, 'user', 'cat.png'),
+                                                                            ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'maria', 'maria@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 50, 'user', 'gamer.png'),
+                                                                            ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'george', 'george@example.com', '{bcrypt}$2a$10$i3ULiPE1aqKwSu5e9ddyRuRna4pqqGG2vpTw65YJ52GwdOcwaybYC', 40, 'user', 'robot.png');
 
 -- ===========================
 -- Badges

@@ -1,7 +1,8 @@
 export interface NotificationDTO {
   id: string;
+  userId: string;
   message: string;
-  type: string; // 'CHALLENGE_REQ', 'FRIEND_REQ', etc.
+  type: 'CHALLENGE' | 'BADGE' | 'SYSTEM';
   isRead: boolean;
-  timestamp: string | number[]; // Backend-ul trimite LocalDateTime, aici ajunge string ISO
+  timestamp: any; // Folosim 'any' pentru a evita erorile de parsare de la Java array
 }
