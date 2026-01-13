@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import {Component, EventEmitter, inject, OnInit, Output, signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ChallengeService } from '../../../../services/challenge.service';
@@ -26,8 +26,7 @@ import { Challenge } from '../../../../models/challenge.model';
             [status]="item.status"
             [categoryClass]="'bg-blue-600/80'"
             [compact]="true"
-            (continue)="onResume(item.mappedChallenge)">
-          </app-challenge-card>
+            (continue)="onResume(item)"> </app-challenge-card>
         </div>
       </div>
 
@@ -81,7 +80,13 @@ export class ActiveChallengesComponent implements OnInit {
     });
   }
 
-  onResume(challenge: Challenge) {
-    console.log('Resuming adventure:', challenge.title);
+  @Output() openPortal = new EventEmitter<any>(); // Definește output-ul
+
+  onResume(item: any) {
+    console.log('Resuming adventure:', item.mappedChallenge.title);
+
+    // TRIMITE TOT OBIECTUL (item), nu doar item.mappedChallenge
+    // Acest 'item' conține acum proprietatea 'id' (ChallengeUser ID) de care backend-ul are nevoie
+    this.openPortal.emit(item);
   }
 }

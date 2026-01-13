@@ -1,0 +1,80 @@
+@if (isOpen) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="close-btn" (click)="closeModal()">×</button>
+
+      @if (isLoading) {
+        <div class="modal-loader">
+          <div class="spinner"></div>
+          <p>Fetching profile...</p>
+        </div>
+      } @else if (profile) {
+        <div class="modal-header">
+          <div class="modal-avatar-container">
+            @if (profile.avatar) {
+              <img [src]="'avatars/' + profile.avatar" alt="avatar" class="modal-avatar-img">
+            } @else {
+              <div class="avatar-placeholder">
+                {{ profile.username.charAt(0).toUpperCase() }}
+              </div>
+            }
+          </div>
+
+          <h2 class="profile-name-gradient">{{ profile.username }}</h2>
+          <span class="modal-lvl">Level {{ profile.level }}</span>
+        </div>
+
+        <div class="modal-body custom-scrollbar">
+          <div class="quick-stats">
+            <div class="stat-item">
+              <span class="stat-value text-blue-400">{{ profile.points }}</span>
+              <span class="stat-label">Total XP</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value text-purple-400">{{ profile.completedChallengesCount }}</span>
+              <span class="stat-label">Challenges</span>
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <h4>Top Badges</h4>
+            <div class="modal-badges-grid">
+              @for (badge of profile.badges.slice(0, 4); track badge.id) {
+                <div class="mini-badge-card">
+                  <div class="badge-icon-wrapper">
+                    <img [src]="'assets/badges/' + (badge.iconUrl.includes('.') ? badge.iconUrl : badge.iconUrl + '.png')"
+                         [alt]="badge.name"
+                         onerror="this.src='assets/badges/first-step.png'">
+                  </div>
+                  <span class="badge-name">{{ badge.name }}</span>
+                </div>
+              } @empty {
+                <div class="empty-state-mini">
+                  <p class="empty-text">No badges earned yet</p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <h4>Recent Activity</h4>
+            <div class="activity-list">
+              @for (act of profile.recentActivity.slice(0, 3); track $index) {
+                <div class="activity-item">
+                  <span class="act-title">{{ act.challengeTitle }}</span>
+                  <span class="act-status" [class.completed]="act.status === 'COMPLETED' || act.status === 'BADGE_UNLOCKED'">
+                    {{ act.status === 'BADGE_UNLOCKED' ? 'UNLOCKED' : act.status }}
+                  </span>
+                </div>
+              } @empty {
+                <div class="empty-state-mini">
+                  <p class="empty-text">No recent activity</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,6 +1,11 @@
 <div class="leaderboard-container">
+  <h2 class="text-5xl font-extrabold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-500 to-blue-500 mb-12 mt-10">
+    Leaderboard
+  </h2>
 
-  <h1 class="title">Leaderboard</h1>
+  <p class="text-gray-400 text-center -mt-8 mb-12 font-medium tracking-wide">
+    Compete with the best and climb the global rankings!
+  </p>
 
   <div *ngIf="isLoading()" class="flex justify-center mb-4">
     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -44,7 +49,7 @@
 
       <div class="avatar-podium">
         <img *ngIf="second.avatar"
-             [src]="second.avatar"
+             [src]="'/avatars/' + second.avatar"
              (error)="second.avatar = null"
              alt="Avatar">
         <span *ngIf="!second.avatar">{{ second.username.charAt(0) | uppercase }}</span>
@@ -60,7 +65,7 @@
 
       <div class="avatar-podium ring-4 ring-yellow-400">
         <img *ngIf="first.avatar"
-             [src]="first.avatar"
+             [src]="'/avatars/' + first.avatar"
              (error)="first.avatar = null"
              alt="Avatar">
         <span *ngIf="!first.avatar">{{ first.username.charAt(0) | uppercase }}</span>
@@ -80,7 +85,7 @@
 
       <div class="avatar-podium">
         <img *ngIf="third.avatar"
-             [src]="third.avatar"
+             [src]="'/avatars/' + third.avatar"
              (error)="third.avatar = null"
              alt="Avatar">
         <span *ngIf="!third.avatar">{{ third.username.charAt(0) | uppercase }}</span>
@@ -104,38 +109,25 @@
     <tbody>
 
     <ng-container *ngFor="let entry of leaderboardEntries(); let i = index">
-      <tr *ngIf="i > 2"
-          class="table-row"
-          [class.current-user-row]="entry.username === currentUser()?.username">
-
+      <tr *ngIf="i > 2" class="table-row" [class.current-user-row]="entry.username === currentUser()?.username">
         <td class="text-center font-bold text-slate-400 text-lg">
           {{ entry.rank }}
         </td>
-
         <td>
           <div class="table-player">
             <div class="avatar-small">
-              <img *ngIf="entry.avatar"
-                   [src]="entry.avatar"
-                   (error)="entry.avatar = null"
-                   alt="Avatar">
+              <img *ngIf="entry.avatar" [src]="'/avatars/' + entry.avatar" (error)="entry.avatar = null">
               <span *ngIf="!entry.avatar">{{ entry.username.charAt(0) | uppercase }}</span>
             </div>
-
             <div class="flex items-center">
               <span class="font-semibold text-slate-200">{{ entry.username }}</span>
-
-              <span *ngIf="entry.username === currentUser()?.username" class="you-tag">
-                  YOU
-                </span>
+              <span *ngIf="entry.username === currentUser()?.username" class="you-tag">YOU</span>
             </div>
           </div>
         </td>
-
         <td class="text-right">
           <span class="points">{{ entry.totalPoints }} XP</span>
         </td>
-
       </tr>
     </ng-container>
 
@@ -160,15 +152,15 @@
       </span>
 
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-purple-600 border-2 border-purple-400 flex items-center justify-center overflow-hidden shadow-lg shadow-purple-500/30">
-          <img *ngIf="myRankData()?.avatar || currentUser()?.avatar as userAvatar"
-               [src]="userAvatar"
-               (error)="myRankData() ? myRankData()!.avatar = null : null"
+        <div class="w-10 h-10 rounded-full bg-purple-600 border-2 border-purple-400 flex items-center justify-center overflow-hidden shadow-lg">
+          <img *ngIf="myRankData()?.avatar || currentUser()?.avatar"
+               [src]="'/avatars/' + (myRankData()?.avatar || currentUser()?.avatar)"
+               (error)="imageErrorFooter = true"
                class="w-full h-full object-cover">
 
-          <span *ngIf="!(myRankData()?.avatar || currentUser()?.avatar)" class="text-white font-bold">
-             {{ currentUser()?.username?.charAt(0) | uppercase }}
-           </span>
+          <span *ngIf="!(myRankData()?.avatar || currentUser()?.avatar) || imageErrorFooter" class="text-white font-bold">
+                {{ currentUser()?.username?.charAt(0) | uppercase }}
+          </span>
         </div>
 
         <div>

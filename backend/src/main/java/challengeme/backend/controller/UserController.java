@@ -184,4 +184,10 @@ public class UserController {
     public ResponseEntity<UserProfileDTO> getMyProfile() {
         return ResponseEntity.ok(userService.getCurrentUserProfile());
     }
+
+    @GetMapping("/{id}/profile")
+    public ResponseEntity<UserProfileDTO> getUserProfileById(@PathVariable UUID id) {
+        // Apelezi serviciul pentru a returna profilul utilizatorului respectiv
+        return ResponseEntity.ok(userService.getUserProfileById(id));
+    }
 }

@@ -7,7 +7,7 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, AbstractContro
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login-form-component.html',
-  styleUrl: '../auth-component.css', // Presupunem path-ul corect relativ
+  styleUrl: '../auth-component.css',
 })
 export class LoginFormComponent {
   @Output() loginRequest = new EventEmitter<any>();

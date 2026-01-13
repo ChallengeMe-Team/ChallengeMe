@@ -1,128 +1,127 @@
 /* --- Navbar Container --- */
 nav {
-  position: fixed;
+  position: fixed !important;
   top: 0;
   left: 0;
   right: 0;
-  height: 96px; /* h-24 equivalent */
-  z-index: 50;
-  background-color: rgba(20, 18, 27, 0.95); /* Semi-transparent dark background */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px); /* Glass effect */
+  height: 90px; /* Redus de la 110px pentru zoom 100% corect */
+  z-index: 1000 !important;
+  background-color: rgba(11, 7, 22, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
-  padding: 0 2rem;
+  padding: 0 3rem;
 }
 
-/* --- Navigation Buttons (Home, Challenges, Leaderboard) --- */
-/* Previous style: gradient buttons */
-.nav-btn {
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-weight: 700;
+/* --- Butoane Navigare Optimizate --- */
+.nav-btn-optimized {
+  padding: 10px 20px; /* Redus pentru echilibru la zoom 100% */
+  border-radius: 10px;
+  font-weight: 800;
   text-transform: uppercase;
-  font-size: 0.875rem;
-  letter-spacing: 0.05em;
-  transition: all 0.3s ease;
-  color: #9ca3af; /* inactive gray */
-  background: transparent; /* default background */
-  border: none;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
+  font-size: 0.8rem; /* Dimensiune text standardizată */
+  letter-spacing: 0.08em;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  color: #94a3b8;
+  border: 1px solid transparent;
 }
 
-.nav-btn:hover {
+.nav-btn-optimized:hover {
   color: white;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
 }
 
-/* The 'active' class applies the purple-blue gradient */
-.nav-btn.active {
-  background: linear-gradient(135deg, #9333ea 0%, #3b82f6 100%);
+.nav-btn-optimized.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3); /* purple shadow */
-  transform: scale(1.05);
+  box-shadow:
+    0 8px 20px rgba(124, 58, 237, 0.3),
+    0 0 15px rgba(37, 99, 235, 0.2);
+  transform: translateY(-2px) scale(1.05);
 }
 
-/* --- Create Challenge Button --- */
-.btn-create {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%); /* Albastru-Indigo */
-  color: white;
-  border-radius: 12px;
-  font-weight: 700;
-  border: none;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
+/* --- Badges & Brand --- */
+.lvl-badge, .xp-badge {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 5px;
 }
 
-.btn-create:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+.lvl-badge {
+  color: #a78bfa;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.25);
 }
 
-.btn-create:active {
-  transform: scale(0.95);
+.xp-badge {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
 }
 
-/* --- Dropdown Menu --- */
+.nav-brand-glow {
+  text-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+}
+
+/* --- Dropdown & Animations --- */
 .dropdown-menu {
-  background-color: #1e1b2e; /* Menu background */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  border-radius: 12px;
-  overflow: hidden;
+  background-color: #17142b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+  border-radius: 14px;
 }
 
 .dropdown-item {
   width: 100%;
-  text-align: left;
-  padding: 12px 16px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: #e2e8f0; /* Light text */
-  font-size: 0.9rem;
-  font-weight: 500;
-  background: transparent;
-  border: none;
-  cursor: pointer;
+  gap: 10px;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 600;
   transition: all 0.2s ease;
 }
 
 .dropdown-item:hover {
-  background-color: rgba(147, 51, 234, 0.15); /* Purple tint on hover */
+  background-color: rgba(124, 58, 237, 0.1);
   color: white;
-}
-
-.dropdown-item lucide-icon {
-  opacity: 0.6;
-  transition: transform 0.2s;
-}
-
-.dropdown-item:hover lucide-icon {
-  opacity: 1;
-  color: #a78bfa; /* Light purple icon on hover */
-  transform: scale(1.1);
-}
-
-/* --- Animations --- */
-@keyframes slideDownFade {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  transform: translateX(4px);
 }
 
 .animate-fade-in {
-  animation: slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideDownFade 0.2s ease-out forwards;
 }
 
-/* --- Mobile / Utilities --- */
-.user-profile-container:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+@keyframes slideDownFade {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bell-shake { animation: bellShakeAnim 25s infinite; }
+@keyframes bellShakeAnim {
+  0%, 98%, 100% { transform: rotate(0); }
+  99% { transform: rotate(12deg); }
+  99.5% { transform: rotate(-12deg); }
+}
+
+.unread-pulse {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ef4444; /* roșu intens */
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 9999px;
+  border: 2px solid #14121b; /* fundalul navbarului pentru contrast */
 }

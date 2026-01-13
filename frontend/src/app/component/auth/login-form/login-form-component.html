@@ -1,23 +1,23 @@
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-3">
 
   <div>
-    <label for="emailOrUsername">Email sau Username</label>
-    <input id="emailOrUsername" type="text" formControlName="emailOrUsername" placeholder="Nume de utilizator sau email" />
+    <label for="emailOrUsername">Email or Username</label>
+    <input id="emailOrUsername" type="text" formControlName="emailOrUsername" placeholder="Enter username or email" />
 
     @if (emailOrUsername?.touched && emailOrUsername?.errors?.['required']) {
       <div class="error-message">
-        Acest câmp este obligatoriu.
+        This field is required.
       </div>
     }
   </div>
 
   <div>
     <label for="password">Parolă</label>
-    <input id="password" type="password" formControlName="password" placeholder="Parola ta" />
+    <input id="password" type="password" formControlName="password" placeholder="Enter your password" />
 
     @if (password?.touched && password?.errors?.['required']) {
       <div class="error-message">
-        Parola este obligatorie.
+        Password is required.
       </div>
     }
   </div>
@@ -30,8 +30,8 @@
 </form>
 
 <p class="text-center text-gray-400 mt-6 text-sm">
-  Nu ai cont?
+  Don't have an account?
   <button (click)="toggleMode.emit()" class="text-indigo-400 hover:underline transition">
-    Înregistrează-te acum
+    Register now
   </button>
 </p>

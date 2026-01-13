@@ -3,6 +3,10 @@
     Explore Challenges
   </h2>
 
+  <p class="text-gray-400 text-center -mt-12 mb-12 font-medium tracking-wide">
+    Choose your next quest and push your limits!
+  </p>
+
   <div *ngFor="let difficulty of difficultyKeys" class="space-y-8">
     <div *ngIf="getChallengesByDifficulty(difficulty).length > 0">
       <div class="flex items-center gap-4 mb-6">
@@ -52,4 +56,13 @@
 
 <app-accept-challenge-modal [isVisible]="isAcceptModalOpen" [challengeTitle]="selectedChallengeForContract?.title" (close)="isAcceptModalOpen = false" (confirm)="onContractSigned($event)"></app-accept-challenge-modal>
 <app-assign-challenge-modal [isVisible]="isAssignModalOpen" (close)="isAssignModalOpen = false" (friendSelected)="onFriendAssigned($event)"></app-assign-challenge-modal>
-<app-confirmation-modal [isVisible]="isRestartModalOpen" title="Restart Quest?" message="Are you sure you want to start this challenge again? Your previous history will be reset." confirmText="Yes, Restart" cancelText="Cancel" type="warning" (close)="isRestartModalOpen = false" (confirm)="confirmRestart()"></app-confirmation-modal>
+<app-confirmation-modal
+  [isVisible]="isRestartModalOpen"
+  title="Start Again?"
+  message="You've already completed this quest once! Do you want to start it again to maintain your habit?"
+  confirmText="Yes, Start Again"
+  cancelText="Maybe later"
+  type="warning"
+  (close)="isRestartModalOpen = false"
+  (confirm)="confirmRestart()">
+</app-confirmation-modal>

@@ -18,16 +18,13 @@ public interface ChallengeUserRepository extends JpaRepository<ChallengeUser, UU
     List<ChallengeUser> findByUserId(UUID userId);
 
     // --- QUERY PENTRU LEADERBOARD DINAMIC ---
-    @Query("""
-        SELECT u.username, u.avatar, SUM(c.points) as total
-        FROM ChallengeUser cu
-        JOIN cu.user u
-        JOIN cu.challenge c
-        WHERE cu.status = challengeme.backend.model.ChallengeUserStatus.COMPLETED
-          AND cu.dateCompleted >= :startDate
-        GROUP BY u.id, u.username, u.avatar
-        ORDER BY total DESC
-    """)
+    @Query("SELECT u.username, u.avatar, " +
+            "COALESCE(SUM(CASE WHEN cu.status = 'COMPLETED' AND cu.dateCompleted >= :startDate THEN c.points ELSE 0 END), 0) " +
+            "FROM User u " +
+            "LEFT JOIN ChallengeUser cu ON u.id = cu.user.id " +
+            "LEFT JOIN Challenge c ON c.id = cu.challenge.id " +
+            "GROUP BY u.id, u.username, u.avatar " +
+            "ORDER BY 3 DESC")
     List<Object[]> aggregateRankings(@Param("startDate") LocalDate startDate);
 
     boolean existsByUserIdAndChallengeId(UUID userId, UUID challengeId);

@@ -91,7 +91,7 @@
             </div>
           </div>
 
-          <button class="btn-profile">View Profile</button>
+          <button class="btn-profile" (click)="viewFriendProfile(friend.id)">View Profile</button>
 
         </div>
       } @empty {
@@ -103,6 +103,13 @@
       }
     </div>
   }
+
+  <app-user-quick-view
+    [isOpen]="isModalOpen()"
+    [isLoading]="isModalLoading()"
+    [profile]="selectedFriendProfile()"
+    (close)="closeModal()">
+  </app-user-quick-view>
 
   <!-- TOAST -->
   @if (showToast()) {

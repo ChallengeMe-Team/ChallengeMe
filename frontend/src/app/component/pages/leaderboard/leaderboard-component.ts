@@ -60,16 +60,18 @@ export class LeaderboardComponent implements OnInit {
   }
 
   loadData() {
-    this.isLoading.set(true); // Activeaza spinner-ul la inceput
+    this.isLoading.set(true);
     this.leaderboardService.getLeaderboard(this.currentRange())
       .subscribe({
-        next: (data) => {
-          this.leaderboardEntries.set(data);
-          this.isLoading.set(false); // Dezactiveaza spinner-ul cand vin datele
+        next: (data: LeaderboardEntry[]) => {
+          // Sortăm datele astfel încât cei cu 0 XP să apară la final, dar să fie prezenți
+          const sortedData = data.sort((a, b) => b.totalPoints - a.totalPoints);
+          this.leaderboardEntries.set(sortedData);
+          this.isLoading.set(false);
         },
         error: (err) => {
           console.error('Failed to load leaderboard', err);
-          this.isLoading.set(false); // Dezactiveaza in caz de eroare
+          this.isLoading.set(false);
         }
       });
   }

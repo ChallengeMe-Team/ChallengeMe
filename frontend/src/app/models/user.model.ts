@@ -1,4 +1,4 @@
-import { Badge } from './badge.model'; // Referință la badge.model.ts existent
+import { Badge } from './badge.model';
 
 export interface UserProfile {
   id: string;

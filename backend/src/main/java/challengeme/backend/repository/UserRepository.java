@@ -15,6 +15,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     // Pentru login cu email SAU username
     Optional<User> findByUsernameOrEmail(String username, String email);
-    @Query("SELECT u.username, u.avatar, u.points FROM User u WHERE u.points > 0 ORDER BY u.points DESC")
+    @Query("SELECT u.username, u.avatar, u.points FROM User u ORDER BY u.points DESC")
     List<Object[]> findGlobalLeaderboard();
 }

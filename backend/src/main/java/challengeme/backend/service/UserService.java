@@ -140,7 +140,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (current.getFriendIds().contains(friend.getId())) {
-            throw new RuntimeException("User is already your friend");
+            return; // Nu facem nimic dacă sunt deja prieteni, evităm duplicarea notificărilor
         }
         current.getFriendIds().add(friend.getId());
         if (!friend.getFriendIds().contains(current.getId())) {
@@ -148,6 +148,12 @@ public class UserService {
         }
         userRepository.save(current);
         userRepository.save(friend);
+
+        notificationService.createNotification(new NotificationCreateRequest(
+                friend.getId(), // Cel care primește notificarea
+                current.getUsername() + " added you as a friend!",
+                NotificationType.SYSTEM
+        ));
     }
 
     @Transactional
@@ -168,51 +174,7 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
 
-        List<ChallengeUser> userChallenges = challengeUserRepository.findByUserId(user.getId());
-        List<ChallengeUser> completed = userChallenges.stream()
-                .filter(cu -> cu.getStatus() == ChallengeUserStatus.COMPLETED)
-                .toList();
-
-        Map<String, Integer> skills = completed.stream()
-                .collect(Collectors.groupingBy(
-                        cu -> cu.getChallenge().getCategory(),
-                        Collectors.summingInt(cu -> cu.getChallenge().getPoints())
-                ));
-
-        int points = user.getPoints() != null ? user.getPoints() : 0;
-
-        // Această metodă va returna DTO-uri cu ID-urile REALE și va salva în DB
-        List<BadgeDTO> badges = generateBadges(user, completed);
-
-        // ACTIVITATE RECENTĂ: Combinăm Challenge-urile cu Badge-urile deblocate
-        List<UserBadge> userBadges = userBadgeRepository.findAllByUser_Username(username);
-        List<ChallengeHistoryDTO> combinedActivity = new ArrayList<>();
-
-        // Adăugăm provocările
-        userChallenges.forEach(cu -> combinedActivity.add(new ChallengeHistoryDTO(
-                cu.getChallenge().getTitle(),
-                cu.getStatus().toString(),
-                cu.getDateCompleted() != null ? cu.getDateCompleted().toString() : cu.getStartDate().toString()
-        )));
-
-        // Adăugăm badge-urile deblocate cu status special "BADGE_UNLOCKED"
-        userBadges.forEach(ub -> combinedActivity.add(new ChallengeHistoryDTO(
-                ub.getBadge().getName(),
-                "BADGE_UNLOCKED",
-                ub.getDateAwarded().toString()
-        )));
-
-        // Sortăm descrescător după dată și limităm la 10 pentru scroll
-        List<ChallengeHistoryDTO> sortedActivity = combinedActivity.stream()
-                .sorted(Comparator.comparing(ChallengeHistoryDTO::date).reversed())
-                .limit(10)
-                .toList();
-
-        return new UserProfileDTO(
-                user.getId(), user.getUsername(), user.getEmail(), points,
-                (points / 100) + 1, user.getAvatar(), completed.size(),
-                calculateStreak(completed), badges, sortedActivity, skills
-        );
+        return getUserProfileById(user.getId());
     }
 
     public List<BadgeDTO> generateBadges(User user, List<ChallengeUser> completedChallenges) {
@@ -315,5 +277,68 @@ public class UserService {
             }
         }
         return Map.of("fixedConnections", fixedCount);
+    }
+
+    public UserProfileDTO getUserProfileById(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        List<ChallengeUser> userChallenges = challengeUserRepository.findByUserId(id);
+        List<ChallengeUser> completed = userChallenges.stream()
+                .filter(cu -> cu.getStatus() == ChallengeUserStatus.COMPLETED)
+                .toList();
+
+        // Folosim metodele helper de mai jos
+        return new UserProfileDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getPoints() != null ? user.getPoints() : 0,
+                ((user.getPoints() != null ? user.getPoints() : 0) / 100) + 1,
+                user.getAvatar(),
+                completed.size(),
+                calculateStreak(completed),
+                generateBadges(user, completed), // Aceasta metodă este deja definită
+                getSortedActivity(userChallenges, user.getUsername()), // Metoda nouă mai jos
+                getSkillsMap(completed) // Metoda nouă mai jos
+        );
+    }
+
+    // METODE HELPER PENTRU REUTILIZARE LOGICĂ PROFIL
+    private List<ChallengeHistoryDTO> getSortedActivity(List<ChallengeUser> userChallenges, String username) {
+        List<UserBadge> userBadges = userBadgeRepository.findAllByUser_Username(username);
+        List<ChallengeHistoryDTO> combinedActivity = new ArrayList<>();
+
+        userChallenges.forEach(cu -> {
+            String activityDate = "N/A";
+            if (cu.getDateCompleted() != null) activityDate = cu.getDateCompleted().toString();
+            else if (cu.getStartDate() != null) activityDate = cu.getStartDate().toString();
+            else if (cu.getDateAccepted() != null) activityDate = cu.getDateAccepted().toString();
+
+            combinedActivity.add(new ChallengeHistoryDTO(
+                    cu.getChallenge().getTitle(),
+                    cu.getStatus().toString(),
+                    activityDate
+            ));
+        });
+
+        userBadges.forEach(ub -> combinedActivity.add(new ChallengeHistoryDTO(
+                ub.getBadge().getName(),
+                "BADGE_UNLOCKED",
+                ub.getDateAwarded().toString()
+        )));
+
+        return combinedActivity.stream()
+                .sorted(Comparator.comparing(ChallengeHistoryDTO::date).reversed())
+                .limit(10)
+                .toList();
+    }
+
+    private Map<String, Integer> getSkillsMap(List<ChallengeUser> completed) {
+        return completed.stream()
+                .collect(Collectors.groupingBy(
+                        cu -> cu.getChallenge().getCategory(),
+                        Collectors.summingInt(cu -> cu.getChallenge().getPoints())
+                ));
     }
 }

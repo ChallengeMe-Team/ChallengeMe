@@ -72,4 +72,8 @@ export class UserService {
   checkEmail(email: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.apiUrl}/check-email?email=${email}`);
   }
+
+  getUserProfileById(userId: string): Observable<UserProfile> {
+    return this.http.get<UserProfile>(`${this.apiUrl}/${userId}/profile`);
+  }
 }

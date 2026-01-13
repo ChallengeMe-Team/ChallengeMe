@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -35,77 +36,57 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody Map<String, String> loginRequest) {
-        String emailOrUsername = loginRequest.get("emailOrUsername");
+        String identifier = loginRequest.get("emailOrUsername");
+        if (identifier == null) identifier = loginRequest.get("username");
         String password = loginRequest.get("password");
 
-        // Autentificam userul folosind Spring Security
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(emailOrUsername, password));
+                new UsernamePasswordAuthenticationToken(identifier, password));
 
-        // Setam contextul de securitate
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Generam Token-ul JWT
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-        // Luam detaliile userului autentificat
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Error: User not found post-auth."));
 
-        // Cautam userul complet in baza de date pentru a-l returna frontend-ului (cu puncte, rol, ID)
-        User user = userRepository.findByUsernameOrEmail(userDetails.getUsername(), userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Error: User found in context but not in DB."));
-
-        // Construim raspunsul: Token + UserDTO
         Map<String, Object> response = new HashMap<>();
         response.put("token", jwt);
         response.put("user", userMapper.toDTO(user));
-
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserCreateRequest signUpRequest) {
-        // Verificari existente
+        // 1. Verificăm dacă există deja
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest().body("Error: Username is already taken!");
+            return ResponseEntity.badRequest().body(Map.of("error", "Username taken!"));
         }
-
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest().body("Error: Email is already in use!");
+            return ResponseEntity.badRequest().body(Map.of("error", "Email in use!"));
         }
 
-        // Creare user nou
         User user = new User();
+        // user.setId(UUID.randomUUID()); <-- ȘTERGE SAU COMENTEAZĂ ACEASTĂ LINIE!
         user.setUsername(signUpRequest.getUsername());
         user.setEmail(signUpRequest.getEmail());
-        user.setPassword(encoder.encode(signUpRequest.getPassword())); // Hash parola
+        user.setPassword(encoder.encode(signUpRequest.getPassword()));
         user.setPoints(0);
-        user.setRole("user"); // Setare rol default
+        user.setRole("user");
 
-        userRepository.save(user);
-
-        // Returnăm un Map (JSON) în loc de String simplu
+        userRepository.save(user); // Hibernate va genera acum ID-ul corect aici
         return ResponseEntity.ok(Collections.singletonMap("message", "User registered successfully!"));
 
     }
 
-    // --- Endpoint NOU pentru persistenta login-ului la refresh (F5) ---
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        String username = authentication.getName();
-        if (username == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Error: User not found."));
-
         return ResponseEntity.ok(userMapper.toDTO(user));
     }
 }

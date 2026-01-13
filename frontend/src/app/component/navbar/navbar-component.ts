@@ -7,15 +7,13 @@ import {
   EventEmitter,
   Output,
   OnInit,
-  signal
+  signal, computed, ChangeDetectorRef, effect
 } from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterModule, Router} from '@angular/router';
-import {AuthService} from '../../services/auth.service'; // Verifică calea!
-import {ChallengeService} from '../../services/challenge.service'; // Verifică calea!
-import {NotificationService} from '../../services/notification.service'; // Verifică calea!
+import {AuthService} from '../../services/auth.service';
+import {NotificationService} from '../../services/notification.service';
 import { NotificationDTO } from '../../models/notification.model';
-// Am scos TimeAgoPipe pentru a scăpa de warning
 
 import {
   LucideAngularModule,
@@ -34,24 +32,32 @@ import {
   Info,
   Trophy
 } from 'lucide-angular';
+import {NotificationDropdownComponent} from './notifications/notifications-dropdown.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterModule], // Fără TimeAgoPipe
+  imports: [CommonModule, LucideAngularModule, RouterModule, NotificationDropdownComponent], // Fără TimeAgoPipe
   templateUrl: './navbar-component.html',
   styleUrls: ['./navbar-component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.Default
 })
 export class NavbarComponent implements OnInit {
 
   private authService = inject(AuthService);
-  public challengeService = inject(ChallengeService);
   private notificationService = inject(NotificationService);
   private elementRef = inject(ElementRef);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef); // Injectează asta
 
-  @Output() createChallengeRequest = new EventEmitter<void>();
+  constructor() {
+    // Forțăm Angular să verifice UI-ul ori de câte ori numărul se schimbă
+    effect(() => {
+      this.notificationService.unreadCount();
+      this.cdr.detectChanges();
+    });
+  }
+
   @Output() toastRequest = new EventEmitter<{ message: string, type: 'success' | 'error' }>();
 
   // Icons
@@ -63,7 +69,7 @@ export class NavbarComponent implements OnInit {
   isNotificationsOpen = false;
 
   // Data
-  notifications = signal<NotificationDTO[]>([]);
+  notifications = this.notificationService.notifications;
   unreadCount = this.notificationService.unreadCount;
   user = this.authService.currentUser;
 
@@ -89,9 +95,8 @@ export class NavbarComponent implements OnInit {
 
   toggleNotifications() {
     this.isNotificationsOpen = !this.isNotificationsOpen;
-    if (this.isNotificationsOpen) {
-      this.isDropdownOpen = false;
-    }
+    if (this.isNotificationsOpen) this.isDropdownOpen = false;
+    this.cdr.detectChanges();
   }
 
   toggleDropdown() {
@@ -99,12 +104,6 @@ export class NavbarComponent implements OnInit {
     if (this.isDropdownOpen) {
       this.isNotificationsOpen = false;
     }
-  }
-
-  onCreateChallenge() {
-    // Dacă folosești un modal global sau navigare:
-    this.challengeService.isCreateModalOpen.set(true);
-    this.isMenuOpen = false;
   }
 
   onLogout() {
@@ -136,5 +135,9 @@ export class NavbarComponent implements OnInit {
       this.isDropdownOpen = false;
       this.isNotificationsOpen = false;
     }
+  }
+
+  onStateRefresh() {
+    this.cdr.detectChanges(); // Forțează Angular să redeseneze TOATĂ componenta ACUM
   }
 }

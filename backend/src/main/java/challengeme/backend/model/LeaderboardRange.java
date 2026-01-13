@@ -1,4 +1,7 @@
 package challengeme.backend.model;
 public enum LeaderboardRange {
-    ALL_TIME, WEEKLY, MONTHLY
+    WEEKLY,
+    MONTHLY,
+    LAST_6_MONTHS,
+    ALL_TIME
 }

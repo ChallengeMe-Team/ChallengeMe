@@ -161,7 +161,7 @@ public class ChallengeUserService {
 
         notificationService.createNotification(new NotificationCreateRequest(
                 targetUser.getId(),
-                currentUser.getUsername() + " te-a provocat la: " + challenge.getTitle() + "!",
+                currentUser.getUsername() + " challenged you to: " + challenge.getTitle() + "!",
                 NotificationType.CHALLENGE
         ));
 
@@ -192,7 +192,7 @@ public class ChallengeUserService {
 
                     if (sender != null) {
                         // 3. Mesajul CORECT de acceptare
-                        String message = "Game on! " + link.getUser().getUsername() + " a acceptat provocarea ta: " + link.getChallenge().getTitle();
+                        String message = "Game on! " + link.getUser().getUsername() + " accepted your challenge: " + link.getChallenge().getTitle();
 
                         NotificationCreateRequest notifRequest = new NotificationCreateRequest(
                                 sender.getId(),
