@@ -3,6 +3,7 @@ package challengeme.backend.dto;
 import challengeme.backend.model.ChallengeUserStatus;
 import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -26,6 +27,6 @@ public class ChallengeUserDTO {
     // --- Status & Dates ---
     private ChallengeUserStatus status;
     private LocalDate dateAccepted;
-    private LocalDate dateCompleted;
+    private LocalDateTime dateCompleted;
     private LocalDate deadline;         // Deadline-ul utilizatorului ("Until when")
 }

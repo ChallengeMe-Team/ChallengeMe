@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -35,7 +36,7 @@ public class ChallengeUser {
     private ChallengeUserStatus status = ChallengeUserStatus.RECEIVED;
 
     private LocalDate dateAccepted;
-    private LocalDate dateCompleted;
+    private LocalDateTime dateCompleted;
 
     private LocalDate startDate;
 
@@ -43,5 +44,7 @@ public class ChallengeUser {
 
     @Column(nullable = true)
     private UUID assignedBy;
+
+    private Integer times_completed = 0;
 
 }

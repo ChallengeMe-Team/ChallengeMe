@@ -21,7 +21,8 @@ public class UserMapper {
                 user.getEmail(),
                 user.getPoints(),
                 user.getAvatar(),
-                user.getRole()
+                user.getRole(),
+                user.getTotalCompletedChallenges() != null ? user.getTotalCompletedChallenges() : 0
         );
     }
 

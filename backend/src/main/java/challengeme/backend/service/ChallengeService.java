@@ -1,15 +1,15 @@
 package challengeme.backend.service;
 
 import challengeme.backend.dto.ChallengeUserDTO;
+import challengeme.backend.dto.request.create.NotificationCreateRequest;
 import challengeme.backend.dto.request.update.ChallengeUpdateRequest;
 import challengeme.backend.dto.request.update.UpdateChallengeRequest;
 import challengeme.backend.mapper.ChallengeMapper;
-import challengeme.backend.model.Challenge;
+import challengeme.backend.model.*;
 import challengeme.backend.exception.ChallengeNotFoundException;
-import challengeme.backend.model.ChallengeUser;
-import challengeme.backend.model.ChallengeUserStatus;
 import challengeme.backend.repository.ChallengeRepository;
 import challengeme.backend.repository.ChallengeUserRepository;
+import challengeme.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +30,8 @@ public class ChallengeService {
     private final ChallengeRepository repository;
     private final ChallengeUserRepository challengeUserRepository;
     private final ChallengeMapper mapper;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public List<Challenge> getAllChallenges() {
         return repository.findAll();
@@ -83,29 +87,65 @@ public class ChallengeService {
         repository.updateCreatorUsername(oldUsername, newUsername);
     }
 
+    @Transactional
     public ChallengeUserDTO updateStatus(UUID id, UpdateChallengeRequest request) {
-        // 1. Găsim înregistrarea în bază
-        var userChallenge = challengeUserRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Challenge not found"));
+        ChallengeUser link = challengeUserRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Link not found"));
 
-        // 2. Actualizăm statusul
-        userChallenge.setStatus(ChallengeUserStatus.valueOf(request.getStatus()));
+        ChallengeUserStatus oldStatus = link.getStatus();
+        ChallengeUserStatus newStatus = ChallengeUserStatus.valueOf(request.getStatus());
 
-        // 3. Mapăm datele de timp
-        // "startDate" din frontend devine "dateAccepted" în baza ta de date
+        // 1. Logica pentru FINISH (COMPLETED)
+        if (newStatus == ChallengeUserStatus.COMPLETED && oldStatus != ChallengeUserStatus.COMPLETED) {
+            link.setDateCompleted(LocalDateTime.now());
+            UUID userId = link.getUser().getId();
+            Integer earnedXP = link.getChallenge().getPoints();
+
+            // Incrementăm repetările pentru această provocare specifică
+            int currentCount = link.getTimes_completed() != null ? link.getTimes_completed() : 0;
+            link.setTimes_completed(currentCount + 1);
+
+            // Actualizăm XP-ul și misiunile globale în tabelul Users
+            userRepository.incrementMissionsAndXP(userId, earnedXP);
+
+            // NOTIFICARE VICTORY: Trimitem către cel care a dat provocarea (ex: Calin)
+            sendFriendNotification(link, "Victory! " + link.getUser().getUsername() +
+                    " has crushed the challenge you sent: " + link.getChallenge().getTitle());
+        }
+
+        // 2. Logica pentru ACCEPTARE
+        if (newStatus == ChallengeUserStatus.ACCEPTED && oldStatus != ChallengeUserStatus.ACCEPTED) {
+            link.setDateAccepted(LocalDate.now());
+
+            // NOTIFICARE ACCEPTARE: Trimitem către prieten
+            sendFriendNotification(link, "Game on! " + link.getUser().getUsername() +
+                    " accepted your challenge: " + link.getChallenge().getTitle());
+        }
+
+        // Actualizăm statusul și restul câmpurilor din request
+        link.setStatus(newStatus);
+
         if (request.getStartDate() != null) {
-            userChallenge.setDateAccepted(request.getStartDate());
+            link.setStartDate(request.getStartDate()); // Asigură-te că folosești setStartDate pentru LocalDate
         }
 
         if (request.getTargetDeadline() != null) {
-            userChallenge.setDeadline(request.getTargetDeadline());
+            link.setDeadline(request.getTargetDeadline());
         }
 
-        // 4. Salvăm și returnăm
-        var saved = challengeUserRepository.save(userChallenge);
-
-        // Convertim înapoi la DTO-ul tău original pentru răspuns
+        var saved = challengeUserRepository.save(link);
         return convertToDto(saved);
+    }
+
+    // Metodă Helper pentru a nu repeta codul
+    private void sendFriendNotification(ChallengeUser link, String message) {
+        if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
+            notificationService.createNotification(new NotificationCreateRequest(
+                    link.getAssignedBy(),
+                    message,
+                    NotificationType.CHALLENGE
+            ));
+        }
     }
 
     private ChallengeUserDTO convertToDto(ChallengeUser entity) {

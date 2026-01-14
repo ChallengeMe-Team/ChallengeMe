@@ -82,9 +82,10 @@ export class ChallengeService {
     return this.http.delete<void>(`${this.challengeUserUrl}/${challengeUserId}`);
   }
 
-  // Metoda generica de update (pentru acceptare invitatie existenta sau marcare ca Done)
   updateChallengeUser(challengeUserId: string, data: any): Observable<any> {
-    return this.http.patch(`${this.challengeUserUrl}/${challengeUserId}`, data);
+    // SCHIMBĂ URL-ul și Metoda (din PATCH în PUT)
+    // Trebuie să meargă la /api/challenges/{id}/status conform ChallengeController.java
+    return this.http.put(`${this.apiUrl}/${challengeUserId}/status`, data);
   }
 
   // --- METODA CARE LIPSEA (Fix pentru eroare) ---

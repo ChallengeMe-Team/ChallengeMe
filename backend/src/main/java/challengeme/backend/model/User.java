@@ -57,6 +57,8 @@ public class User {
         return friendIds;
     }
 
+    private Integer totalCompletedChallenges = 0; // Inițializează cu 0
+
     public void setFriendIds(List<UUID> friendIds) {
         this.friendIds = friendIds;
     }

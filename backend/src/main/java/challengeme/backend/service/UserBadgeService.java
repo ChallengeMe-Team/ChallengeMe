@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,7 +44,7 @@ public class UserBadgeService {
         UserBadge userBadge = new UserBadge();
         userBadge.setUser(user);
         userBadge.setBadge(badge);
-        userBadge.setDateAwarded(LocalDate.now());
+        userBadge.setDateAwarded(LocalDateTime.now());
 
         return repository.save(userBadge);
     }

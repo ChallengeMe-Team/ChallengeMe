@@ -2,6 +2,7 @@ package challengeme.backend.dto;
 
 import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -17,5 +18,5 @@ public class UserBadgeDTO {
     private String iconUrl;
     private Integer pointsReward;
 
-    private LocalDate dateAwarded;
+    private LocalDateTime dateAwarded;
 }

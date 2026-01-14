@@ -10,6 +10,7 @@ import challengeme.backend.model.User;
 import challengeme.backend.model.Badge;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -34,5 +35,5 @@ public class UserBadge {
     private Badge badge;
 
     @Column(name = "date_awarded", nullable = false)
-    private LocalDate dateAwarded = LocalDate.now();
+    private LocalDateTime dateAwarded;
 }

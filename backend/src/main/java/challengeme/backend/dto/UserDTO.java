@@ -20,4 +20,6 @@ public class UserDTO {
     private Integer points;
     private String avatar;
     private String role;
+
+    private Integer totalCompletedChallenges;
 }

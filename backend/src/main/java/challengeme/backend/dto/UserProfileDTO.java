@@ -11,7 +11,7 @@ public record UserProfileDTO(
         Integer points,
         Integer level,
         String avatar,
-        int completedChallengesCount,
+        int totalCompletedChallenges,
         int currentStreak,
         List<BadgeDTO> badges,
         List<ChallengeHistoryDTO> recentActivity,

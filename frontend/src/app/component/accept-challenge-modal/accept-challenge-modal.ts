@@ -10,7 +10,6 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./accept-challenge-modal.css']
 })
 export class AcceptChallengeModalComponent {
-  // ... restul codului tău (logica pe care ai scris-o deja) rămâne neschimbat
   @Input() challengeTitle: string | undefined = '';
   @Input() isVisible: boolean = false;
   @Output() close = new EventEmitter<void>();
@@ -22,33 +21,41 @@ export class AcceptChallengeModalComponent {
   errorMsg: string = '';
 
   onDateChange(): void {
-    // ... (codul tău de validare) ...
     this.errorMsg = '';
     this.commitmentMessage = '';
-    if (!this.startDate) return;
-    const start = new Date(this.startDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
-    if (this.startDate < new Date().toISOString().split('T')[0]) {
+    if (!this.startDate) return;
+
+    // 1. Validare Data de Start (să nu fie în trecut)
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (this.startDate < todayStr) {
       this.errorMsg = "Start date cannot be in the past.";
       return;
     }
 
-    if (this.targetDeadline) {
-      const end = new Date(this.targetDeadline);
-      if (end <= start) {
-        this.errorMsg = "Deadline must be after the start date.";
-        return;
-      }
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      this.commitmentMessage = `You are committing to finish this in ${diffDays} days.`;
+    // 2. VALIDARE DEADLINE OBLIGATORIU
+    if (!this.targetDeadline) {
+      this.errorMsg = "A target deadline is required to sign the contract.";
+      return;
     }
+
+    // 3. Validare succesiune date
+    const start = new Date(this.startDate);
+    const end = new Date(this.targetDeadline);
+
+    if (end <= start) {
+      this.errorMsg = "Deadline must be after the start date.";
+      return;
+    }
+
+    // Calcul succes
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    this.commitmentMessage = `You are committing to finish this in ${diffDays} days.`;
   }
 
   onConfirm(): void {
-    if (!this.errorMsg && this.startDate) {
+    if (!this.errorMsg && this.startDate && this.targetDeadline) {
       this.confirm.emit({ start: this.startDate, end: this.targetDeadline });
     }
   }

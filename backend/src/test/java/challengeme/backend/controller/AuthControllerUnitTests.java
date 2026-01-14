@@ -89,7 +89,7 @@ class AuthControllerUnitTests {
         mockUser.setUsername("testUser");
         mockUser.setEmail("email@test.com");
         when(userRepository.findByUsernameOrEmail(any(), any())).thenReturn(Optional.of(mockUser));
-        when(userMapper.toDTO(any())).thenReturn(new UserDTO(null, "testUser", "email@test.com", 0, "user"));
+        when(userMapper.toDTO(any())).thenReturn(new UserDTO(null, "testUser", "email@test.com", 0, "", "user", 5));
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/login")
