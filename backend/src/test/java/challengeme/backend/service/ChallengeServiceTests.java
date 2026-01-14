@@ -6,6 +6,7 @@ import challengeme.backend.mapper.ChallengeMapper;
 import challengeme.backend.model.Challenge;
 import challengeme.backend.repository.ChallengeRepository;
 import challengeme.backend.repository.ChallengeUserRepository;
+import challengeme.backend.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,12 +36,14 @@ class ChallengeServiceTests {
     private ChallengeMapper mapper;
 
     private ChallengeService service;
+    private UserRepository userRepository;
+    private NotificationService notificationService;
 
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
         // 2. Constructor actualizat cu cele 3 argumente
-        service = new ChallengeService(repository, challengeUserRepository, mapper);
+        service = new ChallengeService(repository, challengeUserRepository, mapper, userRepository, notificationService);
     }
 
     @AfterEach

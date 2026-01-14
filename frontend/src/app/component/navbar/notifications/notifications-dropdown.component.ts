@@ -78,13 +78,24 @@ export class NotificationDropdownComponent implements OnInit {
 
   formatMessage(message: string): string {
     if (!message) return '';
-    return message
+
+    let formatted = message;
+
+    // 1. Colorăm verbele și cuvintele cheie (le facem primele pentru a nu fi suprascrise)
+    formatted = formatted
       .replace(/declined/gi, '<b class="text-red-500 font-extrabold uppercase">declined</b>')
       .replace(/accepted/gi, '<b class="text-emerald-400 font-extrabold uppercase">accepted</b>')
       .replace(/congratulations/gi, '<b class="text-amber-400 font-black italic">Congratulations</b>')
       .replace(/crushed/gi, '<b class="text-orange-400 italic">crushed</b>')
       .replace(/victory/gi, '<b class="text-yellow-500 uppercase tracking-widest">victory</b>')
       .replace(/friend/gi, '<b class="text-blue-400">friend</b>')
-      .replace(/game on/gi, '<b class="text-purple-400 uppercase">Game On!</b>');
+      .replace(/game on/gi, '<b class="text-purple-400 uppercase">Game On!</b>')
+      .replace(/challenged you to/gi, '<b class="text-indigo-400">challenged you to</b>');
+
+    // 2. Colorăm numele expeditorului (primul cuvânt)
+    // Această regulă caută primul cuvânt care NU este încă parte dintr-un tag HTML
+    formatted = formatted.replace(/^(\w+)/, '<b class="text-purple-400 font-black hover:text-purple-300 transition-colors">$1</b>');
+
+    return formatted;
   }
 }

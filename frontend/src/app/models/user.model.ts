@@ -7,7 +7,7 @@ export interface UserProfile {
   points: number;
   level: number;
   avatar?: string;
-  completedChallengesCount: number;
+  totalCompletedChallenges: number;
   currentStreak: number;
   badges: Badge[];
   recentActivity: ActivityHistory[];
@@ -18,4 +18,5 @@ export interface ActivityHistory {
   challengeTitle: string;
   status: string;
   date: string;
+  timesCompleted: number;
 }

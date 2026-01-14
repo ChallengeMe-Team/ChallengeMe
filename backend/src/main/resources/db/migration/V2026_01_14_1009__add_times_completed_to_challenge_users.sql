@@ -1,0 +1,1 @@
+ALTER TABLE challenge_users ADD COLUMN times_completed INTEGER DEFAULT 0;

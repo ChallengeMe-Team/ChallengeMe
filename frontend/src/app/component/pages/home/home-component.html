@@ -67,8 +67,8 @@
 
 <app-complete-challenge-modal
   [isVisible]="isCompletionModalVisible"
-  [challengeTitle]="selectedChallengeForCompletion?.title || ''"
-  [xpReward]="selectedChallengeForCompletion?.points || 0"
+  [challengeTitle]="selectedChallengeForCompletion?.mappedChallenge?.title || ''"
+  [xpReward]="selectedChallengeForCompletion?.mappedChallenge?.points || 0"
   (close)="isCompletionModalVisible = false"
   (confirmCompletion)="handleClaimSuccess()">
 </app-complete-challenge-modal>

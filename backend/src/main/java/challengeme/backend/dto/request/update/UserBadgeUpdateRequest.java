@@ -1,9 +1,10 @@
 package challengeme.backend.dto.request.update;
 
 import lombok.Data;
-import java.time.LocalDate;
+
+import java.time.LocalDateTime;
 
 @Data
 public class UserBadgeUpdateRequest {
-    private LocalDate dateAwarded;
+    private LocalDateTime dateAwarded;
 }

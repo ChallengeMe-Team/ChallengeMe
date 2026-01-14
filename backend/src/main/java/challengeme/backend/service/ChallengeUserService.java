@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import challengeme.backend.model.NotificationType;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -188,25 +189,21 @@ public class ChallengeUserService {
 
                 // 2. Verificăm dacă a fost asignat de altcineva (nu self-challenge)
                 if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
-                    User sender = userRepository.findById(link.getAssignedBy()).orElse(null);
 
-                    if (sender != null) {
-                        // 3. Mesajul CORECT de acceptare
-                        String message = "Game on! " + link.getUser().getUsername() + " accepted your challenge: " + link.getChallenge().getTitle();
+                    // Calin primește mesajul
+                    String message = "Game on! " + link.getUser().getUsername() + " accepted your challenge: " + link.getChallenge().getTitle();
 
-                        NotificationCreateRequest notifRequest = new NotificationCreateRequest(
-                                sender.getId(),
-                                message,
-                                NotificationType.CHALLENGE // Sau SYSTEM, cum preferi
-                        );
-                        notificationService.createNotification(notifRequest);
-                    }
+                    notificationService.createNotification(new NotificationCreateRequest(
+                            link.getAssignedBy(), // ID-ul lui Calin
+                            message,
+                            NotificationType.CHALLENGE
+                    ));
                 }
             }
         }
         if (request.getStatus() == ChallengeUserStatus.COMPLETED) {
             if (link.getDateAccepted() == null) link.setDateAccepted(LocalDate.now());
-            link.setDateCompleted(LocalDate.now());
+            link.setDateCompleted(LocalDateTime.now());
             if (oldStatus != ChallengeUserStatus.COMPLETED) {
                 User user = link.getUser();
                 Challenge challenge = link.getChallenge();

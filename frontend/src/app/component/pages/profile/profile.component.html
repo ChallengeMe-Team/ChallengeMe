@@ -42,7 +42,7 @@
         <div class="bg-[#1a1627] p-6 rounded-xl border border-gray-800">
           <lucide-icon [img]="icons.CheckCircle" class="text-blue-400 mb-2"></lucide-icon>
           <p class="text-gray-400 text-sm">Completed</p>
-          <p class="text-2xl font-bold">{{ user.completedChallengesCount }}</p>
+          <p class="text-2xl font-bold">{{ user.totalCompletedChallenges }}</p>
         </div>
         <div class="bg-[#1a1627] p-6 rounded-xl border border-gray-800">
           <lucide-icon [img]="icons.Trophy" class="text-orange-400 mb-2"></lucide-icon>
@@ -104,17 +104,22 @@
               </div>
 
               <span>
-          <ng-container [ngSwitch]="act.status">
-            <span *ngSwitchCase="'COMPLETED'" class="text-green-600 font-bold">Finished</span>
-            <span *ngSwitchCase="'ACCEPTED'" class="text-gray-400">Started</span>
-            <span *ngSwitchCase="'BADGE_UNLOCKED'" class="text-yellow-500 font-bold ">Unlocked</span>
-            <span *ngSwitchDefault class="text-gray-400">Assigned</span>
-          </ng-container>
+  <ng-container [ngSwitch]="act.status">
+    <ng-container *ngSwitchCase="'COMPLETED'">
+      <span class="text-green-500 font-bold">
+        {{ act.timesCompleted > 1 ? 'Redid and finished successfully' : 'Finished successfully' }}
+      </span>
+    </ng-container>
 
-          <strong class="text-white ml-1">
-            {{ act.status === 'BADGE_UNLOCKED' ? '"' + act.challengeTitle + '" Badge' : '\'' + act.challengeTitle + '\'' }}
-          </strong>
-        </span>
+    <span *ngSwitchCase="'ACCEPTED'" class="text-gray-400">Started</span>
+    <span *ngSwitchCase="'BADGE_UNLOCKED'" class="text-yellow-500 font-bold">Unlocked</span>
+    <span *ngSwitchDefault class="text-gray-400">Assigned</span>
+  </ng-container>
+
+  <strong class="text-white ml-1">
+    {{ act.status === 'BADGE_UNLOCKED' ? '"' + act.challengeTitle + '" Badge' : '\'' + act.challengeTitle + '\'' }}
+  </strong>
+</span>
             </div>
 
             <span class="text-gray-500 text-sm font-medium">{{ act.date | timeAgo }}</span>

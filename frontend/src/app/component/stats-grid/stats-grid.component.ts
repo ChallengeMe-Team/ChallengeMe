@@ -49,7 +49,9 @@ export class StatsGridComponent implements OnInit {
           this.cdr.detectChanges();
         });
 
-        this.animateValue(userProfile.completedChallengesCount, (val) => {
+        // Folosim noul câmp cu o verificare de siguranță
+        const missionsValue = userProfile.totalCompletedChallenges ?? 0;
+        this.animateValue(missionsValue, (val) => {
           this.displayChallenges = val;
           this.cdr.detectChanges();
         });

@@ -82,7 +82,6 @@ export class HomeComponent implements OnInit, AfterViewInit {
   onStartChallenge() {
     console.log('Redirecționare către Challenges pentru deschidere formular...');
     this.router.navigate(['/challenges'], { queryParams: { openModal: 'true' } });
-    // Am adăugat un queryParam în caz că vrei să forțezi deschiderea din cod acolo
   }
 
   onExploreChallenges() { this.router.navigate(['/challenges']); }
@@ -107,26 +106,28 @@ export class HomeComponent implements OnInit, AfterViewInit {
         this.isCompletionModalVisible = false;
         this.triggerWinConfetti();
 
-        // EXTRAGEM PUNCTELE: Acestea se află în mappedChallenge conform mapării tale din ActiveChallenges
         const earnedXP = this.selectedChallengeForCompletion.mappedChallenge?.points || 0;
-
         const newPoints = (currentUser.points || 0) + earnedXP;
-        this.authService.currentUser.set({ ...currentUser, points: newPoints });
 
+        const newMissions = (currentUser.totalCompletedChallenges || 0) + 1;
+        this.authService.currentUser.set({
+          ...currentUser,
+          points: newPoints,
+          totalCompletedChallenges: newMissions
+        });
         console.log('Victory! XP adăugat:', earnedXP);
 
-        // Opțional: În loc de reload, poți naviga scurt pentru a forța reîmprospătarea componentelor
         this.refreshActiveChallenges();
       },
       error: (err) => console.error('Eroare la salvarea victoriei:', err)
     });
   }
 
-// Metodă pentru a forța reîncărcarea listei de quest-uri active
+  // Metodă pentru a forța reîncărcarea listei de quest-uri active
   private refreshActiveChallenges() {
-    // Dacă ActiveChallengesComponent ascultă de un semnal sau are o metodă de refresh, o apelăm aici.
-    // Alternativa simplă este un refresh de pagină sau re-navigare:
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000); // Așteaptă 2 secunde pentru confetti
   }
 
   private triggerWinConfetti() {

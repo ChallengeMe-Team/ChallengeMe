@@ -70,9 +70,8 @@ public class ChallengeController {
     @PutMapping("/{id}/status")
     public ResponseEntity<ChallengeUserDTO> updateStatus(
             @PathVariable UUID id,
-            @RequestBody UpdateChallengeRequest request) { // <--- Folosim noul DTO aici
+            @RequestBody UpdateChallengeRequest request) {
 
-        // Apelezi serviciul (va trebui să actualizezi și serviciul, vezi pasul 3)
         ChallengeUserDTO updatedChallenge = service.updateStatus(id, request);
 
         return ResponseEntity.ok(updatedChallenge);

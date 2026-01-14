@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -229,7 +230,7 @@ public class UserService {
                         UserBadge ub = new UserBadge();
                         ub.setUser(user);
                         ub.setBadge(badge);
-                        ub.setDateAwarded(LocalDate.now());
+                        ub.setDateAwarded(LocalDateTime.now());
                         userBadgeRepository.save(ub);
 
                         String message = "Congratulations! You've unlocked the " + badge.getName() + " badge!";
@@ -246,9 +247,13 @@ public class UserService {
 
     private int calculateStreak(List<ChallengeUser> completedChallenges) {
         if (completedChallenges.isEmpty()) return 0;
+
         List<LocalDate> dates = completedChallenges.stream()
-                .map(ChallengeUser::getDateCompleted).filter(Objects::nonNull)
-                .distinct().sorted(Comparator.reverseOrder()).toList();
+                // EXTRAGE DOAR DATA (LocalDate) din LocalDateTime pentru calculul streak-ului
+                .map(cu -> cu.getDateCompleted().toLocalDate())
+                .distinct()
+                .sorted(Comparator.reverseOrder())
+                .toList();
         if (dates.isEmpty()) return 0;
         int streak = 0;
         LocalDate current = LocalDate.now();
@@ -296,7 +301,7 @@ public class UserService {
                 user.getPoints() != null ? user.getPoints() : 0,
                 ((user.getPoints() != null ? user.getPoints() : 0) / 100) + 1,
                 user.getAvatar(),
-                completed.size(),
+                user.getTotalCompletedChallenges() != null ? user.getTotalCompletedChallenges() : 0,
                 calculateStreak(completed),
                 generateBadges(user, completed), // Aceasta metodă este deja definită
                 getSortedActivity(userChallenges, user.getUsername()), // Metoda nouă mai jos
@@ -311,24 +316,34 @@ public class UserService {
 
         userChallenges.forEach(cu -> {
             String activityDate = "N/A";
-            if (cu.getDateCompleted() != null) activityDate = cu.getDateCompleted().toString();
-            else if (cu.getStartDate() != null) activityDate = cu.getStartDate().toString();
-            else if (cu.getDateAccepted() != null) activityDate = cu.getDateAccepted().toString();
+
+            // Dacă e finalizată, avem LocalDateTime (dată + oră exactă)
+            if (cu.getDateCompleted() != null) {
+                activityDate = cu.getDateCompleted().toString(); // ex: 2024-01-14T11:45:30
+            }
+            // Dacă e doar acceptată, avem LocalDate.
+            // Îi adăugăm simbolic ora 00:00 pentru a nu strica sortarea
+            else if (cu.getStartDate() != null) {
+                activityDate = cu.getStartDate().atStartOfDay().toString();
+            }
 
             combinedActivity.add(new ChallengeHistoryDTO(
                     cu.getChallenge().getTitle(),
                     cu.getStatus().toString(),
-                    activityDate
+                    activityDate,
+                    cu.getTimes_completed() != null ? cu.getTimes_completed() : 0
             ));
         });
 
         userBadges.forEach(ub -> combinedActivity.add(new ChallengeHistoryDTO(
                 ub.getBadge().getName(),
                 "BADGE_UNLOCKED",
-                ub.getDateAwarded().toString()
+                ub.getDateAwarded().toString(), // Va conține ora exactă a salvării
+                1
         )));
 
         return combinedActivity.stream()
+                // Sortează cronologic după String-ul ISO (care funcționează bine alfabetic)
                 .sorted(Comparator.comparing(ChallengeHistoryDTO::date).reversed())
                 .limit(10)
                 .toList();
