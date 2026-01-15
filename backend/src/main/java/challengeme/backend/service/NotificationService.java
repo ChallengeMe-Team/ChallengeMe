@@ -51,8 +51,8 @@ public class NotificationService {
 
     @Transactional
     public void markAllNotificationsAsRead(UUID userId) {
-        List<Notification> notifications = notificationRepository.findByUserId(userId);
-        notifications.forEach(n -> n.setRead(true));
-        notificationRepository.saveAll(notifications);
+        System.out.println("DEBUG: Pornesc curățarea pentru user: " + userId);
+        notificationRepository.markAllAsReadNative(userId);
+        System.out.println("DEBUG: SQL-ul a fost trimis către Postgres.");
     }
 }

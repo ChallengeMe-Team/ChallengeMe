@@ -46,12 +46,13 @@ export class NotificationService implements OnDestroy {
   }
 
   markAllAsRead(userId: string): Observable<void> {
+    console.log('Serviciul execută POST către:', `${this.apiUrl}/user/${userId}/mark-all-read`);
+
     return this.http.post<void>(`${this.apiUrl}/user/${userId}/mark-all-read`, {}).pipe(
       tap(() => {
-        // Update local instantaneu
+        console.log('Tap: Backend-ul a confirmat scrierea. Updatez signal-urile.');
         this.notifications.update(list => list.map(n => ({ ...n, isRead: true })));
         this.unreadCount.set(0);
-        console.log('Frontend: All notifications marked as read');
       })
     );
   }

@@ -16,7 +16,10 @@ import { Challenge } from '../../../../models/challenge.model';
         <h2 class="text-xl font-bold text-white flex items-center gap-2">
           <span class="text-yellow-400">⚔️</span> Active Quests
         </h2>
-        <a routerLink="/challenges" class="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors uppercase tracking-wider">View All</a>
+        <a routerLink="/my-challenges" [queryParams]="{ tab: 'active' }"
+           class="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors uppercase tracking-wider">
+          View All
+        </a>
       </div>
 
       <div class="flex-1 flex flex-col gap-3" *ngIf="activeChallenges().length > 0; else emptyState">

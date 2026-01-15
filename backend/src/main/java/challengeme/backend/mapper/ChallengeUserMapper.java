@@ -46,6 +46,8 @@ public class ChallengeUserMapper {
         dto.setDateCompleted(entity.getDateCompleted());
         dto.setDeadline(entity.getDeadline());
 
+        dto.setTimesCompleted(entity.getTimesCompleted());
+
         // 5. Assigned By Username
         // Dacă există un ID în assignedBy, căutăm userul în bază și luăm numele
         if (entity.getAssignedBy() != null) {

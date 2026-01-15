@@ -143,36 +143,30 @@ export class ChallengesComponent implements OnInit {
 
   confirmRestart() {
     if (!this.challengeToRestart) return;
-
     const challenge = this.challengeToRestart;
     const user = this.auth.currentUser();
     if (!user) return;
 
-    this.isRestartModalOpen = false; // Închidem modalul de confirmare
+    this.isRestartModalOpen = false;
 
-    // 1. Căutăm link-ul existent
     this.challengeService.getAllUserChallengeLinks(user.id).subscribe(links => {
-      const linkToDelete = links.find((l: any) => (l.challenge?.id || l.challengeId) === challenge.id);
+      const linkToUpdate = links.find((l: any) => (l.challenge?.id || l.challengeId) === challenge.id);
 
-      if (linkToDelete) {
-        // 2. Ștergem înregistrarea veche pentru a permite una nouă
-        this.challengeService.deleteChallengeUser(linkToDelete.id).subscribe({
+      if (linkToUpdate) {
+        // ÎN LOC DE DELETE, FACEM UPDATE LA ACCEPTED
+        const payload = {
+          status: 'ACCEPTED',
+          startDate: new Date().toISOString().split('T')[0] // Resetăm data de start la azi
+        };
+
+        this.challengeService.updateChallengeUser(linkToUpdate.id, payload).subscribe({
           next: () => {
-            // 3. Actualizăm UI-ul local (ștergem statusul 'COMPLETED' din mapă)
-            const newMap = new Map(this.userChallengeStatuses());
-            newMap.delete(challenge.id);
-            this.userChallengeStatuses.set(newMap);
-
-            // 4. Deschidem automat modalul de START (cel cu semnarea contractului)
-            this.handleStart(challenge);
-
-            this.showToast('Ready to level up! Set your new dates.', 'success');
+            this.loadUserActiveChallenges(); // Reîncărcăm statusurile
+            this.showToast('Challenge restarted! Good luck again.', 'success');
+            this.router.navigate(['/my-challenges']);
           },
-          error: () => this.showToast('Something went wrong. Please try again.', 'error')
+          error: () => this.showToast('Failed to restart.', 'error')
         });
-      } else {
-        // Dacă dintr-un motiv anume nu găsim link-ul, totuși încercăm să pornim provocarea
-        this.handleStart(challenge);
       }
     });
   }

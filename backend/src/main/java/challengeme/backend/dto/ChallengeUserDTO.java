@@ -23,10 +23,11 @@ public class ChallengeUserDTO {
     private String difficulty;          // Dificultate
     private String challengeCreatedBy;  // Cine a creat provocarea inițial
     private String assignedByUsername;
+    private Integer timesCompleted;
 
     // --- Status & Dates ---
     private ChallengeUserStatus status;
-    private LocalDate dateAccepted;
+    private LocalDateTime dateAccepted;
     private LocalDateTime dateCompleted;
     private LocalDate deadline;         // Deadline-ul utilizatorului ("Until when")
 }

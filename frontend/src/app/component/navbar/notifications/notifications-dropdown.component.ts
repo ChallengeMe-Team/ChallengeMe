@@ -13,6 +13,8 @@ import { NotificationService } from '../../../services/notification.service';
 import { NotificationDTO } from '../../../models/notification.model';
 import { LucideAngularModule} from 'lucide-angular';
 import { Medal, UserPlus, PartyPopper, Handshake, BellRing } from 'lucide-angular';
+import {AuthService} from '../../../services/auth.service';
+import { Bell, BellOff } from 'lucide-angular';
 
 @Component({
   selector: 'app-notification-dropdown',
@@ -22,15 +24,14 @@ import { Medal, UserPlus, PartyPopper, Handshake, BellRing } from 'lucide-angula
   styleUrls: ['./notifications-dropdown.component.css'],
   encapsulation: ViewEncapsulation.None
 })
-export class NotificationDropdownComponent implements OnInit {
+export class NotificationDropdownComponent{
   private notificationService = inject(NotificationService);
   @Output() stateChanged = new EventEmitter<void>();
-  private cdr = inject(ChangeDetectorRef);
+  private authService = inject(AuthService);
 
   notifications = this.notificationService.notifications;
 
-  ngOnInit() {
-  }
+  readonly icons = { Bell, BellOff };
 
   onNotificationClick(notif: NotificationDTO) {
     if (!notif.isRead) {
@@ -65,13 +66,23 @@ export class NotificationDropdownComponent implements OnInit {
   }
 
   markAllAsRead() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!user.id) return;
 
-    this.notificationService.markAllAsRead(user.id).subscribe({
+    // 1. Extragem ID-ul direct din semnalul de user al aplicației (cel mai sigur mod)
+    const currentUser = this.authService.currentUser();
+    const userId = currentUser?.id;
+
+    if (!userId) {
+      console.error('CRITICAL: ID-ul utilizatorului nu a putut fi recuperat din AuthService!', currentUser);
+      return;
+    }
+
+    // 2. Apelăm serviciul
+    this.notificationService.markAllAsRead(userId).subscribe({
       next: () => {
-        this.stateChanged.emit(); // Trimite semnalul la Navbar
-        console.log('UI: All read signal sent');
+        this.stateChanged.emit();
+      },
+      error: (err) => {
+        console.error('API ERROR: Serverul a respins cererea de mark-all-read:', err);
       }
     });
   }

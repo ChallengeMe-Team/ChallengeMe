@@ -26,11 +26,24 @@ export class ProfileComponent implements OnInit {
   ngOnInit() {
     this.userService.getProfile().subscribe({
       next: (data) => {
+        console.log('DEBUG FRONTEND - Date profil primite:', data); //
+        if (data && data.recentActivity && data.recentActivity.length > 0) {
+          data.recentActivity.sort((a, b) => {
+            if (!a.date || !b.date) return 0; // Siguranță pentru date null
+            return this.parseTimestamp(b.date).getTime() - this.parseTimestamp(a.date).getTime();
+          });
+        }
         this.profile.set(data);
         this.isLoading.set(false);
-      },
-      error: () => this.isLoading.set(false)
+      }
     });
+  }
+
+  private parseTimestamp(ts: any): Date {
+    if (Array.isArray(ts)) {
+      return new Date(ts[0], ts[1] - 1, ts[2], ts[3], ts[4], ts[5] || 0);
+    }
+    return new Date(ts);
   }
 
   getCategoryColor(category: string): string {

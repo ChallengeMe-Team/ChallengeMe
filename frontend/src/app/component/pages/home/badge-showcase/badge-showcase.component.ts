@@ -16,7 +16,10 @@ import { Badge } from '../../../../models/badge.model';
         <h2 class="text-xl font-bold text-white flex items-center gap-2">
           <span class="text-yellow-400">🏆</span> Latest Glory
         </h2>
-        <a routerLink="/profile" class="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors uppercase tracking-wider">Collection</a>
+        <a routerLink="/badges"
+           class="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors uppercase tracking-wider">
+          Collection
+        </a>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1" *ngIf="recentBadges().length > 0; else noBadges">

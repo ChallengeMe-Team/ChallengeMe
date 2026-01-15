@@ -27,7 +27,7 @@ public class NotificationMapper {
         entity.setUserId(request.userId());
         entity.setMessage(request.message());
         entity.setType(request.type());
-        entity.setTimestamp(LocalDateTime.now());
+        entity.setTimestamp(java.time.ZonedDateTime.now(java.time.ZoneId.of("Europe/Bucharest")).toLocalDateTime());
         entity.setRead(false);
         return entity;
     }

@@ -9,29 +9,29 @@ export class TimeAgoPipe implements PipeTransform {
   transform(value: string | number[] | Date): string {
     if (!value) return '';
 
+    console.log('DEBUG PIPE - Valoare primită:', value); //
+
     let date: Date;
 
     // VERIFICARE: Dacă vine Array de la Java [an, luna, zi, ora, min...]
     if (Array.isArray(value)) {
-      // Atenție: În JS lunile sunt 0-11, Java trimite 1-12. Scădem 1 la lună.
-      // Format: [year, month, day, hour, minute, second]
-      date = new Date(
-        value[0],      // Year
-        value[1] - 1,  // Month (Java 1 = Jan, JS 0 = Jan)
-        value[2],      // Day
-        value[3] || 0, // Hour
-        value[4] || 0, // Minute
-        value[5] || 0  // Second
-      );
+      // Verifică log-ul: dacă Java trimite [2026, 1, 15, 19, 46...], JS va crede că e ora locală
+      date = new Date(value[0], value[1] - 1, value[2], value[3] || 0, value[4] || 0, value[5] || 0);
     } else {
-      // Dacă e string ISO sau Date object
+      // Dacă e string ISO (ca în log: 2026-01-15T19:36...), asigură-te că JS îl vede corect
       date = new Date(value);
     }
 
     const now = new Date();
+
+    console.log('DEBUG PIPE - Ora curentă a browserului:', now);
+
     const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
+    console.log('DEBUG PIPE - Secunde calculate între acum și dată:', seconds);
+
     // Logică afișare text
+    if (seconds < 0) return 'Just now';
     if (seconds < 30) return 'Just now';
 
     const intervals: { [key: string]: number } = {

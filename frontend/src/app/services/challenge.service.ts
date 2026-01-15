@@ -88,7 +88,6 @@ export class ChallengeService {
     return this.http.put(`${this.apiUrl}/${challengeUserId}/status`, data);
   }
 
-  // --- METODA CARE LIPSEA (Fix pentru eroare) ---
   // Aceasta metoda sterge relatia dintre user si challenge (reset progress)
   deleteChallengeUser(challengeUserId: string): Observable<void> {
     return this.http.delete<void>(`${this.challengeUserUrl}/${challengeUserId}`);

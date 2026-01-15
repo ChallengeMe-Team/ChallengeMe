@@ -19,8 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import challengeme.backend.model.NotificationType;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -72,13 +73,16 @@ public class ChallengeUserService {
         challengeUser.setStatus(ChallengeUserStatus.valueOf(request.getStatus()));
         if (request.getStartDate() != null) {
             challengeUser.setStartDate(request.getStartDate());
-            challengeUser.setDateAccepted(LocalDate.now());
+            LocalDateTime bucharestTime = ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime();
+            System.out.println("DEBUG BACKEND - Ora generată pentru acceptare: " + bucharestTime); //
+            challengeUser.setDateAccepted(LocalDateTime.now(ZoneId.of("UTC")));
         }
         if (request.getTargetDeadline() != null) {
             challengeUser.setDeadline(request.getTargetDeadline());
         }
         challengeUser.setAssignedBy(user.getId());
         ChallengeUser saved = repository.save(challengeUser);
+        System.out.println("DEBUG BACKEND - S-a salvat în DB cu ID: " + saved.getId());
         return convertToDto(saved);
     }
 
@@ -103,6 +107,8 @@ public class ChallengeUserService {
         dto.setDateAccepted(entity.getDateAccepted());
         dto.setDateCompleted(entity.getDateCompleted());
         dto.setDeadline(entity.getDeadline());
+
+        dto.setTimesCompleted(entity.getTimesCompleted());
         return dto;
     }
 
@@ -178,7 +184,7 @@ public class ChallengeUserService {
 
         if (request.getStatus() == ChallengeUserStatus.ACCEPTED) {
             if (link.getDateAccepted() == null) {
-                link.setDateAccepted(LocalDate.now());
+                link.setDateAccepted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
             }
             if (request.getStartDate() != null) link.setStartDate(request.getStartDate());
             if (request.getTargetDeadline() != null) link.setDeadline(request.getTargetDeadline());
@@ -202,14 +208,25 @@ public class ChallengeUserService {
             }
         }
         if (request.getStatus() == ChallengeUserStatus.COMPLETED) {
-            if (link.getDateAccepted() == null) link.setDateAccepted(LocalDate.now());
-            link.setDateCompleted(LocalDateTime.now());
+            if (link.getDateAccepted() == null) link.setDateAccepted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
+            link.setDateCompleted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
+
             if (oldStatus != ChallengeUserStatus.COMPLETED) {
+                // 1. Incrementăm reușitele direct pe entitatea 'link'
+                Integer currentTimes = link.getTimesCompleted();
+                link.setTimesCompleted(currentTimes == null ? 1 : currentTimes + 1);
+
+                // 2. Gestionăm punctele și misiunile utilizatorului
                 User user = link.getUser();
                 Challenge challenge = link.getChallenge();
-                int pointsReward = challenge.getPoints();
-                int currentPoints = user.getPoints() == null ? 0 : user.getPoints();
-                user.setPoints(currentPoints + pointsReward);
+
+                int pointsToAdd = challenge.getPoints();
+                int currentXP = (user.getPoints() == null) ? 0 : user.getPoints();
+                user.setPoints(currentXP + pointsToAdd);
+
+                int totalMissions = (user.getTotalCompletedChallenges() == null) ? 0 : user.getTotalCompletedChallenges();
+                user.setTotalCompletedChallenges(totalMissions + 1);
+
                 userRepository.save(user);
 
                 // --- NOTIFICARE COMPLETION START ---
