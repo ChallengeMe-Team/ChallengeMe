@@ -1,5 +1,5 @@
 import { ApplicationConfig, APP_INITIALIZER, importProvidersFrom } from '@angular/core';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import {provideRouter, withComponentInputBinding, withInMemoryScrolling} from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { authInterceptor } from './auth.interceptor';
@@ -20,7 +20,9 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
 
     // Configurarea routerului
-    provideRouter(routes, withComponentInputBinding()),
+    provideRouter(routes, withInMemoryScrolling({
+      scrollPositionRestoration: 'enabled'
+    })),
 
     // Configurarea clientului HTTP
     provideHttpClient(

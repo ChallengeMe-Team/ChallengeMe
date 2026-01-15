@@ -76,11 +76,18 @@ export class MyChallengesComponent implements OnInit {
   readonly icons = { Edit, Trash2, PlusCircle, Check, X, Clock, CheckCircle };
 
   ngOnInit() {
+    // Forțează scroll-ul la începutul paginii
+    window.scrollTo(0, 0);
+
     this.route.queryParams.subscribe(params => {
       if (params['tab'] === 'inbox') {
         setTimeout(() => {
           this.switchTab('inbox');
         }, 50);
+      }
+      // Verifică dacă ai primit tab='active' din Home
+      else if (params['tab'] === 'active') {
+        this.switchTab('active');
       }
     });
     this.loadAllData();

@@ -29,6 +29,7 @@ freak
 noob
 jigodie
 gunoi
+nword
 milog
 queer
 milosule
@@ -220,3 +221,5 @@ stfu
 shutthefuckup
 gtfo
 getthefuckout
+sex
+pisda

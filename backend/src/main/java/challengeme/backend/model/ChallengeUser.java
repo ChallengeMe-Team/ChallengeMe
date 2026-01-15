@@ -35,7 +35,7 @@ public class ChallengeUser {
     @Column(nullable = false)
     private ChallengeUserStatus status = ChallengeUserStatus.RECEIVED;
 
-    private LocalDate dateAccepted;
+    private LocalDateTime dateAccepted;
     private LocalDateTime dateCompleted;
 
     private LocalDate startDate;
@@ -45,6 +45,6 @@ public class ChallengeUser {
     @Column(nullable = true)
     private UUID assignedBy;
 
-    private Integer times_completed = 0;
+    private Integer timesCompleted = 0;
 
 }

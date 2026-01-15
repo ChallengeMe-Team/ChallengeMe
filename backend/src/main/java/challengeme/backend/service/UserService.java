@@ -331,7 +331,7 @@ public class UserService {
                     cu.getChallenge().getTitle(),
                     cu.getStatus().toString(),
                     activityDate,
-                    cu.getTimes_completed() != null ? cu.getTimes_completed() : 0
+                    cu.getTimesCompleted() != null ? cu.getTimesCompleted() : 0
             ));
         });
 

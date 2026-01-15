@@ -10,7 +10,10 @@
 
 
 <body>
-<div id="cursor" class="w-6 h-6 rounded-full bg-blue-400 fixed top-0 left-0 pointer-events-none opacity-70 mix-blend-difference"></div>
+<div id="cursor"
+     style="z-index: 99999; pointer-events: none;"
+     class="w-6 h-6 rounded-full bg-blue-400 fixed top-0 left-0 opacity-70 mix-blend-difference">
+</div>
 <app-root></app-root>
 <script>
   const cursor = document.getElementById('cursor');

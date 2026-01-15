@@ -22,6 +22,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 
 @Service
 @RequiredArgsConstructor
@@ -97,13 +100,13 @@ public class ChallengeService {
 
         // 1. Logica pentru FINISH (COMPLETED)
         if (newStatus == ChallengeUserStatus.COMPLETED && oldStatus != ChallengeUserStatus.COMPLETED) {
-            link.setDateCompleted(LocalDateTime.now());
+            link.setDateCompleted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
             UUID userId = link.getUser().getId();
             Integer earnedXP = link.getChallenge().getPoints();
 
             // Incrementăm repetările pentru această provocare specifică
-            int currentCount = link.getTimes_completed() != null ? link.getTimes_completed() : 0;
-            link.setTimes_completed(currentCount + 1);
+            int currentCount = link.getTimesCompleted() != null ? link.getTimesCompleted() : 0;
+            link.setTimesCompleted(currentCount + 1);
 
             // Actualizăm XP-ul și misiunile globale în tabelul Users
             userRepository.incrementMissionsAndXP(userId, earnedXP);
@@ -115,7 +118,7 @@ public class ChallengeService {
 
         // 2. Logica pentru ACCEPTARE
         if (newStatus == ChallengeUserStatus.ACCEPTED && oldStatus != ChallengeUserStatus.ACCEPTED) {
-            link.setDateAccepted(LocalDate.now());
+            link.setDateAccepted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
 
             // NOTIFICARE ACCEPTARE: Trimitem către prieten
             sendFriendNotification(link, "Game on! " + link.getUser().getUsername() +
@@ -166,8 +169,12 @@ public class ChallengeService {
         }
 
         dto.setStatus(entity.getStatus());
+
         dto.setDateAccepted(entity.getDateAccepted());
         dto.setDateCompleted(entity.getDateCompleted());
+        dto.setTimesCompleted(entity.getTimesCompleted());
+
+        System.out.println("DEBUG MAPPER - dateAccepted trimis în DTO: " + dto.getDateAccepted());
 
         return dto;
     }

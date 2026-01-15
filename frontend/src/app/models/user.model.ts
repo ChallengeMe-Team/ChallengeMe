@@ -17,6 +17,6 @@ export interface UserProfile {
 export interface ActivityHistory {
   challengeTitle: string;
   status: string;
-  date: string;
+  date: any;
   timesCompleted: number;
 }
