@@ -9,18 +9,22 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.*;
 
-// Avem nevoie de căutare flexibilă pentru login
-
+/**
+ * Repository for User account data. Supports authentication and profile statistics updates.
+ */
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByUsername(String username);
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
 
-    // Pentru login cu email SAU username
-    Optional<User> findByUsernameOrEmail(String username, String email);
+    /** Supports multi-credential login (email or username). */    Optional<User> findByUsernameOrEmail(String username, String email);
     @Query("SELECT u.username, u.avatar, u.points FROM User u ORDER BY u.points DESC")
     List<Object[]> findGlobalLeaderboard();
 
+    /**
+     * Atomic operation to increment user level/XP upon challenge completion.
+     * Uses COALESCE to prevent null pointer issues during calculation.
+     */
     @Modifying
     @Transactional
     @Query("UPDATE User u SET " +

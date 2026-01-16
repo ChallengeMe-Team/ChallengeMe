@@ -7,13 +7,12 @@ import {
   EventEmitter,
   Output,
   OnInit,
-  signal, computed, ChangeDetectorRef, effect
+  ChangeDetectorRef, effect
 } from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterModule, Router} from '@angular/router';
 import {AuthService} from '../../services/auth.service';
 import {NotificationService} from '../../services/notification.service';
-import { NotificationDTO } from '../../models/notification.model';
 
 import {
   LucideAngularModule,
@@ -34,10 +33,21 @@ import {
 } from 'lucide-angular';
 import {NotificationDropdownComponent} from './notifications/notifications-dropdown.component';
 
+/**
+ * Core navigation component providing global access to features and user state.
+ * It manages authentication sessions, real-time notification badges, and
+ * profile progression metrics (Level/XP).
+ * * Key Architectural Implementation:
+ * - Angular Signals Integration: Consumes AuthService and NotificationService signals
+ * for efficient, reactive UI updates.
+ * - Change Detection Optimization: Combines 'Default' strategy with manual 'ChangeDetectorRef'
+ * triggers and 'effect()' to ensure notification counts are perfectly synchronized.
+ * - Interaction Logic: Implements @HostListener to handle click-outside events for dropdown closure.
+ */
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterModule, NotificationDropdownComponent], // Fără TimeAgoPipe
+  imports: [CommonModule, LucideAngularModule, RouterModule, NotificationDropdownComponent],
   templateUrl: './navbar-component.html',
   styleUrls: ['./navbar-component.css'],
   changeDetection: ChangeDetectionStrategy.Default
@@ -48,10 +58,12 @@ export class NavbarComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private elementRef = inject(ElementRef);
   private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef); // Injectează asta
+  private cdr = inject(ChangeDetectorRef);
 
+  /** * Reactive effect to force UI refresh on notification count changes.
+   * Ensures the 'unread-pulse' badge updates instantly.
+   */
   constructor() {
-    // Forțăm Angular să verifice UI-ul ori de câte ori numărul se schimbă
     effect(() => {
       this.notificationService.unreadCount();
       this.cdr.detectChanges();
@@ -60,7 +72,7 @@ export class NavbarComponent implements OnInit {
 
   @Output() toastRequest = new EventEmitter<{ message: string, type: 'success' | 'error' }>();
 
-  // Icons
+  /** Global icons set for navigation and dropdown items. */
   readonly icons = {User, FileText, Users, Settings, LogOut, ChevronDown, PlusCircle, Menu, Bell, Check, Swords, UserPlus, Info, Trophy};
 
   // State
@@ -68,15 +80,17 @@ export class NavbarComponent implements OnInit {
   isMenuOpen = false;
   isNotificationsOpen = false;
 
-  // Data
-  notifications = this.notificationService.notifications;
+  // --- STATE SIGNALS ---
+  /** Reference to the currently authenticated user. */
   unreadCount = this.notificationService.unreadCount;
   user = this.authService.currentUser;
 
-  // Computed
+  // --- COMPUTED PROPERTIES ---
   get username(): string { return this.user()?.username || 'Guest'; }
   get userPoints(): number { return this.user()?.points || 0; }
+  /** Formats the user's level based on total XP (100 points per level progression). */
   get userLevel(): number { return Math.floor(this.userPoints / 100) + 1; }
+  /** Extracts initials for the avatar placeholder if no image is present. */
   get userInitials(): string { return this.username.substring(0, 2).toUpperCase(); }
 
   // Navigation Links
@@ -85,14 +99,13 @@ export class NavbarComponent implements OnInit {
     {label: 'Challenges', path: '/challenges'},
     {label: 'Leaderboard', path: '/leaderboard'},
     {label: 'Badges', path: '/badges'}
-  ]; // <--- AICI era greșeala (aveai '}' în loc de '];')
+  ];
 
   ngOnInit(): void {
-    // Dacă ai nevoie de inițializare, o pui aici
   }
 
   // --- ACTIONS ---
-
+  /** Toggles the notification dropdown and ensures the profile menu is closed. */
   toggleNotifications() {
     this.isNotificationsOpen = !this.isNotificationsOpen;
     if (this.isNotificationsOpen) this.isDropdownOpen = false;
@@ -106,6 +119,7 @@ export class NavbarComponent implements OnInit {
     }
   }
 
+  /** Terminate session logic: stops polling and redirects to Auth. */
   onLogout() {
     this.notificationService.stopPolling();
     this.authService.logout();
@@ -116,7 +130,6 @@ export class NavbarComponent implements OnInit {
 
   onNotificationClick(notif: any) {
     console.log('Notification clicked:', notif);
-    // this.notificationService.markAsRead(notif.id);
     this.isNotificationsOpen = false;
   }
 
@@ -129,6 +142,7 @@ export class NavbarComponent implements OnInit {
     }
   }
 
+  /** Listens for global clicks to automatically close open menus (UX improvement). */
   @HostListener('document:click', ['$event'])
   clickOutside(event: Event) {
     if (!this.elementRef.nativeElement.contains(event.target)) {
@@ -138,6 +152,6 @@ export class NavbarComponent implements OnInit {
   }
 
   onStateRefresh() {
-    this.cdr.detectChanges(); // Forțează Angular să redeseneze TOATĂ componenta ACUM
+    this.cdr.detectChanges();
   }
 }

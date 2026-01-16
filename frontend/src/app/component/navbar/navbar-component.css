@@ -1,10 +1,15 @@
-/* --- Navbar Container --- */
+/**
+ * Styles for the Navbar.
+ * Focuses on transparency (glassmorphism), responsiveness, and interactive animations.
+ */
+
+/* --- Fixed Glassmorphism Navbar --- */
 nav {
   position: fixed !important;
   top: 0;
   left: 0;
   right: 0;
-  height: 90px; /* Redus de la 110px pentru zoom 100% corect */
+  height: 90px;
   z-index: 1000 !important;
   background-color: rgba(11, 7, 22, 0.96);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
@@ -14,13 +19,14 @@ nav {
   padding: 0 3rem;
 }
 
-/* --- Butoane Navigare Optimizate --- */
+/* --- Optimized Navigation Buttons --- */
+/* Uses active states to visually confirm current route via [routerLinkActive] */
 .nav-btn-optimized {
-  padding: 10px 20px; /* Redus pentru echilibru la zoom 100% */
+  padding: 10px 20px;
   border-radius: 10px;
   font-weight: 800;
   text-transform: uppercase;
-  font-size: 0.8rem; /* Dimensiune text standardizată */
+  font-size: 0.8rem;
   letter-spacing: 0.08em;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   color: #94a3b8;
@@ -92,6 +98,7 @@ nav {
   transform: translateX(4px);
 }
 
+/* --- Profile Dropdown Animation --- */
 .animate-fade-in {
   animation: slideDownFade 0.2s ease-out forwards;
 }
@@ -108,6 +115,8 @@ nav {
   99.5% { transform: rotate(-12deg); }
 }
 
+/* --- Notification Badge (Pulse) --- */
+/* Intense red badge with high contrast border for instant visibility */
 .unread-pulse {
   position: absolute;
   top: -2px;
@@ -118,10 +127,10 @@ nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ef4444; /* roșu intens */
+  background-color: #ef4444;
   color: white;
   font-size: 10px;
   font-weight: 800;
   border-radius: 9999px;
-  border: 2px solid #14121b; /* fundalul navbarului pentru contrast */
+  border: 2px solid #14121b;
 }

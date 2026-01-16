@@ -1,8 +1,18 @@
+/**
+ * Implementation: Tailwind CSS Base Layer with Custom Design Tokens.
+ * Core Focus: Enforcing a "Dark First" aesthetic with high-contrast gradients
+ * and glassmorphism-friendly shadows.
+ */
+
+/* 1. TAILWIND INTEGRATION */
+/* Injects Tailwind's preflight resets and utility engine. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Setări globale pentru a forța fundalul întunecat */
+/* 2. CORE VIEWPORT RESET */
+/* Forces a consistent deep-space background (#0b0716) and establishes
+   'Inter' as the primary typeface for maximum readability. */
 html, body {
   background-color: #0b0716;
   color: white;
@@ -10,11 +20,16 @@ html, body {
   min-height: 100vh;
 }
 
-/* Definim clasele de gradient esențiale */
+/* 3. BRAND IDENTITY GRADIENTS */
+/* Implements the "Hero" gradient logic used for high-impact buttons
+   and decorative elements (Purple to Blue). */
 .gradient-hero {
   background: linear-gradient(90deg, #9333ea 0%, #3b82f6 100%); /* Mov la Albastru */
 }
 
+/* 4. TYPOGRAPHY ACCENTS */
+/* Uses background-clipping to apply gradients to text characters,
+   creating the "Hero Title" effect across pages. */
 .gradient-text {
   background-image: linear-gradient(90deg, #9333ea 0%, #3b82f6 100%);
   -webkit-background-clip: text;
@@ -22,7 +37,10 @@ html, body {
   color: transparent;
 }
 
-/* Umbră puternică pe carduri pentru dark mode */
+/* 5. DEPTH & ELEVATION (Shadow System) */
+/* Custom shadow token for Dark Mode. Combines a deep black spread
+   with a subtle Purple (#9333ea) glow to simulate object elevation
+   in a dark environment. */
 .card-shadow {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 10px rgba(147, 51, 234, 0.2);
 }

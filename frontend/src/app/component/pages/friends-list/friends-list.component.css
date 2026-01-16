@@ -1,3 +1,8 @@
+/**
+ * Visual Specifications for the Social Module.
+ * Implements interactive feedback and high-contrast dark mode aesthetics.
+ */
+
 .friends-container {
   max-width: 1000px;
   margin: 0 auto;
@@ -16,11 +21,10 @@
 /* GRID RESPONSIVE */
 .friends-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Auto-aranjare */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
 }
 
-/* CARD DESIGN */
 .friend-card {
   background-color: #1e1e1e;
   border: 1px solid #333;
@@ -72,7 +76,7 @@
 
 /* EMPTY STATE */
 .empty-state {
-  grid-column: 1 / -1; /* Ocupă tot rândul */
+  grid-column: 1 / -1;
   text-align: center;
   padding: 4rem;
   background: #1a1a1a;
@@ -151,7 +155,7 @@
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
 .search-wrapper {
-  position: relative; /* Ca dropdown-ul să se poziționeze față de acest container */
+  position: relative;
   max-width: 600px;
   margin-bottom: 2rem;
 }
@@ -171,7 +175,6 @@
   margin-top: 5px;
 }
 
-/* Cardul din Dropdown */
 .search-result-card {
   display: flex;
   align-items: center;
@@ -184,17 +187,15 @@
   border-bottom: none;
 }
 
-/* 🟢 STARE: NOT FRIEND (ACTIV) */
 .search-result-card:not(.already-friend):hover {
   background: #252530;
   transform: translateX(5px);
-  border-left: 3px solid #3f51b5; /* Highlight mov */
+  border-left: 3px solid #3f51b5;
 }
 
-/* ⚫ STARE: ALREADY FRIEND (DISABLED/GRAY) */
 .search-result-card.already-friend {
-  background: #141414; /* Foarte închis */
-  opacity: 0.6; /* Transparent */
+  background: #141414;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -232,7 +233,6 @@
   color: rgba(255, 255, 255, 0.4);
 }
 
-/* Butoane */
 .btn-add-mini {
   background: linear-gradient(to right, #3f51b5, #e040fb);
   border: none;
@@ -284,7 +284,6 @@
   margin-bottom: 1rem;
 }
 
-/* Badge-ul cu numărul "Real Time" */
 .badge {
   background: linear-gradient(135deg, #3f51b5, #e040fb);
   color: white;
@@ -307,7 +306,7 @@
   margin-bottom: 3rem;
 }
 
-/* BARA DE SEARCH "MODERNĂ" */
+/* Pill-shaped search container with focus animations */
 .search-bar-container {
   display: flex;
   align-items: center;
@@ -319,7 +318,6 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-/* Efect de glow când dai click */
 .search-bar-container.focused {
   border-color: #3f51b5;
   box-shadow: 0 0 15px rgba(63, 81, 181, 0.3);
@@ -332,9 +330,8 @@
   opacity: 0.5;
 }
 
-/* Input-ul propriu-zis */
 .add-input.big-input {
-  flex: 1; /* Ocupă tot spațiul rămas */
+  flex: 1;
   background: transparent;
   border: none;
   font-size: 1.1rem;
@@ -343,7 +340,6 @@
   padding: 10px 0;
 }
 
-/* BUTONUL "ADD FRIEND" DIN DREAPTA */
 .btn-search-action {
   background: #3f51b5;
   color: white;
@@ -368,7 +364,7 @@
   cursor: not-allowed;
 }
 
-/* DROPDOWN MARE */
+/* Big Dropdown for search results with glassmorphism-like shadow */
 .search-dropdown.big-dropdown {
   top: 110%;
   border-radius: 20px;

@@ -1,8 +1,18 @@
+/**
+ * Styles for the Notification Dropdown.
+ * Focuses on transparency, blur effects, and keyword highlighting.
+ * * Key Principles:
+ * - Glassmorphism: High blur and low opacity background for a premium feel.
+ * - Hardware Acceleration: CSS transforms for smooth animations.
+ * - Deep Styling: Targeting dynamically injected HTML from the component logic.
+ */
+
 /* --- Containerul Principal (Glassmorphism) --- */
 :host {
-  display: block; /* Necesar pentru ca poziționarea absolută din template să funcționeze corect */
+  display: block; /* Ensures correct positioning for absolute child elements */
 }
 
+/* Entrance animation: Combines scale and vertical slide with an Ease-Out curve */
 .animate-fade-in {
   animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   backdrop-filter: blur(16px);
@@ -20,7 +30,8 @@
   }
 }
 
-/* --- Scrollbar Personalizat --- */
+/* --- Accessibility: Custom Scrollbar --- */
+/* Designed to match the dark-purple theme instead of using browser defaults */
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
@@ -38,28 +49,24 @@
   background: rgba(124, 58, 237, 0.5);
 }
 
-/* --- Efecte pentru Notificări --- */
 .group:hover {
   background-color: rgba(255, 255, 255, 0.03);
 }
 
-/* Badge-ul de tip (CHALLENGE, SYSTEM, etc.) */
 span.uppercase {
   font-size: 9px;
   letter-spacing: 0.05em;
   opacity: 0.8;
 }
 
-/* Punctul albastru pentru "Necitit" */
 .bg-blue-500 {
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
 }
 
-/* --- Adaptabilitate --- */
 @media (max-width: 640px) {
   .w-85 {
     width: 280px;
-    right: -50px; /* Ajustăm poziția pe ecrane mici */
+    right: -50px;
   }
 }
 
@@ -67,6 +74,8 @@ span.uppercase {
   width: 420px;
 }
 
+/* --- Feedback Logic: Unread vs Read --- */
+/* The unread-dot acts as a focal point using a glow effect (box-shadow) */
 .unread-dot {
   width: 10px;
   height: 10px;
@@ -75,30 +84,33 @@ span.uppercase {
   box-shadow: 0 0 12px rgba(59, 130, 246, 0.9);
 }
 
+/* Row interaction: Adds a left-border accent on hover to signal focus */
 .notification-row {
   transition: all 0.2s ease;
-  border-left: 3px solid transparent; /* Pregătire pentru hover */
+  border-left: 3px solid transparent;
 }
 
 .notification-row.unread {
-  background-color: rgba(124, 58, 237, 0.05); /* Fundal mov foarte discret pentru necitite */
+  background-color: rgba(124, 58, 237, 0.05);
 }
 
 .notification-row:hover {
   background-color: rgba(255, 255, 255, 0.05);
-  border-left-color: #7c3aed; /* Linie mov discretă la hover */
+  border-left-color: #7c3aed;
 }
 
-/* Ajustare pentru mobil */
+/* --- Responsiveness: Mobile Adaptation --- */
 @media (max-width: 640px) {
   .w-95 {
-    width: calc(100vw - 2rem); /* Ocupă aproape tot ecranul pe mobil */
+    width: calc(100vw - 2rem); /* Dynamic width for small screens */
     right: -1rem;
   }
 }
 
-/* Stil pentru cuvintele colorate prin innerHTML */
+/* --- Advanced: Deep Selectors --- */
+/* Targets HTML tags injected via [innerHTML] in the .ts file.
+   Applies a drop-shadow based on the current text color (glow effect). */
 :host ::ng-deep b {
   letter-spacing: 0.03em;
-  filter: drop-shadow(0 0 5px currentColor); /* Adaugă un mic glow culorilor */
+  filter: drop-shadow(0 0 5px currentColor);
 }

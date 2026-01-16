@@ -6,6 +6,17 @@ import { AuthService } from '../../../../services/auth.service';
 import { ChallengeCardComponent } from '../../../../shared/challenge-card/challenge-card.component';
 import { Challenge } from '../../../../models/challenge.model';
 
+/**
+ * Purpose: Provides a dashboard overview of the user's currently active quests.
+ * It filters global participation data to show only 'ACCEPTED' or 'IN_PROGRESS'
+ * challenges, prioritized by recent acceptance.
+ * * * Key Technical Aspects:
+ * - Reactive State: Uses 'signal' to handle the UI state for active quest items.
+ * - Data Transformation: Maps complex backend DTOs into a local 'mappedChallenge'
+ * format compatible with the standard ChallengeCardComponent.
+ * - Event-Driven: Emits the full ChallengeUser context to the parent component
+ * to trigger specialized interactions like the "Completion Portal".
+ */
 @Component({
   selector: 'app-active-challenges',
   standalone: true,
@@ -52,8 +63,14 @@ export class ActiveChallengesComponent implements OnInit {
   private challengeService = inject(ChallengeService);
   private authService = inject(AuthService);
 
+  /** Signal containing the filtered list of quests currently being pursued by the user. */
   activeChallenges = signal<any[]>([]);
 
+  /** * Lifecycle Hook: Initializes the active quest stream.
+   * 1. Retrieves user context from AuthService.
+   * 2. Filters links for 'ACCEPTED' and 'IN_PROGRESS' statuses.
+   * 3. Sorts by recency (dateAccepted) and limits display to the top 3 items.
+   */
   ngOnInit() {
     const userId = this.authService.currentUser()?.id;
     if (!userId) return;
@@ -62,11 +79,11 @@ export class ActiveChallengesComponent implements OnInit {
       next: (dtos: any[]) => {
         const filtered = dtos
           .filter(dto => ['ACCEPTED', 'IN_PROGRESS'].includes(dto.status))
-          // FIX: Use 'dateAccepted' from your DTO
           .sort((a, b) => new Date(b.dateAccepted).getTime() - new Date(a.dateAccepted).getTime())
           .slice(0, 3)
           .map(dto => ({
             ...dto,
+            // Normalizing the backend DTO into the Challenge model used by child cards
             mappedChallenge: {
               id: dto.challengeId,
               title: dto.challengeTitle,
@@ -83,13 +100,15 @@ export class ActiveChallengesComponent implements OnInit {
     });
   }
 
-  @Output() openPortal = new EventEmitter<any>(); // Definește output-ul
+  /** Emits the specific ChallengeUser link object to trigger completion workflows in the parent. */
+  @Output() openPortal = new EventEmitter<any>();
 
+  /**
+   * Action Handler: Triggered when a user clicks to resume/complete a quest.
+   * Emits the full 'item' context which contains the essential ChallengeUser ID required by the backend.
+   */
   onResume(item: any) {
     console.log('Resuming adventure:', item.mappedChallenge.title);
-
-    // TRIMITE TOT OBIECTUL (item), nu doar item.mappedChallenge
-    // Acest 'item' conține acum proprietatea 'id' (ChallengeUser ID) de care backend-ul are nevoie
     this.openPortal.emit(item);
   }
 }

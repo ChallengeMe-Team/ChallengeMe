@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +24,11 @@ import java.util.UUID;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-
+/**
+ * Service responsible for managing challenge definitions and their progress tracking.
+ * It handles CRUD operations for challenges, ownership validation, and the
+ * rewarding logic for experience points (XP) upon completion.
+ */
 @Service
 @RequiredArgsConstructor
 public class ChallengeService {
@@ -36,27 +39,40 @@ public class ChallengeService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
+    /** Retrieves all challenges available in the global catalog. */
     public List<Challenge> getAllChallenges() {
         return repository.findAll();
     }
 
+    /**
+     * Finds a challenge by its UUID.
+     * @param id Challenge identifier.
+     * @throws ChallengeNotFoundException if the record is missing.
+     */
     public Challenge getChallengeById(UUID id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ChallengeNotFoundException(id));
     }
 
+    /** Lists challenges created by a specific user. */
     public List<Challenge> getChallengesByCreator(String username) {
         return repository.findAllByCreatedBy(username);
     }
 
+    /** Persists a new challenge definition. */
     public Challenge addChallenge(Challenge challenge) {
         return repository.save(challenge);
     }
 
+    /**
+     * Updates an existing challenge.
+     * Includes an ownership check to ensure only the creator can modify the quest.
+     * @param id ID of the challenge to update.
+     * @param request Update details.
+     */
     public Challenge updateChallenge(UUID id, ChallengeUpdateRequest request) {
         Challenge entity = getChallengeById(id);
 
-        // --- Ownership Check ---
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
         if (!entity.getCreatedBy().equals(currentUser)) {
@@ -66,30 +82,41 @@ public class ChallengeService {
         return repository.save(entity);
     }
 
+    /**
+     * Permanently deletes a challenge and all its associated user participations.
+     * Validates ownership before execution.
+     */
     @Transactional
     public void deleteChallenge(UUID id) {
-        //Verificam existenta
         Challenge entity = getChallengeById(id);
 
-        //Verificam Ownership-ul
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!entity.getCreatedBy().equals(currentUser)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own challenges.");
         }
 
-        //Stergem dependentele
         challengeUserRepository.deleteAllByChallengeId(entity.getId());
 
-        //Stergem Challenge-ul propriu-zis
         repository.delete(entity);
     }
 
+    /**
+     * Synchronizes the creator's username across all challenges if a user updates their profile.
+     * Ensures data consistency without breaking foreign key logic.
+     */
     @Transactional
     public void synchronizeUsername(String oldUsername, String newUsername) {
-        // Aceasta va executa query-ul creat mai sus
         repository.updateCreatorUsername(oldUsername, newUsername);
     }
 
+    /**
+     * Core business logic for status transitions (ACCEPTED, COMPLETED).
+     * If COMPLETED: Increments timesCompleted, awards XP points, and notifies the assigner.
+     * If ACCEPTED: Sets start timestamps and notifies the assigner.
+     * @param id Participation ID (ChallengeUser).
+     * @param request The status update details.
+     * @return Updated ChallengeUserDTO.
+     */
     @Transactional
     public ChallengeUserDTO updateStatus(UUID id, UpdateChallengeRequest request) {
         ChallengeUser link = challengeUserRepository.findById(id)
@@ -98,38 +125,36 @@ public class ChallengeService {
         ChallengeUserStatus oldStatus = link.getStatus();
         ChallengeUserStatus newStatus = ChallengeUserStatus.valueOf(request.getStatus());
 
-        // 1. Logica pentru FINISH (COMPLETED)
+        // 1. Completion Logic
         if (newStatus == ChallengeUserStatus.COMPLETED && oldStatus != ChallengeUserStatus.COMPLETED) {
             link.setDateCompleted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
             UUID userId = link.getUser().getId();
             Integer earnedXP = link.getChallenge().getPoints();
 
-            // Incrementăm repetările pentru această provocare specifică
             int currentCount = link.getTimesCompleted() != null ? link.getTimesCompleted() : 0;
             link.setTimesCompleted(currentCount + 1);
 
-            // Actualizăm XP-ul și misiunile globale în tabelul Users
             userRepository.incrementMissionsAndXP(userId, earnedXP);
 
-            // NOTIFICARE VICTORY: Trimitem către cel care a dat provocarea (ex: Calin)
-            sendFriendNotification(link, "Victory! " + link.getUser().getUsername() +
+             sendFriendNotification(link, "Victory! " + link.getUser().getUsername() +
                     " has crushed the challenge you sent: " + link.getChallenge().getTitle());
         }
 
-        // 2. Logica pentru ACCEPTARE
-        if (newStatus == ChallengeUserStatus.ACCEPTED && oldStatus != ChallengeUserStatus.ACCEPTED) {
-            link.setDateAccepted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
+        LocalDateTime now = ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime();
 
-            // NOTIFICARE ACCEPTARE: Trimitem către prieten
+        // 2. Acceptance Logic
+        if (newStatus == ChallengeUserStatus.ACCEPTED && oldStatus != ChallengeUserStatus.ACCEPTED) {
+            link.setDateAccepted(now);
+            link.setStartDate(now);
+
             sendFriendNotification(link, "Game on! " + link.getUser().getUsername() +
                     " accepted your challenge: " + link.getChallenge().getTitle());
         }
 
-        // Actualizăm statusul și restul câmpurilor din request
         link.setStatus(newStatus);
 
-        if (request.getStartDate() != null) {
-            link.setStartDate(request.getStartDate()); // Asigură-te că folosești setStartDate pentru LocalDate
+        if (request.getStartDate() != null && newStatus != ChallengeUserStatus.ACCEPTED) {
+            link.setStartDate(request.getStartDate().atStartOfDay());
         }
 
         if (request.getTargetDeadline() != null) {
@@ -140,7 +165,9 @@ public class ChallengeService {
         return convertToDto(saved);
     }
 
-    // Metodă Helper pentru a nu repeta codul
+    /**
+     * Helper to send social notifications to the friend who assigned the challenge.
+     */
     private void sendFriendNotification(ChallengeUser link, String message) {
         if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
             notificationService.createNotification(new NotificationCreateRequest(
@@ -151,13 +178,12 @@ public class ChallengeService {
         }
     }
 
+    /** Internal mapping logic to convert participation entity to DTO. */
     private ChallengeUserDTO convertToDto(ChallengeUser entity) {
         ChallengeUserDTO dto = new ChallengeUserDTO();
 
-        // Mapare ID-uri
         dto.setId(entity.getId());
 
-        // Mapare User (presupunând că ai relația @ManyToOne către User)
         if (entity.getUser() != null) {
             dto.setUserId(entity.getUser().getId());
             dto.setUsername(entity.getUser().getUsername());

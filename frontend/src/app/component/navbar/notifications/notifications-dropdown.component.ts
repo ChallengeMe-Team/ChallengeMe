@@ -15,24 +15,39 @@ import { LucideAngularModule} from 'lucide-angular';
 import { Medal, UserPlus, PartyPopper, Handshake, BellRing } from 'lucide-angular';
 import {AuthService} from '../../../services/auth.service';
 import { Bell, BellOff } from 'lucide-angular';
+import { TimeAgoPipe } from '../../../pipes/time-ago.pipe';
 
+/**
+ * UI Component that manages the display and interaction logic for user notifications.
+ * It provides a real-time view of system alerts, friend requests, and achievements.
+ * * * Key Technical Features:
+ * - Dynamic Message Formatting: Uses Regex to parse plain-text messages into rich HTML with semantic coloring.
+ * - Reactive State Management: Directly integrates with NotificationService signals for instantaneous UI updates.
+ * - Encapsulation Bypass: Uses 'ViewEncapsulation.None' to apply custom styles to dynamically injected HTML tags (via [innerHTML]).
+ * - Contextual Iconography: Maps notification types (BADGE, SYSTEM, CHALLENGE) to specific Lucide icons and color palettes.
+ */
 @Component({
   selector: 'app-notification-dropdown',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, TimeAgoPipe],
   templateUrl: './notifications-dropdown.component.html',
   styleUrls: ['./notifications-dropdown.component.css'],
   encapsulation: ViewEncapsulation.None
 })
 export class NotificationDropdownComponent{
   private notificationService = inject(NotificationService);
+  /** Event emitted when a significant state change occurs (e.g., mass marking as read). */
   @Output() stateChanged = new EventEmitter<void>();
   private authService = inject(AuthService);
 
+  /** Signal-based list of notifications synchronized with the global store. */
   notifications = this.notificationService.notifications;
 
   readonly icons = { Bell, BellOff };
 
+  /** * Handles individual notification interactions.
+   * Marks unread notifications as read via the API and updates the local signal state.
+   */
   onNotificationClick(notif: NotificationDTO) {
     if (!notif.isRead) {
       this.notificationService.markAsRead(notif.id).subscribe({
@@ -48,9 +63,9 @@ export class NotificationDropdownComponent{
   getIconForType(type: string): any {
     switch (type) {
       case 'BADGE': return Medal;
-      case 'SYSTEM': return UserPlus; // Folosit pentru Friend Requests
+      case 'SYSTEM': return UserPlus;
       case 'CHALLENGE_COMPLETED': return PartyPopper;
-      case 'CHALLENGE': return Handshake; // Pentru acceptat/refuzat
+      case 'CHALLENGE': return Handshake;
       default: return BellRing;
     }
   }
@@ -65,18 +80,19 @@ export class NotificationDropdownComponent{
     }
   }
 
+  /**
+   * Bulk action to mark all notifications for the current user as read.
+   * Utilizes the AuthService to ensure proper user identification.
+   */
   markAllAsRead() {
 
-    // 1. Extragem ID-ul direct din semnalul de user al aplicației (cel mai sigur mod)
     const currentUser = this.authService.currentUser();
     const userId = currentUser?.id;
 
     if (!userId) {
-      console.error('CRITICAL: ID-ul utilizatorului nu a putut fi recuperat din AuthService!', currentUser);
       return;
     }
 
-    // 2. Apelăm serviciul
     this.notificationService.markAllAsRead(userId).subscribe({
       next: () => {
         this.stateChanged.emit();
@@ -87,12 +103,17 @@ export class NotificationDropdownComponent{
     });
   }
 
+  /**
+   * Rich-text formatter that injects Tailwind CSS classes into specific keywords.
+   * Transforms plain strings into visually highlighted interactive messages.
+   * @param message Raw message string from the backend.
+   */
   formatMessage(message: string): string {
     if (!message) return '';
 
     let formatted = message;
 
-    // 1. Colorăm verbele și cuvintele cheie (le facem primele pentru a nu fi suprascrise)
+    // Keyword highlighting logic using Regex patterns
     formatted = formatted
       .replace(/declined/gi, '<b class="text-red-500 font-extrabold uppercase">declined</b>')
       .replace(/accepted/gi, '<b class="text-emerald-400 font-extrabold uppercase">accepted</b>')
@@ -103,8 +124,6 @@ export class NotificationDropdownComponent{
       .replace(/game on/gi, '<b class="text-purple-400 uppercase">Game On!</b>')
       .replace(/challenged you to/gi, '<b class="text-indigo-400">challenged you to</b>');
 
-    // 2. Colorăm numele expeditorului (primul cuvânt)
-    // Această regulă caută primul cuvânt care NU este încă parte dintr-un tag HTML
     formatted = formatted.replace(/^(\w+)/, '<b class="text-purple-400 font-black hover:text-purple-300 transition-colors">$1</b>');
 
     return formatted;

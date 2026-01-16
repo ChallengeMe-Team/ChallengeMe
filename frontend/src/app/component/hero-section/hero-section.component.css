@@ -1,7 +1,13 @@
+/**
+ * Hero Section Styles
+ * Focuses on smooth transitions and high-end visual effects (glows, blurs).
+ */
+
 :host {
   display: block;
 }
 
+/* Entry animation to provide a professional "Single Page App" feel */
 .animate-fade-in {
   animation: fadeIn 0.8s ease-out forwards;
 }
@@ -11,7 +17,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Reutilizăm stilul de text gradient din proiectul tău */
+/* Custom gradient masked text for major headers */
 .gradient-hero {
   background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
   -webkit-background-clip: text;

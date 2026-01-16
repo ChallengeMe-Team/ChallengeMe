@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/** Minimal repository for persistent leaderboard records. */
 @Repository
 public interface LeaderboardRepository extends JpaRepository<Leaderboard, UUID> {
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/** Repository for tracking user achievements. */
 @Repository
 public interface UserBadgeRepository extends JpaRepository<UserBadge, UUID> {
     List<UserBadge> findAllByUser_Username(String username);

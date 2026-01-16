@@ -1,3 +1,14 @@
+/**
+ * STYLING SPECIFICATIONS: Challenges View
+ * ----------------------------------------------------------------------
+ * 1. ANIMATION: Implements a hardware-accelerated fade-in with a subtle
+ * vertical slide for the main section entrance.
+ * 2. TYPOGRAPHY: Uses increased letter spacing for difficulty headers to
+ * enhance scannability.
+ * 3. BADGE SYSTEM: Standardizes quest badges with absolute positioning,
+ * high-contrast borders, and shadow depth.
+ */
+
 section {
   animation: fadeIn 0.4s ease-in-out;
 }
@@ -11,14 +22,13 @@ h3 {
   letter-spacing: 1px;
 }
 
-/* STIL UNIVERSAL BADGE */
+/* UNIVERSAL BADGE STYLE: Standardized for status and difficulty corner tags */
 .badge {
   @apply absolute top-4 right-4 text-[10px] uppercase tracking-tighter font-black px-2.5 py-1 rounded-md text-white shadow-lg;
-  /* Mix-blend-mode sau un mic overlay pot ajuta la lizibilitate dacă e nevoie */
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Efect de strălucire discret pentru carduri */
+/* CARD GLOW EFFECT: Adds a low-opacity purple glow to challenge containers */
 .grid > div {
   border: 1px solid rgba(139, 92, 246, 0.1);
 }

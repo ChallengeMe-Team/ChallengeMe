@@ -5,14 +5,21 @@ import { AuthService } from '../../../services/auth.service';
 import { UserService } from '../../../services/user.service';
 import { ToastComponent } from '../../../shared/toast/toast-component';
 import { LucideAngularModule, User, Mail, Lock } from 'lucide-angular';
-
-// Importuri RxJS (Esențiale!)
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 
-// Definim tipurile posibile pentru modal
 type ModalType = 'password' | 'username' | 'email' | null;
 
+/*** This component handles user profile customization, including avatar selection,
+ * secure password changes, and sensitive data updates (email/username).
+ * * * Key Architecture:
+ * - Reactive Debouncing: Employs RxJS Subjects and operators to prevent API
+ * overload during real-time availability checks.
+ * - Signal-based Validation: Uses 'computed' signals to provide instant UI
+ * feedback for password strength and form validity.
+ * - Secure Session Sync: Orchestrates token refreshes upon identity changes
+ * to maintain authenticated state without forcing logouts.
+ */
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -41,11 +48,12 @@ export class SettingsComponent implements OnInit {
   emailTaken = signal<boolean | null>(null);
   isChecking = signal(false);
 
-  // Subjects pentru Debounce (asteapta sa te opresti din scris)
+  // --- RxJS REACTIVE STREAMS ---
+  /** Subject to stream username changes for debounced availability checks. */
   private usernameCheck$ = new Subject<string>();
   private emailCheck$ = new Subject<string>();
 
-  // --- 🔄 MODAL STATE (Generalizat) ---
+  // --- MODAL STATE ---
   isModalOpen = signal(false);
   activeModalType = signal<ModalType>(null);
   modalStep = signal<'confirm' | 'form'>('confirm');
@@ -60,9 +68,7 @@ export class SettingsComponent implements OnInit {
   newUsername = signal('');
   newEmail = signal('');
 
-  // --- 💡 VALIDARI VIZUALE (COMPUTED) ---
-
-  // 1. Validare Parola
+  // 1. Password Validation
   hasMinLength = computed(() => this.newPassword().length >= 6);
   hasUpperCase = computed(() => /[A-Z]/.test(this.newPassword()));
   hasLowerCase = computed(() => /[a-z]/.test(this.newPassword()));
@@ -77,24 +83,22 @@ export class SettingsComponent implements OnInit {
     this.passwordsMatch()
   );
 
-  // 2. Validare Username
+  // 2. Username Validation
   usernameHasLength = computed(() => this.newUsername().trim().length >= 3);
   usernameIsDifferent = computed(() => this.newUsername() !== this.currentUser?.username);
 
-  // Helper pentru checklist (verde doar daca serverul a zis explicit FALSE)
   usernameIsUnique = computed(() => this.usernameTaken() === false);
 
   isUsernameValid = computed(() =>
     this.usernameHasLength() &&
     this.usernameIsDifferent() &&
-    this.usernameTaken() !== true // Validam doar daca NU e luat (permitem null)
+    this.usernameTaken() !== true
   );
 
-  // 3. Validare Email
+  // 3. Email Validation
   emailHasFormat = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.newEmail().trim()));
   emailIsDifferent = computed(() => this.newEmail().trim() !== this.currentUser?.email);
 
-  // Helper pentru checklist
   emailIsUnique = computed(() => this.emailTaken() === false);
 
   isEmailValid = computed(() =>
@@ -108,6 +112,10 @@ export class SettingsComponent implements OnInit {
   toastMessage = signal('');
   toastType = signal<'success' | 'error'>('success');
 
+  /** *
+   * Initializes user context and configures the RxJS pipelines for background
+   * validation tasks.
+   */
   ngOnInit() {
     this.currentUser = this.authService.currentUser();
     if (this.currentUser?.avatar) {
@@ -117,21 +125,25 @@ export class SettingsComponent implements OnInit {
     this.setupAvailabilityCheckers();
   }
 
-  // --- ACTIONS: MODAL CONTROL ---
 
-  // Configurare RxJS
+  /**
+   * Configures RxJS pipelines using 'debounceTime(500)' and 'switchMap' to
+   * efficiently check if usernames/emails are taken.
+   * - Prevents duplicate requests using 'distinctUntilChanged'.
+   * - Automatically cancels pending requests if the user continues typing.
+   */
   private setupAvailabilityCheckers() {
     // 1. Username Checker
     this.usernameCheck$.pipe(
-      debounceTime(500), // Asteapta 500ms dupa ultima tasta
+      debounceTime(500),
       distinctUntilChanged(),
       switchMap(username => {
         if (!username || username.length < 3 || username === this.currentUser?.username) {
-          return of(null); // Nu verifica daca e invalid sau e al meu
+          return of(null);
         }
         this.isChecking.set(true);
         return this.userService.checkUsername(username).pipe(
-          catchError(() => of(null)) // In caz de eroare, ignoram
+          catchError(() => of(null))
         );
       })
     ).subscribe(isTaken => {
@@ -158,11 +170,13 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  // HANDLERS PT INPUT (Leaga HTML de RxJS)
+  /**
+   * Bridges the HTML template events to the RxJS observable stream.
+   */
   onUsernameInput(value: string) {
     this.newUsername.set(value);
-    this.usernameTaken.set(null); // Resetam starea pana vine raspunsul
-    this.usernameCheck$.next(value.trim()); // Declansam verificarea
+    this.usernameTaken.set(null);
+    this.usernameCheck$.next(value.trim());
   }
 
   onEmailInput(value: string) {
@@ -171,11 +185,14 @@ export class SettingsComponent implements OnInit {
     this.emailCheck$.next(value.trim());
   }
 
+  /**
+   * Manages a multi-step modal flow (Confirm -> Form).
+   * Automatically resets validation states and prepopulates existing user data.
+   */
   openModal(type: ModalType) {
     this.activeModalType.set(type);
     this.modalStep.set('confirm');
 
-    // Resetam input-urile cu valorile curente
     if (type === 'username') this.newUsername.set(this.currentUser.username);
     if (type === 'email') this.newEmail.set(this.currentUser.email);
     if (type === 'password') {
@@ -215,7 +232,7 @@ export class SettingsComponent implements OnInit {
     this.performUpdate({ email: this.newEmail().trim() }, 'Email updated successfully!');
   }
 
-  // 4. Password Submit
+  /** Orchestrates the specific change-password API call with local error handling. */
   onUpdatePassword() {
     if (!this.isPasswordValid()) return;
 
@@ -239,25 +256,27 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  // Helper generic
+  /**
+   * Core Transaction Logic: performUpdate(payload, successMsg)
+   * Handles critical identity updates.
+   * 1. Extrudes DTO and New JWT Token from the response.
+   * 2. Synchronizes 'auth-token' in LocalStorage to prevent session expiration.
+   * 3. Merges the updated fields into the global AuthService signal.
+   */
   private performUpdate(payload: any, successMsg: string) {
     if (!this.currentUser) return;
     this.isLoading.set(true);
 
     this.userService.updateUser(this.currentUser.id, payload).subscribe({
       next: (response: any) => {
-        // ATENTIE: 'response' acum contine { user: ..., token: ... }
 
-        // 1. Extragem datele
         const updatedUserDTO = response.user;
         const newToken = response.token;
 
-        // 2. ACTUALIZAM TOKEN-UL IN BROWSER (CRITIC!)
         if (newToken) {
           localStorage.setItem('auth-token', newToken);
         }
 
-        // 3. Actualizam starea user-ului in aplicatie
         const mergedUser = { ...this.currentUser, ...updatedUserDTO };
         this.currentUser = mergedUser;
         this.authService.currentUser.set(mergedUser);
@@ -279,6 +298,7 @@ export class SettingsComponent implements OnInit {
     this.selectedAvatar.set(avatar);
   }
 
+  /** Standardized ephemeral feedback mechanism with 3s auto-clean. */
   private triggerToast(msg: string, type: 'success' | 'error') {
     this.toastMessage.set(msg);
     this.toastType.set(type);

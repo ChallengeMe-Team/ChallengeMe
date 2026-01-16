@@ -1,22 +1,37 @@
+/**
+ * Implementation: Glassmorphism Floating Label with Tailwind Integration.
+ * Core Focus: High-visibility categorization using absolute positioning and
+ * micro-interactions to signify interactivity.
+ */
+
+/* 1. COMPONENT ARCHITECTURE & TAILWIND MIXIN */
+/* Uses @apply for structural Tailwind utility classes combined with
+   custom CSS for layout precision and high-contrast typography. */
 .badge {
   @apply absolute top-4 right-4
   uppercase tracking-widest font-black
   rounded-lg text-white;
 
-  /* Dimensiuni și Aliniere */
+  /* Ensures consistent width across categories of varying text lengths */
   min-width: 90px;
   text-align: center;
   border: 1px solid rgba(255, 255, 255, 0.25);
 
-  /* Efecte vizuale */
+  /* 2. GLASSMORPHISM EFFECTS */
+  /* Combines background blur with high-density shadows to separate the
+     badge from complex background images or gradients. */
   backdrop-filter: blur(8px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 
-  /* Animație la hover pe card */
+  /* 3. TRANSITION KINETICS */
+  /* Uses an "Elastic" cubic-bezier to give the badge a playful,
+     responsive feel when triggered by the parent hover. */
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Categoria "sare" în evidență când pui mouse-ul pe card */
+/* 4. PARENT-TRIGGERED INTERACTION */
+/* When the parent card (div) is hovered, the badge performs a
+   compound transformation (lift + scale) to grab user attention. */
 div:hover .badge {
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 12px 25px rgba(0, 0, 0, 0.5);

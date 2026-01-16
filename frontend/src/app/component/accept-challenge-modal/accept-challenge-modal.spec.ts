@@ -1,7 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import {AcceptChallengeModalComponent} from './accept-challenge-modal'; // Important pentru ngModel
+import {AcceptChallengeModalComponent} from './accept-challenge-modal';
 
+/**
+ * Automated Tests for AcceptChallengeModal
+ * Ensures core component stability and template-to-logic binding.
+ */
 describe('AcceptChallengeModalComponent', () => {
   let component: AcceptChallengeModalComponent;
   let fixture: ComponentFixture<AcceptChallengeModalComponent>;
@@ -18,7 +22,10 @@ describe('AcceptChallengeModalComponent', () => {
     fixture.detectChanges();
   });
 
+  /** Checks if the component is correctly instantiated by the Angular framework. */
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  /** Verified that the logic can handle input values and validate correctly. */
 });

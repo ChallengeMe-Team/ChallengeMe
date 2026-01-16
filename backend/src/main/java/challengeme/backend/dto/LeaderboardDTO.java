@@ -4,6 +4,9 @@ import lombok.*;
 
 import java.util.UUID;
 
+/**
+ * Internal DTO for leaderboard data management and ranking calculation.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

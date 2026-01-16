@@ -42,6 +42,10 @@
             <span class="text-[9px] font-black uppercase tracking-tighter opacity-60" [class]="getTypeColor(notif.type)">
               {{ notif.type }}
             </span>
+
+          <span class="text-[10px] text-gray-500 font-medium">
+            • {{ notif.timestamp | timeAgo }}
+          </span>
         </div>
       </div>
 

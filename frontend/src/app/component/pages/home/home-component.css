@@ -1,4 +1,13 @@
-/* --- FUNDAL ȘI LAYOUT --- */
+/**
+ * 1. GLASSMORPHISM: Uses low-opacity backgrounds with high-blur backdrops
+ * for quest widgets.
+ * 2. ANIMATED AURA: Fixed radial-gradient background layer that shifts
+ * scale for a "living" environment effect.
+ * 3. HIERARCHY: Strict Z-Index mapping to ensure background patterns remain
+ * non-intrusive below interactive content.
+ */
+
+/* HOST SETUP: Primary deep-dark background */
 :host {
   display: block;
   min-height: 100vh;
@@ -11,10 +20,10 @@
   position: relative;
   min-height: 100vh;
   width: 100%;
-  z-index: 1; /* Wrapper-ul trebuie să fie baza */
+  z-index: 1;
 }
 
-/* FIX: Fundal Aura - ridicat z-index la valori pozitive mici */
+/* BACKGROUND AURA (Layer 2): Moves with a subtle breathing animation */
 .hero-gradient-animation {
   position: fixed;
   inset: 0;
@@ -27,6 +36,7 @@
   pointer-events: none;
 }
 
+/* TROPHY PATTERN (Layer 3): Subtle overlay for thematic depth */
 .trophy-pattern {
   position: fixed;
   inset: 0;
@@ -37,15 +47,15 @@
   pointer-events: none;
 }
 
-/* --- CONȚINUT (Z-INDEX MARE) --- */
+/* CONTENT CONTAINER (Layer 10): High priority interactive layer */
 .relative.z-10 {
   position: relative;
-  z-index: 10; /* Conținutul trebuie să fie peste fundalurile 2 și 3 */
+  z-index: 10;
   pointer-events: auto;
   background: transparent !important;
 }
 
-/* --- TITLURI ȘI TEXT --- */
+/* TYPOGRAPHY: Premium gaming "Glow" and Gradient effects */
 .epic-glow {
   color: #ffffff !important;
   text-shadow: 0 0 20px rgba(168, 85, 247, 0.5), 0 0 40px rgba(99, 102, 241, 0.3);
@@ -59,24 +69,21 @@
   display: inline-block;
 }
 
-/* --- REZOLVARE VIZIBILITATE (REVEAL) --- */
-/* Dacă observatorul nu merge, forțăm o opacitate minimă sau scoatem animația temporar */
 .reveal-on-scroll {
-  opacity: 1 !important; /* FORȚĂM VIZIBILITATEA PENTRU TEST */
+  opacity: 1 !important;
   transform: none !important;
   transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* --- BUTOANE --- */
+/* INTERACTION: Spring-style action buttons */
 .btn-action {
   padding: 18px 60px;
   min-width: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px; /* Spațiu între iconiță și text */
-
-  font-size: 1.2rem; /* Text ușor mai mare pentru echilibru */
+  gap: 12px;
+  font-size: 1.2rem;
   font-weight: 800;
   border-radius: 18px;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -94,12 +101,12 @@
   backdrop-filter: blur(12px);
 }
 
-/* --- ANIMAȚII --- */
 @keyframes meshMove {
   0% { transform: scale(1); }
   100% { transform: scale(1.1); }
 }
 
+/* GLASS EFFECT: Standardized widget container style */
 .glass-card {
   background: rgba(23, 20, 43, 0.4) !important;
   backdrop-filter: blur(20px);
@@ -107,16 +114,13 @@
 }
 
 .flex.flex-wrap.justify-center.gap-6 {
-  gap: 2rem !important; /* Mărește distanța dintre New Challenge și Explore World */
+  gap: 2rem !important;
 }
 
-/* --- HERO SECTION (MODIFICAT DISTANȚA FAȚĂ DE STATS) --- */
 section.relative.min-h-\[85vh\] {
-  /* Am mărit padding-ul de jos (pb) pentru a împinge conținutul mai jos */
   padding-bottom: 12rem !important;
 }
 
-/* Ajustăm marginea negativă a secțiunii de stats pentru a controla distanța finală */
 section.max-w-7xl.mx-auto.-mt-20 {
-  margin-top: -2rem !important; /* Reducem marginea negativă pentru a lăsa spațiu */
+  margin-top: -2rem !important;
 }

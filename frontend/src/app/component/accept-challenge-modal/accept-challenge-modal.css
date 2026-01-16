@@ -1,9 +1,14 @@
-/* 1. Forțăm calendarul nativ al browserului să fie întunecat */
+/**
+ * UI/UX Enhancement Styles
+ * Focuses on dark-mode aesthetics and micro-interactions for validation feedback.
+ */
+
+/* Forces the browser's native date picker to adhere to the dark theme palette */
 input[type="date"] {
   color-scheme: dark;
 }
 
-/* 2. Animație de intrare lină (Fade In + Scale) */
+/* Entrance animation using a scale-up and fade effect for a premium feel */
 .animate-fade-in {
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -13,7 +18,7 @@ input[type="date"] {
   to { opacity: 1; transform: scale(1); }
 }
 
-/* 3. Mic efect de "bounce" pentru mesajul de succes */
+/* Subtle bounce for successful date calculations to guide user attention */
 .animate-bounce-short {
   animation: bounceShort 0.5s ease-in-out;
 }
@@ -23,7 +28,7 @@ input[type="date"] {
   50% { transform: translateY(-5px); }
 }
 
-/* 4. Efect de "shake" (tremurat) pentru erori */
+/* Shake animation triggered on validation errors to provide tactile-like feedback */
 .animate-shake {
   animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
 }

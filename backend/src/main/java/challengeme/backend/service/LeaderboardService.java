@@ -24,6 +24,11 @@ import static challengeme.backend.model.LeaderboardRange.MONTHLY;
 import static challengeme.backend.model.LeaderboardRange.WEEKLY;
 import static challengeme.backend.model.LeaderboardRange.LAST_6_MONTHS;
 
+/**
+ * Service responsible for managing user rankings and competitive statistics.
+ * It provides both persistent ranking records and dynamic leaderboard calculations
+ * based on specific time periods (Weekly, Monthly, All Time).
+ */
 @Service
 @RequiredArgsConstructor
 public class LeaderboardService {
@@ -33,6 +38,13 @@ public class LeaderboardService {
     private final ChallengeUserRepository challengeUserRepository;
     private final LeaderboardMapper mapper;
 
+    /**
+     * Manually creates a leaderboard entry for a user.
+     * Automatically triggers a rank recalculation for the entire system.
+     * @param userId UUID of the user.
+     * @param totalPoints Starting points for the entry.
+     * @return The saved Leaderboard entity.
+     */
     public Leaderboard create(UUID userId, int totalPoints) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
@@ -44,6 +56,7 @@ public class LeaderboardService {
         return entry;
     }
 
+    /** Retrieves a specific leaderboard record by ID. */
     public Leaderboard get(UUID id) {
         return repository.findById(id)
                 .orElseThrow(() -> new LeaderboardNotFoundException(id));
@@ -53,6 +66,7 @@ public class LeaderboardService {
         return repository.findAll();
     }
 
+    /** Returns all leaderboard entries sorted by total points in descending order. */
     public List<Leaderboard> getSorted() {
         return repository.findAll()
                 .stream()
@@ -60,6 +74,7 @@ public class LeaderboardService {
                 .toList();
     }
 
+    /** Updates points for an entry and refreshes global rankings. */
     public Leaderboard update(UUID id, LeaderboardUpdateRequest request) {
         Leaderboard existing = get(id);
         mapper.updateEntity(request, existing);
@@ -68,12 +83,17 @@ public class LeaderboardService {
         return existing;
     }
 
+    /** Deletes an entry and updates the ranks of remaining participants. */
     public void delete(UUID id) {
         Leaderboard existing = get(id);
         repository.delete(existing);
         recalcRanks();
     }
 
+    /**
+     * Internal logic to update numerical ranks (1st, 2nd, 3rd, etc.)
+     * based on the current sorted point values in the database.
+     */
     private void recalcRanks() {
         List<Leaderboard> sorted = getSorted();
         for (int i = 0; i < sorted.size(); i++) {
@@ -83,18 +103,23 @@ public class LeaderboardService {
         }
     }
 
+    /**
+     * Main engine for the Leaderboard UI. Provides two types of rankings:
+     * 1. ALL_TIME: Fetches direct points from the User profile.
+     * 2. PERIODIC (Weekly/Monthly/6 Months): Aggregates points earned
+     * from challenges completed within the specified timeframe.
+     * @param range The desired time scope for the ranking.
+     * @return A list of DTOs ready for display, sorted by rank.
+     */
     public List<LeaderboardResponseDTO> getFilteredLeaderboard(LeaderboardRange range) {
 
         List<Object[]> results;
 
         if (range == LeaderboardRange.ALL_TIME) {
-            // CAZUL 1: ALL TIME
-            // Luăm datele direct din tabela 'users' (coloana points).
-            // Asta include toți userii care au XP, indiferent de unde l-au obținut.
+            // Case 1: Global ranking based on total accumulated XP in user profiles
             results = userRepository.findGlobalLeaderboard();
         } else {
-            // CAZUL 2: WEEKLY / MONTHLY
-            // Calculăm dinamic activitatea din 'challenge_users'.
+            // Case 2: Dynamic ranking based on completion dates in challenge_users
             LocalDate startDate = switch (range) {
                 case WEEKLY -> LocalDate.now().minusDays(7);
                 case MONTHLY -> LocalDate.now().minusMonths(1);
@@ -104,22 +129,19 @@ public class LeaderboardService {
             results = challengeUserRepository.aggregateRankings(startDate);
         }
 
-        // Maparea rezultatelor este identică pentru ambele cazuri
         List<LeaderboardResponseDTO> ranking = new ArrayList<>();
 
         for (int i = 0; i < results.size(); i++) {
             Object[] row = results.get(i);
 
-            // Verificare sigură pentru cast
-            // Nota: u.points din UserRepository este probabil int sau Integer,
-            // iar SUM() din ChallengeRepo poate fi Long. Le tratăm pe ambele ca Number.
+            // Handle numeric casting safely (PostgreSQL SUM returns Long, User points might be Integer)
             Long points = (row[2] instanceof Number) ? ((Number) row[2]).longValue() : 0L;
 
             ranking.add(new LeaderboardResponseDTO(
                     i + 1,                   // Rank
-                    (String) row[0],         // username
-                    (String) row[1],         // avatar
-                    points                   // total points
+                    (String) row[0],         // Username
+                    (String) row[1],         // Avatar
+                    points                // total points
             ));
         }
         return ranking;

@@ -7,16 +7,28 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Payload for the user registration (Signup) process.
+ * Contains strict security patterns for password complexity and email validation.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserCreateRequest {
+    /** Desired display name for the new account. */
     @NotBlank private String username;
+
+    /** Unique email address for account verification and identification. */
     @NotBlank @Email private String email;
-    @NotBlank(message = "Parola este obligatorie.")
+
+    /** * Account password.
+     * Must contain at least one digit, one lowercase letter, one uppercase letter,
+     * one special character, and be at least 6 characters long.
+     */
+    @NotBlank(message = "Password is required.")
     @Pattern(
             regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()\\-_+=<>?/{}\\[\\]|:;\"',~`]).{6,}$",
-            message = "Parola nu respectă cerințele de securitate."
+            message = "Password does not meet security requirements."
     )
     @NotBlank private String password;
 }

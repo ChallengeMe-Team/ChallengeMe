@@ -6,8 +6,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-//!!!! Observatie: NU expunem parola în DTO, doar în request.
-
+/**
+ * General purpose User DTO for account management.
+ * SECURITY NOTE: Sensitive information such as passwords are never exposed through this object.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

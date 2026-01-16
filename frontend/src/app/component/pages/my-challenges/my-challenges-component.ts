@@ -13,10 +13,22 @@ import { AcceptChallengeModalComponent } from '../../accept-challenge-modal/acce
 import { ConfirmationModalComponent } from '../../../shared/confirmation-modal/confirmation-modal.component';
 import { CompleteChallengeModalComponent } from '../../complete-challenge-modal/complete-challenge-modal-component';
 import { getCategoryGradient } from '../../../shared/utils/color-utils';
-import { firstValueFrom } from 'rxjs'; // Helper for async/await
+import { firstValueFrom } from 'rxjs';
 
 import confetti from 'canvas-confetti';
 
+/**
+ * This component serves as the central hub for a user's quest management.
+ * It organizes challenges into three distinct operational states using Angular Signals:
+ * 1. Active: Challenges currently in progress.
+ * 2. Inbox: New challenges received from other users (Pending).
+ * 3. Created: Quests designed and published by the current user.
+ *
+ * * Key Architectural Patterns:
+ * - Reactive State Management: Uses 'signal' for high-performance UI updates without full re-renders.
+ * - Async/Await Synchronization: Uses 'firstValueFrom' to handle sequential badge verification logic.
+ * - Modal Orchestration: Controls 6 specialized modals for CRUD and participation workflows.
+ */
 @Component({
   selector: 'app-my-challenges',
   standalone: true,
@@ -33,6 +45,7 @@ import confetti from 'canvas-confetti';
   styles: []
 })
 export class MyChallengesComponent implements OnInit {
+  // Injections
   public challengeService = inject(ChallengeService);
   public auth = inject(AuthService);
   public badgeService = inject(BadgeService);
@@ -41,12 +54,16 @@ export class MyChallengesComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  // Tabs
+  // --- STATE MANAGEMENT (SIGNALS) ---
+  /** Tracks the currently visible tab to toggle list visibility. */
   activeTab = signal<'active' | 'inbox' | 'created'>('active');
 
   // Lists
+  /** Master list of challenges authored by the user. */
   myChallenges = signal<Challenge[]>([]);
+  /** Challenges awaiting user response (Accept/Decline). */
   inboxChallenges = signal<any[]>([]);
+  /** Challenges currently being pursued. */
   activeChallenges = signal<any[]>([]);
 
   isLoading = signal(false);
@@ -69,14 +86,18 @@ export class MyChallengesComponent implements OnInit {
   isDeclineModalOpen = false;
   challengeToDecline: any = null;
 
-  // Toast
+// --- UI FEEDBACK ---
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
 
   readonly icons = { Edit, Trash2, PlusCircle, Check, X, Clock, CheckCircle };
 
+  /** * Lifecycle Hook: Initialization
+   * - Reset scroll position for UX consistency.
+   * - Deep Linking: Subscribes to queryParams to automatically switch to the 'inbox' or 'active' tab
+   * when navigated from notifications or the dashboard.
+   */
   ngOnInit() {
-    // Forțează scroll-ul la începutul paginii
     window.scrollTo(0, 0);
 
     this.route.queryParams.subscribe(params => {
@@ -93,6 +114,13 @@ export class MyChallengesComponent implements OnInit {
     this.loadAllData();
   }
 
+  /**
+   * Data Orchestrator: loadAllData()
+   * Simultaneously fetches three distinct datasets from ChallengeService:
+   * 1. Personal creations (By username).
+   * 2. Pending invites (Status: PENDING).
+   * 3. Current quests (Status: ACCEPTED).
+   */
   loadAllData() {
     const currentUser = this.auth.currentUser();
     if (!currentUser) return;
@@ -118,15 +146,23 @@ export class MyChallengesComponent implements OnInit {
     }
   }
 
+  /** Swaps the active view and triggers template re-rendering via Signal update. */
   switchTab(tab: 'active' | 'inbox' | 'created') {
     this.activeTab.set(tab);
   }
 
+  /** Initiates the acceptance flow by capturing the selected inbox item. */
   acceptChallenge(item: any) {
     this.selectedChallengeForContract = item;
     this.isAcceptModalOpen = true;
   }
 
+  /**
+   * Workflow: onContractSigned(dates)
+   * Finalizes the "Pending -> Active" transition.
+   * - Sends a payload with 'ACCEPTED' status and target deadlines to the backend.
+   * - Optimistically updates local signals to move the item from 'inbox' to 'active'.
+   */
   onContractSigned(dates: { start: string, end: string }) {
     if (!this.selectedChallengeForContract) return;
 
@@ -154,11 +190,13 @@ export class MyChallengesComponent implements OnInit {
     });
   }
 
+  /** Triggers the decline confirmation modal for an inbox item. */
   declineChallenge(item: any) {
     this.challengeToDecline = item;
     this.isDeclineModalOpen = true;
   }
 
+  /** Finalizes the rejection of a challenge, removing it from the user's inbox. */
   onConfirmDecline() {
     if (!this.challengeToDecline) return;
 
@@ -176,47 +214,51 @@ export class MyChallengesComponent implements OnInit {
     });
   }
 
+  /** Opens the victory portal for a specific active challenge. */
   openCompleteModal(item: any) {
     this.selectedChallengeForCompletion = item;
     this.isCompleteModalOpen = true;
   }
 
+  /**
+   * Complex Workflow: onChallengeCompleted()
+   * --------------------------------------
+   * Implements the "Victory & Achievement" logic:
+   * 1. Pre-Check: Captures the current badge state.
+   * 2. Transaction: Updates status to 'COMPLETED' in the DB.
+   * 3. Reward: Calculates and updates user XP reactively via AuthService.
+   * 4. Badge Comparison: Diffs the old vs. new badge list to detect if this completion unlocked a new achievement.
+   * 5. Celebration: Triggers the AchievementService for badge redirects or local confetti for standard XP gain.
+   */
   async onChallengeCompleted() {
     if (!this.selectedChallengeForCompletion) return;
     const currentUser = this.auth.currentUser();
     if (!currentUser) return;
 
     try {
-      // get badges before completion
 
       const oldBadges = await firstValueFrom(this.badgeService.getUserBadges(currentUser.username));
 
-      // complete the challenge
       const payload = { status: 'COMPLETED' };
       await firstValueFrom(this.challengeService.updateChallengeUser(this.selectedChallengeForCompletion.id, payload));
 
-      // get badges after completion
       const newBadges = await firstValueFrom(this.badgeService.getUserBadges(currentUser.username));
 
-      // update local state (remove from list, update points)
+      // UI Sync
       this.activeChallenges.update(prev => prev.filter(c => c.id !== this.selectedChallengeForCompletion.id));
       const newPoints = (currentUser.points || 0) + (this.selectedChallengeForCompletion.points || 0);
       this.auth.currentUser.set({ ...currentUser, points: newPoints });
 
-      // compare badges
       const newlyEarnedBadge = this.findNewBadge(oldBadges, newBadges);
 
       this.isCompleteModalOpen = false;
 
       if (newlyEarnedBadge) {
-        // new badge scenario
         const badgeName = newlyEarnedBadge.badge?.name || 'New Badge';
         this.showToast(`New Badge Unlocked: ${badgeName}! 🏆`, 'success');
 
-        // trigger the service (Confetti + Redirect)
         this.achievementService.celebrateNewBadge();
       } else {
-        // standard scenario
         this.showToast(`Victory! +${this.selectedChallengeForCompletion.points} XP Earned!`, 'success');
         this.triggerSuccessAnimation(); // standard small confetti
       }
@@ -227,14 +269,16 @@ export class MyChallengesComponent implements OnInit {
     }
   }
 
-  // Helper to diff arrays
+  /**
+   * A pure utility function that performs an array difference to isolate
+   * a newly earned badge object by unique ID.
+   */
   private findNewBadge(oldList: any[], newList: any[]): any | undefined {
     if (!newList || !oldList) return undefined;
-    // Find an item in newList that doesn't exist in oldList (by ID)
     return newList.find(newItem => !oldList.some(oldItem => oldItem.id === newItem.id));
   }
 
-  // Original confetti for standard victories
+  /** Visual UX: Triggers a multi-colored confetti effect for quest victories. */
   private triggerSuccessAnimation() {
     const duration = 2 * 1000;
     const end = Date.now() + duration;
@@ -262,10 +306,12 @@ export class MyChallengesComponent implements OnInit {
     frame();
   }
 
+  /** Helper for category-based visual theming. */
   getCategoryStyle(category: string) {
     return getCategoryGradient(category);
   }
 
+  /** Finalizes challenge creation, injecting the author's identity into the payload. */
   onCreateChallenge(formValues: any) {
     const currentUser = this.auth.currentUser();
     if (!currentUser) return;
@@ -281,11 +327,13 @@ export class MyChallengesComponent implements OnInit {
     });
   }
 
+  /** Maps selected challenge to the edit signal and opens the form modal. */
   openEditModal(challenge: Challenge) {
     this.editChallengeData.set(challenge);
     this.isEditModalOpen.set(true);
   }
 
+  /** Commits changes to an existing challenge and refreshes the lists. */
   onChallengeUpdated(updatedData: any) {
     this.challengeService.updateChallenge(updatedData.id, updatedData).subscribe({
       next: () => {
@@ -297,11 +345,13 @@ export class MyChallengesComponent implements OnInit {
     });
   }
 
+  /** Sets target for deletion and triggers confirmation UI. */
   confirmDelete(challenge: Challenge) {
     this.challengeToDelete.set(challenge);
     this.isDeleteModalOpen.set(true);
   }
 
+  /** Orchestrates the deletion of a challenge and optimistically removes it from the signal. */
   performDelete() {
     const target = this.challengeToDelete();
     if (!target) return;
@@ -315,6 +365,10 @@ export class MyChallengesComponent implements OnInit {
     });
   }
 
+  /**
+   * Standardized feedback mechanism. Uses a 3-second auto-cleanup to prevent
+   * UI clutter.
+   */
   showToast(msg: string, type: 'success' | 'error') {
     this.toastMessage.set(msg);
     this.toastType.set(type);

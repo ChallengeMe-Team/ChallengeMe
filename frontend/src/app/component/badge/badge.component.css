@@ -1,16 +1,21 @@
+/**
+ * Styles for the badge presentation card.
+ * Implements micro-interactions and elevation transitions.
+ */
 .badge-card {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 1rem;
-  background-color: rgba(26, 22, 39, 0.8);
-  border: 1px solid rgba(75, 85, 99, 0.5);
+  background-color: rgba(26, 22, 39, 0.8); /* Semi-transparent dark purple */
+  border: 1px solid rgba(75, 85, 99, 0.5); /* Muted border */
   border-radius: 0.75rem;
   transition: all 0.3s ease;
 }
 
+/* Elevation and glow effect on hover */
 .badge-card:hover {
-  border-color: rgba(168, 85, 247, 0.5);
-  transform: translateY(-2px);
+  border-color: rgba(168, 85, 247, 0.5); /* Purple accent */
+  transform: translateY(-2px); /* Lift effect */
 }

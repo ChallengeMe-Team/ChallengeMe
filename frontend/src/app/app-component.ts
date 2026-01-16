@@ -9,7 +9,11 @@ import { AuthService } from './services/auth.service';
 import {filter} from 'rxjs';
 import { NotificationService } from './services/notification.service';
 
-
+/**
+ * Implementation: Standalone Component with Reactive Signals and Effects.
+ * Core Focus: Managing global UI layouts (Navbar), background synchronization
+ * (Polling), and centralized notification delivery (Toasts).
+ */
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -28,8 +32,12 @@ export class AppComponent {
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
 
+  /** * Global Signal Listener:
+   * Uses an 'effect' to monitor the authentication state.
+   * - Login: Triggers background notification polling.
+   * - Logout: Terminates polling to save resources.
+   */
   constructor() {
-    // Folosim un effect pentru a monitoriza starea login-ului
     effect(() => {
       const user = this.authService.currentUser();
       if (user) {
@@ -43,27 +51,27 @@ export class AppComponent {
 
   private router = inject(Router);
 
-  private cdr = inject(ChangeDetectorRef); // Adaugă această linie
+  private cdr = inject(ChangeDetectorRef);
 
+  // --- STATE PROPERTIES ---
   isLoggedIn = computed(() => !!this.authService.currentUser());
-
   showNavbar: boolean = false;
-
   isFormVisible = false;
   toastVisible = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
+  /**
+   * Manages layout visibility based on the active route.
+   * Logic: Hides the Navbar when the user is on the '/auth' page to
+   * maintain a clean login experience.
+   */
   ngOnInit(): void {
-    // Setăm starea inițială a Navbar-ului
     this.showNavbar = !this.router.url.startsWith('/auth');
 
-    // Ascultă evenimentele de schimbare a rutei
     this.router.events.pipe(
-      // Filtrăm doar evenimentele de finalizare a navigării
       filter((event): event is NavigationEnd => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
-      // Setează showNavbar la 'false' dacă ruta curentă începe cu '/auth'
       this.showNavbar = !event.urlAfterRedirects.startsWith('/auth');
     });
   }
@@ -82,19 +90,30 @@ export class AppComponent {
     this.closeForm();
   }
 
+  /**
+   * Triggers the global feedback system.
+   * Note: Manually invokes 'ChangeDetectorRef.detectChanges()' to ensure the
+   * toast renders immediately within the OnPush change detection strategy.
+   *
+   */
   showToast(message: string, type: 'success' | 'error') {
     this.toastMessage = message;
     this.toastType = type;
     this.toastVisible = true;
 
-    this.cdr.detectChanges(); // FORȚEAZĂ afișarea mesajului în UI
+    this.cdr.detectChanges();
 
     setTimeout(() => {
       this.toastVisible = false;
-      this.cdr.detectChanges(); // FORȚEAZĂ ascunderea mesajului
+      this.cdr.detectChanges();
     }, 3000);
   }
 
+  /**
+   * Dynamically hooks into components loaded via the RouterOutlet.
+   * Used specifically to bridge events from AuthComponent to the global
+   * toast system.
+   */
   onActivate(componentRef: any) {
     if (componentRef instanceof AuthComponent) {
       if (componentRef.toastEvent) {
@@ -105,7 +124,6 @@ export class AppComponent {
 
       if (componentRef.authSuccess) {
         componentRef.authSuccess.subscribe(() => {
-          // După login, rutăm către Home
           this.router.navigate(['/']);
         });
       }
