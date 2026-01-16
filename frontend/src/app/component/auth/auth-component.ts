@@ -9,6 +9,15 @@ import { AuthService } from '../../services/auth.service';
 import { LucideAngularModule, LUCIDE_ICONS, LucideIconProvider, Loader2 } from 'lucide-angular';
 import {Router} from '@angular/router';
 
+/**
+ * Smart Component that orchestrates the entire Authentication workflow.
+ * It serves as a container for Login and Signup forms, managing high-level logic,
+ * API communication via AuthService, and navigation.
+ * * * Key Architectural Patterns:
+ * - Container-Presenter Pattern: Holds the state and logic for dumb form components.
+ * - Angular Signals: Utilizes reactive signals for high-performance state management (loading, view modes).
+ * - ChangeDetectionStrategy.OnPush: Optimizes performance by checking changes only when inputs or signals update.
+ */
 @Component({
   selector: 'app-auth-container',
   standalone: true,
@@ -26,18 +35,28 @@ import {Router} from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AuthComponent {
+  /** Emits notifications to the global Toast system. */
   @Output() toastEvent = new EventEmitter<{ message: string, type: 'success' | 'error' }>();
+  /** Emits the user object upon successful login for parent state hydration. */
   @Output() authSuccess = new EventEmitter<any>();
 
+  /** Signal controlling the current view: true for Login, false for Signup. */
   isLoginMode = signal(true); // true = Login, false = Signup
+  /** Signal tracking asynchronous API operations to trigger global loading overlays. */
   isLoading = signal(false);
 
   private authService = inject(AuthService);
 
+  /** Switches between Login and Signup modes. */
   toggleMode() {
     this.isLoginMode.update(mode => !mode);
   }
 
+  /**
+   * Orchestrates the registration process.
+   * On success: Notifies the user and switches view to Login mode.
+   * On error: Extracts server error messages for toast notification.
+   */
   handleSignup(data: any) {
     this.isLoading.set(true);
 
@@ -45,13 +64,11 @@ export class AuthComponent {
       finalize(() => this.isLoading.set(false))
     ).subscribe({
       next: (res) => {
-        // 1. MAI ÎNTÂI emitem evenimentul pentru Toast
         this.toastEvent.emit({
           message: 'Account created successfully! You can now log in.',
           type: 'success'
         });
 
-        // 2. Apoi schimbăm modul formularului (trece la Login)
         this.isLoginMode.set(true);
       },
       error: (err) => {
@@ -63,6 +80,10 @@ export class AuthComponent {
 
   private router = inject(Router);
 
+  /**
+   * Orchestrates the login process.
+   * On success: Hydrates Auth state, triggers success toast, and navigates to the dashboard.
+   */
   handleLogin(credentials: any) {
     this.isLoading.set(true);
 

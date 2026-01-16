@@ -1,18 +1,21 @@
-/*
-   1. LAYOUT GENERAL
-*/
+/**
+ * The component utilizes a three-tier visual architecture:
+ * 1. FILTERING (Tab Switcher): Temporal management (Weekly/Monthly/All-time).
+ * 2. PODIUM (Top 3): Visual hierarchy using metallic gradients and float animations.
+ * 3. DETAILED LIST: Infinite scrollable list with current user highlighting.
+ */
+
 .leaderboard-container {
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 2rem 1rem 120px 1rem; /* Padding mare jos ca să nu acopere footer-ul ultimele rânduri */
+  padding: 2rem 1rem 120px 1rem;
   color: white;
   font-family: 'Inter', sans-serif;
 }
 
-/*
-   2. SWITCHER (TAB-URI)
-*/
+/* --- 1. FILTERING & NAVIGATION --- */
+/* Pill-shape switcher: Uses 0.3s transitions for visual feedback on hover/active states. */
 .range-btn {
   padding: 0.5rem 1.5rem;
   border-radius: 9999px; /* Pill shape */
@@ -37,8 +40,9 @@
   transform: scale(1.05);
 }
 
-/*
-   3. PODIUM (Top 3)
+/* --- 2. PODIUM SYSTEM (Top 3) --- */
+/* The podium uses Flexbox with 'align-items: flex-end' to align the
+   bases of the columns regardless of their variable heights.
 */
 .podium-wrapper {
   display: flex;
@@ -46,7 +50,7 @@
   align-items: flex-end;
   gap: 1.5rem;
   margin-bottom: 4rem;
-  height: 260px; /* Înălțime fixă pentru aliniere */
+  height: 260px; /* Base alignment for the stair effect */
   padding-top: 2rem;
 }
 
@@ -66,27 +70,31 @@
   transform: translateY(-5px);
 }
 
-/* Stiluri specifice locurilor */
+/* Metallic Specificity:
+   - Gold: #facc15 -> #ca8a04 (1st Place)
+   - Silver: #94a3b8 -> #475569 (2nd Place)
+   - Bronze: #fb923c -> #9a3412 (3rd Place)
+*/
 .first-place {
   height: 100%;
-  background: linear-gradient(180deg, #facc15 0%, #ca8a04 100%); /* Yellow/Gold */
+  background: linear-gradient(180deg, #facc15 0%, #ca8a04 100%);
   z-index: 10;
-  width: 130px; /* Locul 1 e puțin mai lat */
+  width: 130px;
   box-shadow: 0 0 40px rgba(250, 204, 21, 0.25);
 }
 
 .second-place {
   height: 75%;
-  background: linear-gradient(180deg, #94a3b8 0%, #475569 100%); /* Silver/Slate */
-  order: -1; /* Îl punem vizual în stânga */
+  background: linear-gradient(180deg, #94a3b8 0%, #475569 100%);
+  order: -1;
 }
 
 .third-place {
   height: 60%;
-  background: linear-gradient(180deg, #fb923c 0%, #9a3412 100%); /* Bronze/Orange */
+  background: linear-gradient(180deg, #fb923c 0%, #9a3412 100%);
 }
 
-/* Elemente din Podium */
+
 .avatar-podium {
   width: 56px;
   height: 56px;
@@ -102,6 +110,10 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
+/* --- 5. VISUAL OPTIMIZATION --- */
+/* Avatar Logic: Uses 'object-fit: cover' to ensure profile image aspect
+   ratio integrity regardless of original dimensions.
+*/
 .avatar-podium img {
   width: 100%;
   height: 100%;
@@ -148,13 +160,14 @@
   margin-top: 2px;
 }
 
-/*
-   4. TABEL (Lista Restul Userilor)
+/* --- 3. TABLE & CURRENT USER HIGHLIGHTING --- */
+/* Row-Separated Design: Uses 'border-spacing' to create individual card effects
+   for each table row.
 */
 .leaderboard-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 10px; /* Spațiu între rânduri */
+  border-spacing: 0 10px;
 }
 
 .leaderboard-table th {
@@ -166,16 +179,15 @@
   font-weight: 700;
 }
 
-/* Rândul standard */
 .table-row {
-  background: #1e293b; /* Slate-800 */
+  background: #1e293b;
   transition: transform 0.2s ease, background 0.2s ease;
   cursor: default;
 }
 
 .table-row:hover {
   transform: scale(1.01);
-  background: #334155; /* Slate-700 */
+  background: #334155;
 }
 
 .table-row td {
@@ -183,15 +195,16 @@
   vertical-align: middle;
 }
 
-/* Rotunjire colțuri rând */
 .table-row td:first-child { border-radius: 12px 0 0 12px; }
 .table-row td:last-child { border-radius: 0 12px 12px 0; }
 
-/* HIGHLIGHT ROW*/
+/* Highlight Logic: Uses a distinct border and violet glow to
+   instantly identify the logged-in user's position.
+*/
 .current-user-row {
-  background: rgba(124, 58, 237, 0.25) !important; /* Mov transparent */
+  background: rgba(124, 58, 237, 0.25) !important;
   border: 1px solid #8b5cf6;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.25); /* Glow effect */
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
   position: relative;
   z-index: 5;
 }
@@ -240,16 +253,17 @@
   color: #e2e8f0;
 }
 
-/*
-STICKY FOOTER ("ME" BAR)
+/* --- 4. STICKY FOOTER (Personal Tracking Bar) --- */
+/* This element remains fixed at the bottom of the viewport, providing
+   permanent context of the user's rank regardless of scroll.
 */
 .sticky-footer {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  background: #0f172a; /* Slate-900 (Foarte închis) */
-  border-top: 2px solid #8b5cf6; /* Bordura mov sus */
+  background: #0f172a;
+  border-top: 2px solid #8b5cf6;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
   z-index: 100;
   padding: 0.75rem 0;
@@ -273,6 +287,7 @@ ANIMATIONS
   to { transform: translateY(0); opacity: 1; }
 }
 
+/* Float Animation: Applied to the crown to simulate magnetic levitation. */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }

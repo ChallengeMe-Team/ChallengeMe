@@ -3,6 +3,18 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import {Observable, tap, catchError, of, lastValueFrom} from 'rxjs';
 
+/**
+ * A singleton service managing the security context and identity lifecycle.
+ * It acts as the primary interface for authentication and session persistence.
+ *
+ * * * Key Technical Aspects:
+ * - Session Pre-loading: Implements a Promise-based initialization strategy
+ * compatible with Angular's APP_INITIALIZER to prevent UI "flicker".
+ * - Reactive Identity: Uses Angular Signals (`currentUser`) to propagate
+ * authentication changes throughout the entire component tree.
+ * - Token Persistence: Handles local storage synchronization for JWT tokens
+ * ensuring session continuity across browser reloads.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -13,37 +25,47 @@ export class AuthService {
   private apiUrl = 'http://localhost:8080/api/auth';
   private readonly TOKEN_KEY = 'auth-token';
 
+  /** * Global Signal representing the authenticated user state.
+   * Components react automatically when this signal is updated.
+   */
   currentUser = signal<any>(null);
 
   constructor() {
   }
 
-  // Aceasta metoda returneaza un Promise. Angular va astepta ca acest Promise
-  // sa se rezolve (resolve()) inainte sa afiseze pagina.
+  /**
+   * A critical boot-time procedure. It intercepts the application startup to
+   * verify existing credentials.
+   * 1. Token Check: If no token exists, the app boots as a 'Guest'.
+   * 2. Identity Verification: If a token is present, it validates it against
+   * the `/me` endpoint to recover the user profile.
+   * @returns A Promise that Angular awaits before rendering the root view.
+   */
   initializeSession(): Promise<void> {
     return new Promise((resolve) => {
-      // 1. Daca nu avem token, nu avem ce verifica.
-      // Rezolvam promisiunea imediat si lasam aplicatia sa porneasca (ca Guest).
-      if (!this.getToken()) {
+       if (!this.getToken()) {
         resolve();
         return;
       }
 
-      // 2. Daca avem token, intrebam backend-ul cine e userul
       this.http.get(`${this.apiUrl}/me`).subscribe({
         next: (user) => {
           this.currentUser.set(user);
-          resolve(); // Gata, am incarcat userul, aplicatia poate porni
+          resolve();
         },
         error: () => {
-          // Token expirat sau eroare server -> stergem tokenul
-          this.logout();
-          resolve(); // Gata, aplicatia porneste (dar ca Guest)
+          this.logout(); // Wipe invalid/expired sessions
+          resolve();
         }
       });
     });
   }
-  // --- LOGIN ---
+
+  /**
+   * Authenticates the user and establishes the security context.
+   * Logic: On success, it persists the JWT to localStorage and updates
+   * the identity signal.
+   */
   login(credentials: { emailOrUsername: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
       tap((response: any) => {
@@ -57,34 +79,34 @@ export class AuthService {
     );
   }
 
-  // --- SIGNUP ---
+  /** Triggers account creation via the backend API. */
   signup(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/signup`, user);
   }
 
-  // --- LOGOUT ---
+  /**
+   * Resets the application to a 'Guest' state by clearing sensitive tokens
+   * and nullifying the user signal.
+   */
   logout() {
     localStorage.removeItem(this.TOKEN_KEY);
     this.currentUser.set(null);
-    // Nu facem redirect aici, lasam componenta sa decida
   }
 
-  // --- UTILITARE ---
+  /** Returns the current raw JWT from browser storage. */
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
+  /** * Verifies if the session is active.
+   * Unlike basic token checks, this ensures user data is actually loaded in memory.
+   */
   isLoggedIn(): boolean {
-    // return !!this.getToken();
-    // Înainte verificam doar: return !!this.getToken();
-    // Acum verificăm dacă avem datele utilizatorului încărcate efectiv.
-    // Datorită APP_INITIALIZER, știm sigur că s-a încercat încărcarea lor înainte de acest punct.
     return !!this.currentUser();
   }
 
+  /** Utility to retrieve the unique identifier of the logged-in user. */
   getUsername(): string | null {
-    // Dacă variabila ta se numește 'user', folosește this.user()
-    // Dacă se numește 'currentUser', folosește this.currentUser()
     return this.currentUser()?.username || null;
   }
 }

@@ -1,3 +1,12 @@
+/**
+ * Implementation: Binary State Styling (Unlocked/Locked).
+ * Core Focus: Using visual cues like saturation, opacity, and borders to
+ * distinguish between earned and available achievements.
+ */
+
+/* 1. COMPONENT ARCHITECTURE */
+/* Standardizes the footprint for all badges within the gallery.
+   Uses a vertical Flexbox to align icons and titles centrally. */
 .badge-card {
   display: flex;
   flex-direction: column;
@@ -12,7 +21,9 @@
   text-align: center;
 }
 
-/* Starea Unlocked: Gradient mov/roz și glow */
+/* 2. UNLOCKED STATE (Achievement Gained) */
+/* Employs a high-vibrancy linear gradient (#a855f7 to #ec4899) and
+   a soft-glow shadow to emphasize victory and progression. */
 .unlocked {
   background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
   box-shadow: 0 10px 20px -5px rgba(236, 72, 153, 0.5);
@@ -25,7 +36,9 @@
   border-color: #fbbf24; /* Un auriu subtil sau culoarea ta de accent */
 }
 
-/* Starea Locked: Grayscale, opacitate redusă și bordură dashed */
+/* 3. LOCKED STATE (Progress Target) */
+/* Uses desaturation (grayscale) and a reduced opacity (0.6) to create
+   a "silhouette" effect, signaling to the user that the task remains. */
 .locked {
   filter: grayscale(1);
   opacity: 0.6;
@@ -45,16 +58,19 @@
   line-height: 1.2;
 }
 
+/* 4. ICONOGRAPHY SCALING */
+/* Icons are scaled significantly (6rem / 96px) to serve as the
+   primary visual anchor of the card. */
 .badge-icon {
-  /* Mărim iconița de la 2.5rem (~40px) la 6rem (~96px) */
   width: 6rem;
   height: 6rem;
-  object-fit: contain; /* Esențial pentru a nu deforma imaginea */
+  object-fit: contain;
 }
 
+/* Fixed container ensures vertical alignment across rows even with varying text lengths */
 .icon-container {
   width: 100%;
-  height: 100px; /* Container fix pentru aliniere perfectă */
+  height: 100px;
   display: flex;
   justify-content: center;
   align-items: center;

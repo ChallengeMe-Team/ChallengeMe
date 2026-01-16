@@ -1,3 +1,11 @@
+/*** Implementation: Glassmorphism Architecture with Semantic Color-Coding.
+ * Core Focus: Providing high-glanceability metrics using a layered z-index
+ * and backdrop filters to maintain consistency with the dark theme.
+ */
+
+/* 1. GRID TOPOLOGY */
+/* Employs a fully responsive grid using 'auto-fit' and 'minmax' to
+   automatically adjust the column count based on viewport width. */
 .stats-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -5,46 +13,56 @@
   margin-bottom: 2rem;
 }
 
+/* 2. GLASSMORPHISM CARD DESIGN */
+/* Combines low-opacity backgrounds with high-blur backdrops.
+   Uses a sub-pixel border (0.05 opacity) to define edges in dark mode. */
 .stat-card {
-  /* Schimbăm fundalul pentru a se potrivi cu tema dark */
   background: rgba(23, 20, 43, 0.6) !important;
   backdrop-filter: blur(12px);
   border-radius: 20px;
   padding: 1.5rem;
   display: flex;
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.05); /* Border fin în loc de shadow alb */
+  border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* 3. INTERACTIVE PHYSICS (Hover) */
+/* Implements a Y-axis lift combined with shadow expansion and
+   border-color transition for tactile depth. */
 .stat-card:hover {
   transform: translateY(-8px);
   border-color: rgba(139, 92, 246, 0.3);
   box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
 
+/* 4. ICONOGRAPHY CONTAINER */
+/* Replaces standard circles with 16px border-radius 'squarcles'
+   to achieve a modern, software-as-a-service aesthetic. */
 .icon-wrapper {
-  /* Eliminăm cercul gri și folosim unul semi-transparent */
   width: 56px;
   height: 56px;
-  border-radius: 16px; /* Mai modern decât 50% */
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.03);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* 5. TYPOGRAPHY & CONTRAST */
+/* High-contrast pure white text with a soft glow (text-shadow)
+   to ensure readability against the blurred background. */
 .stat-value {
   font-size: 2rem;
   font-weight: 900;
-  color: white; /* Alb pur pentru contrast */
+  color: white;
   text-shadow: 0 0 15px rgba(255,255,255,0.2);
 }
 
 .stat-label {
   font-size: 0.75rem;
-  color: #94a3b8; /* Gri albăstrui */
+  color: #94a3b8;
 }
 
 .stat-content {
@@ -52,12 +70,15 @@
   flex-direction: column;
 }
 
-/* Culori specifice pentru fiecare card */
+/* 6. SEMANTIC COLOR MAPPING */
+/* Points (XP): Yellow accent - #f1c40f */
 .points-card { border-left-color: #f1c40f; } /* Galben pentru XP */
 .points-card .icon-wrapper { color: #f1c40f; background-color: rgba(241, 196, 15, 0.1); }
 
+/* Challenges: Green accent - #2ecc71 */
 .challenges-card { border-left-color: #2ecc71; } /* Verde pentru Misiuni */
 .challenges-card .icon-wrapper { color: #2ecc71; background-color: rgba(46, 204, 113, 0.1); }
 
+/* Badges: Purple accent - #9b59b6 */
 .badges-card { border-left-color: #9b59b6; } /* Mov pentru Badges */
 .badges-card .icon-wrapper { color: #9b59b6; background-color: rgba(155, 89, 182, 0.1); }

@@ -2,29 +2,48 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { BadgeService } from '../../../services/badge.service';
-import { AuthService } from '../../../services/auth.service'; // Asigură-te că calea e corectă
+import { AuthService } from '../../../services/auth.service';
 import { LucideAngularModule, Zap } from 'lucide-angular';
 import { BadgeDisplay } from '../../../models/badge.model';
 
+/**
+ * Component responsible for displaying the global achievement catalog.
+ * It synchronizes the full list of available badges with the specific set
+ * earned by the current user to provide a "Collection" style interface.
+ * * * Key Logic:
+ * - Reactive Data Fetching: Uses RxJS 'forkJoin' to execute parallel API calls
+ * to both the global catalog and user-specific achievements.
+ * - State Management: Utilizes Angular Signals for the loading state to ensure
+ * high-performance UI reactivity.
+ * - Security Integration: Consumes 'AuthService' to dynamically retrieve the
+ * logged-in user's identity for personalized badge filtering.
+ */
 @Component({
   selector: 'app-badges-page',
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
-  templateUrl: './badges-page.component.html',
-  styleUrls: ['./badges-page.component.css']
+  templateUrl: './badges-page.component.html'
 })
 export class BadgesPageComponent implements OnInit {
+  /** local list used for display, combining badge data with unlock status. */
   badgeList: BadgeDisplay[] = [];
+
+  /** Signal tracking the asynchronous data loading process. */
   isLoading = signal(true);
   readonly icons = { Zap };
 
   constructor(
     private badgeService: BadgeService,
-    private authService: AuthService // 1. Injectăm AuthService
+    private authService: AuthService
   ) {}
 
+  /**
+   * Orchestrates the multi-source data initialization.
+   * 1. Retrieves current username from session.
+   * 2. Fetches global and user-owned badges simultaneously.
+   * 3. Maps the data into a unified display model by checking ID existence.
+   */
   ngOnInit(): void {
-    // 2. Luăm username-ul dinamic (modifică metoda dacă în service-ul tău se numește altfel, ex: getUser().username)
     const username = this.authService.getUsername();
 
     if (!username) {
@@ -35,12 +54,11 @@ export class BadgesPageComponent implements OnInit {
 
     forkJoin({
       allBadges: this.badgeService.getAll(),
-      userBadges: this.badgeService.getUserBadges(username) // 3. Folosim variabila dinamică
+      userBadges: this.badgeService.getUserBadges(username)
     }).subscribe({
       next: ({ allBadges, userBadges }) => {
         this.badgeList = allBadges.map(badge => {
-          // Verificăm dacă ID-ul badge-ului curent se află în lista de deținute
-          // userBadges vine de la /api/badges/user/{username}
+
           const isOwned = userBadges.some(owned => owned.id === badge.id);
 
           return {

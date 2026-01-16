@@ -1,3 +1,9 @@
+/**
+ * Component-specific styles for the modal and custom UI elements.
+ * Uses a combination of standard CSS for layouts and Tailwind classes in the HTML.
+ */
+
+/* Modal Backdrop: Fixed overlay with high z-index for focus */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -5,6 +11,7 @@
   z-index: 100;
 }
 
+/* Modal Content Box: Centered using the transform-translate technique */
 .modal {
   position: fixed;
   top: 50%;
@@ -27,7 +34,8 @@ h3 {
   font-size: 1.2rem;
 }
 
-/* DROPDOWN */
+/* DROPDOWN & INPUTS */
+/* Custom dropdown panel that appears when searching/selecting friends */
 .dropdown {
   position: relative;
 }
@@ -47,6 +55,7 @@ h3 {
   opacity: 0.6;
 }
 
+/* Custom scrollbar styling for a cleaner look in Webkit browsers */
 .dropdown-panel {
   position: absolute;
   top: 110%;
@@ -79,10 +88,13 @@ h3 {
   cursor: pointer;
 }
 
+/* LIST ITEMS & AVATARS */
+/* Hover effect for list items to provide immediate visual feedback */
 .friend-item:hover {
   background: #262626;
 }
 
+/* Circular avatar placeholder using flexbox for centering initials */
 .avatar {
   width: 32px;
   height: 32px;
@@ -98,6 +110,8 @@ h3 {
   color: white;
 }
 
+/* ACTIONS (Buttons) */
+/* Primary action button with a purple-blue gradient to match the app theme */
 .btn-primary {
   background: linear-gradient(90deg, #4f46e5, #6366f1);
   border: none;
@@ -108,6 +122,7 @@ h3 {
   cursor: pointer;
 }
 
+/* Visual cue for disabled state when no friend is selected */
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;

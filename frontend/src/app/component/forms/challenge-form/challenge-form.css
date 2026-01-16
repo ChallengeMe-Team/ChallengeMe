@@ -1,3 +1,14 @@
+/**
+ * Layout and Styling for the Challenge Creation/Editing Interface.
+ * Implements a "Glassmorphism" modal design with strict validation feedback.
+ * * Key Visual Features:
+ * - Modal Positioning: Uses fixed centering with backdrop blur for depth.
+ * - Validation Highlighting: Instant visual cues for content errors (Red accents).
+ * - Component Scaling: Smooth entrance animations using scale and opacity.
+ */
+
+/* 1. OVERLAY & MODAL STRUCTURE */
+/* Provides a blurred focus layer behind the modal to minimize background distraction */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -9,6 +20,7 @@
   z-index: 50;
 }
 
+/* Main container with a dark theme surface and elevation via shadow */
 .modal-container {
   background: #111827;
   border-radius: 16px;
@@ -53,6 +65,8 @@ label {
   margin-bottom: 4px;
 }
 
+/* 2. FORM ELEMENTS & INTERACTIVITY */
+/* Unified styling for all user inputs (text, select, textarea) */
 input, textarea, select {
   width: 100%;
   background: #0f172a;
@@ -63,6 +77,7 @@ input, textarea, select {
   outline: none;
   transition: border-color 0.2s;
 }
+/* Focus state: Subtle purple glow indicating the active field */
 input:focus, textarea:focus, select:focus {
   border-color: #9333ea;
 }
@@ -78,6 +93,8 @@ textarea {
   margin-top: 20px;
 }
 
+/* 4. BUTTONS & ACTIONS */
+/* CTA Button: Features the app's signature purple-blue gradient */
 .cancel-btn, .create-btn {
   padding: 10px 18px;
   border-radius: 10px;
@@ -101,29 +118,32 @@ textarea {
   filter: brightness(1.15);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* Stil pentru mesajul de eroare sub input */
+/* Text-based error feedback located immediately under the faulty field */
 .error-msg {
-  color: #ef4444; /* Roșu */
+  color: #ef4444;
   font-size: 0.75rem;
   margin-top: 4px;
   font-weight: 500;
   animation: fadeIn 0.2s ease-in;
 }
 
-/* Bordură roșie pentru input-ul cu probleme */
+/* 3. VALIDATION STATES (Crucial for Content Guard) */
+/* Triggered when 'validateField()' detects inappropriate content */
 .input-error {
   border-color: #ef4444 !important;
 }
 
-/* Stil pentru buton dezactivat */
+/* State management for 'isFormInvalid' logic */
 button:disabled {
   background: #334155 !important;
   cursor: not-allowed;
   opacity: 0.5;
   filter: grayscale(1);
+}
+
+
+/* 5. ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }

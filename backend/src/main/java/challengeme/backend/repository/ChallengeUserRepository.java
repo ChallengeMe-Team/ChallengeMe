@@ -13,13 +13,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Core repository for managing user-challenge interactions and rankings.
+ */
 @Repository
 public interface ChallengeUserRepository extends JpaRepository<ChallengeUser, UUID> {
     List<ChallengeUser> findByUserId(UUID userId);
 
-    // --- QUERY PENTRU LEADERBOARD DINAMIC ---
+    /**
+     * Aggregates points for a dynamic leaderboard based on a rolling start date.
+     * Uses COALESCE and conditional aggregation to rank users even with zero points.
+     * @param startDate Filter for completion date (used for Weekly/Monthly rankings).
+     * @return A list of Object arrays [username, avatar, totalPoints].
+     */
     @Query("SELECT u.username, u.avatar, " +
-            "COALESCE(SUM(CASE WHEN cu.status = 'COMPLETED' AND cu.dateCompleted >= :startDate THEN c.points ELSE 0 END), 0) " +
+            "COALESCE(SUM(CASE WHEN cu.status = 'COMPLETED' AND cu.dateCompleted >= CAST(:startDate AS timestamp) THEN c.points ELSE 0 END), 0) " +
             "FROM User u " +
             "LEFT JOIN ChallengeUser cu ON u.id = cu.user.id " +
             "LEFT JOIN Challenge c ON c.id = cu.challenge.id " +
@@ -29,9 +37,8 @@ public interface ChallengeUserRepository extends JpaRepository<ChallengeUser, UU
 
     boolean existsByUserIdAndChallengeId(UUID userId, UUID challengeId);
 
-    // --- METODELE CARE ÎȚI LIPSEAU ---
 
-    // 1. Verifică statusurile active (PENDING/ACCEPTED)
+    /** Checks if a user is currently engaged in a challenge with specific active statuses. */
     @Query("SELECT CASE WHEN COUNT(cu) > 0 THEN true ELSE false END FROM ChallengeUser cu " +
             "WHERE cu.user.id = :userId " +
             "AND cu.challenge.id = :challengeId " +
@@ -40,10 +47,7 @@ public interface ChallengeUserRepository extends JpaRepository<ChallengeUser, UU
                                      @Param("challengeId") UUID challengeId,
                                      @Param("statuses") Collection<ChallengeUserStatus> statuses);
 
-    // 2. Găsește relația exactă (ca să o putem recicla dacă e COMPLETED)
     Optional<ChallengeUser> findByUserIdAndChallengeId(UUID userId, UUID challengeId);
-
-    // ---------------------------------
 
     void deleteAllByChallengeId(UUID challengeId);
 

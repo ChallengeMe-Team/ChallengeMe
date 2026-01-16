@@ -6,6 +6,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for social interaction.
+ * Provides minimal user data necessary for the "Friends List" UI.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,10 +18,4 @@ public class FriendDTO {
     private String username;
     private int points;
     private String avatar;
-    public FriendDTO(UUID id, String username, Integer points, String avatar) {
-        this.id = id;
-        this.username = username;
-        this.points = points;
-        this.avatar = avatar;
-    }
 }

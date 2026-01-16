@@ -1,8 +1,19 @@
--- 1. Wipe existing data to prevent ID/Name conflicts and duplicates
+/**
+ * Purpose: Final alignment of the Badge Catalog with Frontend assets and Service logic.
+ * Logic: Performs a "Clean & Load" strategy to ensure no orphaned or redundant badge records exist.
+ * Impact: Synchronizes badge names with the Rules Engine in UserService.java.
+ */
+
+-- 1. DATA CLEANUP
+-- Removes existing records to prevent unique constraint violations or ID conflicts.
+-- Cascading rules (ON DELETE CASCADE) ensure 'user_badges' remain consistent.
 DELETE FROM user_badges;
 DELETE FROM badges;
 
--- 2. Insert the consolidated English catalog with EXACT paths and filenames
+-- 2. CONSOLIDATED CATALOG LOAD
+-- Inserts the definitive list of achievements with exact asset paths.
+-- The names (e.g., 'Marathoner', 'Zen Master') must match the strings checked
+-- in UserService.generateBadges() for the automation to work.
 INSERT INTO badges (id, name, description, criteria, icon_url, points_reward) VALUES
                                                                                   (gen_random_uuid(), 'Marathoner', 'Complete 3 challenges from the Fitness category', '3 Fitness Challenges', 'assets/badges/marathon.png', 50),
                                                                                   (gen_random_uuid(), 'Weekend Chef', 'Cook a new recipe and share a photo', 'Complete Weekend Chef', 'assets/badges/chef.png', 30),

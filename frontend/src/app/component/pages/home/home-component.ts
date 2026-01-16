@@ -21,6 +21,16 @@ import confetti from 'canvas-confetti';
 import {ChallengeService} from '../../../services/challenge.service';
 import {AuthService} from '../../../services/auth.service';
 
+/**
+ * Manages the landing experience, scroll animations, and the mission completion flow.
+ * * Key Responsibilities:
+ * - Scroll Reveal System: Uses IntersectionObserver to trigger animations as sections
+ * enter the viewport.
+ * - Victory Flow: Orchestrates the API call to complete a challenge, updates global
+ * user XP, and triggers celebration effects.
+ * - Deep Linking: Handles navigation with query parameters to open specific forms
+ * in other routes.
+ */
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -41,29 +51,42 @@ import {AuthService} from '../../../services/auth.service';
 export class HomeComponent implements OnInit, AfterViewInit {
   constructor(private el: ElementRef) {}
 
-  private router = inject(Router); // Injectează Router-ul pentru navigare
-  private challengeService = inject(ChallengeService); // Injectăm serviciul care controlează modalul
+  // Functional Service Injections
+  private router = inject(Router);
+  private challengeService = inject(ChallengeService);
   private authService = inject(AuthService);
 
+  /** Signal-based loading state to ensure smooth component transitions. */
   isLoading = signal(true);
 
+  // Icon Definitions
   readonly icons = {
     PlusCircle: PlusCircle,
   };
-
   readonly zapIcon = Zap;
 
-  // Starea pentru modalul de finalizare
+  // Completion Workflow State
   isCompletionModalVisible = false;
   selectedChallengeForCompletion: any = null;
 
+  /**
+   * Method: ngOnInit
+   * ----------------
+   * Triggers a short artificial delay (400ms) to ensure child widgets have
+   * completed their initial internal rendering before revealing the dashboard.
+   */
   ngOnInit() {
-    // Timp scurt de loading pentru a asigura randarea componentelor copil
     setTimeout(() => this.isLoading.set(false), 400);
   }
 
+  /**
+   * Method: ngAfterViewInit
+   * -----------------------
+   * Initializes the IntersectionObserver to handle the "Reveal on Scroll" effect.
+   * Elements with the '.reveal-on-scroll' class are tracked and updated with
+   * visibility classes when 10% of the element is visible.
+   */
   ngAfterViewInit() {
-    // Initializam observatorul pentru animatiile la scroll
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -79,26 +102,46 @@ export class HomeComponent implements OnInit, AfterViewInit {
   @Output() startChallengeRequest = new EventEmitter<void>();
   @Output() exploreChallenges = new EventEmitter<void>();
 
+  /**
+   * Method: onStartChallenge
+   * ------------------------
+   * Implements "Deep Linking" navigation. Redirects the user to the Challenges page
+   * and passes a query parameter to automatically open the creation modal.
+   */
   onStartChallenge() {
     console.log('Redirecționare către Challenges pentru deschidere formular...');
     this.router.navigate(['/challenges'], { queryParams: { openModal: 'true' } });
   }
 
+  /** Simple router navigation to the global challenge catalog. */
   onExploreChallenges() { this.router.navigate(['/challenges']); }
 
-  // Metodă pentru a deschide modalul (va fi apelată de butonul verde)
+  /**
+   * Method: handleOpenCompletion
+   * ----------------------------
+   * Triggered by child components (e.g., ActiveChallenges) to initiate the
+   * "Claim Victory" workflow for a specific quest.
+   */
   handleOpenCompletion(challenge: any) {
     this.selectedChallengeForCompletion = challenge;
     this.isCompletionModalVisible = true;
   }
 
+  /**
+   * Method: handleClaimSuccess
+   * --------------------------
+   * The core "Victory" logic of the platform:
+   * 1. API Call: Updates the persistent challenge link status to 'COMPLETED'.
+   * 2. Visual Celebration: Triggers the confetti animation.
+   * 3. Session Update: Recalculates user XP and mission counts in the global signal state.
+   * 4. State Sync: Forces a refresh of active quest lists.
+   */
   handleClaimSuccess() {
     if (!this.selectedChallengeForCompletion) return;
 
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
 
-    // Folosim ID-ul de legătură (8888...) pentru URL-ul de API
     const challengeUserId = this.selectedChallengeForCompletion.id;
 
     this.challengeService.updateChallengeUser(challengeUserId, { status: 'COMPLETED' }).subscribe({
@@ -106,10 +149,11 @@ export class HomeComponent implements OnInit, AfterViewInit {
         this.isCompletionModalVisible = false;
         this.triggerWinConfetti();
 
+        // Reactive update of the current user session
         const earnedXP = this.selectedChallengeForCompletion.mappedChallenge?.points || 0;
         const newPoints = (currentUser.points || 0) + earnedXP;
-
         const newMissions = (currentUser.totalCompletedChallenges || 0) + 1;
+
         this.authService.currentUser.set({
           ...currentUser,
           points: newPoints,
@@ -123,14 +167,21 @@ export class HomeComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Metodă pentru a forța reîncărcarea listei de quest-uri active
+  /** Forces a UI refresh to clear completed quests from the dashboard after a delay. */
   private refreshActiveChallenges() {
     setTimeout(() => {
       window.location.reload();
-    }, 2000); // Așteaptă 2 secunde pentru confetti
+    }, 2000);
   }
 
+  /**
+   * Method: triggerWinConfetti
+   * --------------------------
+   * Visual UX Enhancement: Executes a 3-second multi-origin confetti animation
+   * using the platform's signature purple and indigo color palette.
+   */
   private triggerWinConfetti() {
+    /* Logic for purple & indigo particles */
     const duration = 3 * 1000;
     const end = Date.now() + duration;
 

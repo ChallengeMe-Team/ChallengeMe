@@ -13,6 +13,18 @@ import { ChallengeCardComponent } from '../../../shared/challenge-card/challenge
 import { ConfirmationModalComponent } from '../../../shared/confirmation-modal/confirmation-modal.component';
 import { FriendDTO } from '../../../services/user.service';
 
+/**
+ * Core component for managing the global challenge catalog.
+ * Acts as an orchestrator for several sub-modals (Accept, Assign, Form, Confirmation)
+ * and handles the business logic for challenge lifecycles.
+ *
+ * * Key Features:
+ * - Dynamic Status Mapping: Tracks the relationship between the logged-in user
+ * and each challenge (e.g., PENDING, ACCEPTED).
+ * - Ownership Security: Restricts edit/delete actions to the original creator.
+ * - Multi-Step Flow: Manages transition states for signing contracts and restarting completed habits.
+ * - Category Theming: Dynamically assigns visual color schemes based on the quest category.
+ */
 @Component({
   selector: 'app-challenges',
   standalone: true,
@@ -28,11 +40,16 @@ import { FriendDTO } from '../../../services/user.service';
   templateUrl: './challenges-component.html'
 })
 export class ChallengesComponent implements OnInit {
+  // Dependency Injection using the functional inject() API
   public challengeService = inject(ChallengeService);
   public auth = inject(AuthService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
+  /**
+   * Constructor handles Deep Linking.
+   * Listens for query parameters to auto-trigger specific UI states (e.g., opening the creation modal).
+   */
   constructor(private route: ActivatedRoute) {
     this.route.queryParams.subscribe(params => {
       if (params['openModal'] === 'true') {
@@ -41,14 +58,24 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
+  // --- COMPONENT STATE (SIGNALS) ---
+
+  /** Signal containing the master list of all available quests fetched from the API. */
   challenges = signal<Challenge[]>([]);
+
+  /** * Reactive Map tracking the relationship between the logged-in user and each challenge.
+   * Keys are Challenge IDs, values are statuses (PENDING, ACCEPTED, COMPLETED).
+   */
   userChallengeStatuses = signal<Map<string, string>>(new Map());
+
+  /** Determines the layout grouping based on difficulty levels (EASY, MEDIUM, HARD). */
   difficultyKeys = Object.values(Difficulty) as Difficulty[];
 
+  /** Loading state flag for asynchronous operations. */
   isLoading = signal(false);
   errorMessage = signal('');
 
-  // Modal States
+  // --- MODAL & ACTION STATES ---
   isRestartModalOpen = false;
   challengeToRestart: Challenge | null = null;
   isEditModalOpen = signal(false);
@@ -60,15 +87,23 @@ export class ChallengesComponent implements OnInit {
   isAssignModalOpen = false;
   selectedChallengeToAssign = signal<Challenge | null>(null);
 
-  // Toast State
+  // --- TOAST NOTIFICATION STATE ---
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
 
+  /**
+   * Lifecycle Hook: Initializes data fetching for both the global catalog
+   * and the user's specific participation links.
+   */
   ngOnInit(): void {
     this.loadChallenges();
     this.loadUserActiveChallenges();
   }
 
+  /**
+   * Fetches the global library of challenges.
+   * Manually triggers change detection to ensure UI synchronization after async resolution.
+   */
   loadChallenges() {
     this.isLoading.set(true);
     this.challengeService.getAllChallenges().subscribe({
@@ -84,6 +119,10 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
+  /**
+   * Retrieves user-specific participation records (ChallengeUser links).
+   * Maps participation statuses to the userChallengeStatuses signal for real-time button state updates.
+   */
   loadUserActiveChallenges() {
     const user = this.auth.currentUser();
     if (!user) return;
@@ -100,26 +139,42 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
+  /**
+   * Filters the main quest list by difficulty for grouped display in the template.
+   * @param difficulty The difficulty enum value to filter by.
+   */
   getChallengesByDifficulty(difficulty: Difficulty): Challenge[] {
     return this.challenges().filter(c => c.difficulty === difficulty);
   }
 
-  // Action Handlers (Evenimente primite de la ChallengeCard)
+  /**
+   * Action Handler: Initiates the challenge enrollment flow.
+   * Stores the selected quest and triggers the Accept Modal.
+   */
   handleStart(challenge: Challenge) {
     this.selectedChallengeForContract = challenge;
     this.isAcceptModalOpen = true;
   }
 
+  /** * Action Handler: Handles the transition for users wishing to restart a 'COMPLETED' challenge.
+   * Triggers a confirmation dialog to prevent accidental restarts.
+   */
   handleRestart(challenge: Challenge) {
     this.challengeToRestart = challenge;
     this.isRestartModalOpen = true;
   }
 
+  /**
+   * Action Handler: Triggers the social sharing flow to send a challenge to a friend.
+   */
   handleAssign(challenge: Challenge) {
     this.selectedChallengeToAssign.set(challenge);
     this.isAssignModalOpen = true;
   }
 
+  /** * Action Handler: Permission-guarded method that verifies ownership before opening the edit view.
+   * Ensures data integrity by matching current session username with 'createdBy' metadata.
+   */
   handleEdit(challenge: Challenge) {
     const user = this.auth.currentUser();
     if (!user || user.username !== challenge.createdBy) {
@@ -130,6 +185,9 @@ export class ChallengesComponent implements OnInit {
     this.isEditModalOpen.set(true);
   }
 
+  /**
+   * Action Handler: Guards deletion requests by verifying ownership and requesting user confirmation.
+   */
   handleDeleteRequest(data: {event: MouseEvent, challenge: Challenge}) {
     data.event.preventDefault();
     const user = this.auth.currentUser();
@@ -141,6 +199,10 @@ export class ChallengesComponent implements OnInit {
     this.isDeleteModalOpen.set(true);
   }
 
+  /**
+   * Logic for Habit Maintenance: Resets a completed challenge back to 'ACCEPTED'.
+   * Updates the start date to current day to restart the progress tracking.
+   */
   confirmRestart() {
     if (!this.challengeToRestart) return;
     const challenge = this.challengeToRestart;
@@ -153,15 +215,14 @@ export class ChallengesComponent implements OnInit {
       const linkToUpdate = links.find((l: any) => (l.challenge?.id || l.challengeId) === challenge.id);
 
       if (linkToUpdate) {
-        // ÎN LOC DE DELETE, FACEM UPDATE LA ACCEPTED
         const payload = {
           status: 'ACCEPTED',
-          startDate: new Date().toISOString().split('T')[0] // Resetăm data de start la azi
+          startDate: new Date().toISOString().split('T')[0]
         };
 
         this.challengeService.updateChallengeUser(linkToUpdate.id, payload).subscribe({
           next: () => {
-            this.loadUserActiveChallenges(); // Reîncărcăm statusurile
+            this.loadUserActiveChallenges();
             this.showToast('Challenge restarted! Good luck again.', 'success');
             this.router.navigate(['/my-challenges']);
           },
@@ -171,6 +232,10 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
+  /**
+   * Social Integration: Sends an invite to the selected friend.
+   * @param friend The friend object receiving the assignment.
+   */
   onFriendAssigned(friend: FriendDTO) {
     const challenge = this.selectedChallengeToAssign();
     if (!challenge) return;
@@ -183,6 +248,10 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
+  /**
+   * Form Submission: Finalizes the creation of a new challenge.
+   * Injects the current user's username as the creator for ownership tracking.
+   */
   onCreateChallenge(formValues: any) {
     const user = this.auth.currentUser();
     const newChallenge = { ...formValues, createdBy: user ? user.username : 'Anonymous' };
@@ -195,6 +264,9 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
+  /** * Enrollment Logic: Finalizes the participation contract.
+   * Triggers the API link between User and Challenge with target start/end dates.
+   */
   onContractSigned(dates: { start: string, end: string }) {
     if (!this.selectedChallengeForContract) return;
     this.challengeService.acceptChallenge(this.selectedChallengeForContract.id, dates.start, dates.end).subscribe({
@@ -206,6 +278,9 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
+  /**
+   * Update Handler: Commits changes to an existing challenge.
+   */
   onChallengeUpdated(updated: any) {
     this.challengeService.updateChallenge(updated.id, updated).subscribe({
       next: () => {
@@ -216,6 +291,10 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
+  /**
+   * Deletion Handler: Permanently removes a quest from the database.
+   * Updates the local Signal master list to avoid a full page refresh.
+   */
   confirmDelete() {
     const challenge = this.challengeToDelete();
     if (!challenge) return;
@@ -228,12 +307,23 @@ export class ChallengesComponent implements OnInit {
     });
   }
 
+  /**
+   * Visual Utility: Manages ephemeral UI notifications.
+   * @param message String to be displayed.
+   * @param type Contextual coloring (success/error).
+   */
   showToast(message: string, type: 'success' | 'error' = 'error') {
     this.toastMessage.set(message);
     this.toastType.set(type);
     setTimeout(() => { this.toastMessage.set(null); }, 3000);
   }
 
+  /**
+   * UI Theming: Maps challenge categories to specific Tailwind CSS background classes.
+   * Ensures a distinct visual identity for different quest types.
+   * @param category The string category name.
+   * @returns A string representing the CSS class for the card badge.
+   */
   getCategoryClass(category: string): string {
     const mapping: { [key: string]: string } = {
       'Fitness': 'bg-fuchsia-500',
@@ -246,7 +336,6 @@ export class ChallengesComponent implements OnInit {
       'Food': 'bg-yellow-600',
       'Lifestyle': 'bg-emerald-500'
     };
-    // Returnează culoarea din mapare sau o culoare gri implicită dacă categoria nu este găsită
-    return mapping[category] || 'bg-gray-500';
+     return mapping[category] || 'bg-gray-500';
   }
 }

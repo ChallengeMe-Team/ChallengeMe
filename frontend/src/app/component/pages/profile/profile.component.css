@@ -1,31 +1,46 @@
-/* src/app/component/pages/profile/profile.component.css */
+/**
+* Implementation: High-Contrast Dark Mode with Glassmorphism Elements.
+ * Core Focus: Providing visual weight to user progression (XP) and
+ * maintaining layout stability via sticky sidebars.
+ */
 
+/* 1. HOST ARCHITECTURE */
+/* Ensures the background color covers the full viewport to prevent
+   white flickering during lazy loading. */
 :host {
   display: block;
-  background-color: #0f0a1e; /* Fundalul închis conform temei */
+  background-color: #0f0a1e;
 }
 
 .profile-container {
   min-height: 100vh;
 }
 
-/* Efect de glow pentru sidebar sticky */
+/* 2. SIDEBAR ELEVATION */
+/* Implements a subtle purple glow using negative spread to anchor
+   the sticky sidebar without visual clutter. */
 aside > div {
   box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.2);
 }
 
-/* Stil pentru scrollbar-ul activității recente dacă lista devine prea lungă */
+/* 3. ACTIVITY FEED CONTAINER */
+/* Constrains the feed height to maintain dashboard proportion.
+   Uses 'overflow-y: auto' for local scrolling. */
 .activity-feed {
   max-height: 400px;
   overflow-y: auto;
 }
 
-/* Utilitare pentru XP Bar */
+/* 4. XP PROGRESSION LOGIC */
+/* Uses a specialized cubic-bezier for a "fluid" filling effect
+   when the user gains experience points. */
 .xp-progress-bar {
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Scrollbar personalizat subțire */
+/* 5. BRANDED SCROLLBARS */
+/* Custom thin scrollbar implementation for a premium application feel,
+   transitioning to brand purple on interaction. */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -40,7 +55,9 @@ aside > div {
   background: #7c3aed;
 }
 
-/* Efect de strălucire pentru barele de skill */
+/* 6. SKILL BAR ENHANCEMENT */
+/* Hardware-accelerated transitions with an "elastic" easing function
+   to simulate a gamified level-up experience. */
 .h-full {
   box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
   transition: width 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);

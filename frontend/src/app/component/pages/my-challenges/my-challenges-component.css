@@ -1,7 +1,17 @@
+/**
+* Implementation: Advanced Hover State Management & Hardware-Accelerated Animations.
+ * Purpose: Provides high-fidelity feedback for quest cards using CSS "Group Hover"
+ * patterns to synchronize multiple child property changes.
+ */
+
+/* 1. TYPOGRAPHY ENHANCEMENT */
+/* Adds a subtle purple aura to text for a premium "Challenger" feel */
 .challenger-glow {
   text-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
 }
 
+/* 2. ENTRANCE ANIMATION */
+/* Hardware-accelerated fade-in with a 10px vertical slide to prevent layout jarring */
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
@@ -11,23 +21,28 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Stil pentru subliniera subtilă permanentă */
+/* 3. DYNAMIC UNDERLINE SYSTEM */
+/* Uses border-bottom instead of text-decoration for precise control over
+   spacing and transition smoothness */
 .challenge-title {
   text-decoration: none;
-  border-bottom: 1px solid rgba(168, 85, 247, 0.15); /* Mov foarte discret implicit */
+  border-bottom: 1px solid rgba(168, 85, 247, 0.15);
   padding-bottom: 2px;
   display: inline-block;
   transition: all 0.3s ease;
 }
 
-/* Efectul declanșat de hover-ul pe caseta (card) */
-/* Selectorul .group:hover țintește clasa .challenge-title din interior */
+/* 4. GROUP HOVER ORCHESTRATION */
+/* Synchronizes the title glow and underline intensity when the parent card
+   (.group) is hovered */
 .group:hover .challenge-title {
-  border-bottom: 1px solid rgba(168, 85, 247, 0.7); /* Linia devine intensă */
-  text-shadow: 0 0 10px rgba(168, 85, 247, 0.25); /* Glow discret text */
+  border-bottom: 1px solid rgba(168, 85, 247, 0.7);
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
 }
 
-/* Schimbare de culoare specifică pentru tab-ul "Created" (albastru în loc de mov) */
+/* 5. TAB-SPECIFIC THEMING (Blue Variant) */
+/* Contextual override for the "Created Challenges" tab to differentiate
+   between User-Created (Blue) and User-Accepted (Purple) quests */
 .group:hover .group-hover\:text-blue-400.challenge-title {
   border-bottom: 1px solid rgba(96, 165, 250, 0.7);
   text-shadow: 0 0 10px rgba(96, 165, 250, 0.25);

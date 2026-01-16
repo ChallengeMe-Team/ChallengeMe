@@ -1,7 +1,17 @@
--- =============================================================
--- NEW CHALLENGES (Competitive & Diverse)
--- =============================================================
+/**
+ * Purpose: Strategic content expansion to enhance user retention and engagement.
+ * Description: Introduces specialized challenge categories (Coding, Education, Creativity)
+ * and high-level badges for advanced achievements.
+ * Logic: Populates the global library with diverse difficulty levels to test the
+ * scaling of the XP and Leveling system.
+ */
 
+-- =============================================================
+-- 1. ADVANCED CHALLENGES
+-- =============================================================
+-- Scenario: Adding high-reward quests to encourage skill development.
+-- Categories like 'Coding' and 'Education' are linked to specific automated
+-- badge rules in the UserService logic.
 INSERT INTO challenges (id, title, description, category, difficulty, points, created_by) VALUES
 -- Education & Skill Building
 (gen_random_uuid(), 'Speed Learner', 'Complete a tutorial or read a technical article for 30 mins', 'Education', 'EASY', 40, 'emilia'),
@@ -20,9 +30,10 @@ INSERT INTO challenges (id, title, description, category, difficulty, points, cr
 
 
 -- =============================================================
--- NEW BADGES (Goal Oriented)
+-- 2. GOAL-ORIENTED BADGES
 -- =============================================================
-
+-- These badges act as 'Milestones'. They are awarded when a user
+-- reaches a specific threshold in a new category.
 INSERT INTO badges (id, name, description, criteria, icon_url, points_reward) VALUES
 -- Education
 (gen_random_uuid(), 'Polyglot', 'Complete 3 language-related challenges', '3 Education Challenges', 'assets/badges/polyglot.png', 60),

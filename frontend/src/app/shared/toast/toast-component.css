@@ -1,3 +1,12 @@
+/**
+ * Implementation: Fixed-Position Floating Alerts with Linear Gradients.
+ * Core Focus: Providing high-visibility, non-blocking asynchronous feedback
+ * while maintaining a premium glassmorphism aesthetic.
+ */
+
+/* 1. TOAST ARCHITECTURE */
+/* Standardized container for alerts. Positioned in the bottom-right viewport
+   corner to avoid blocking primary navigation or content. */
 .toast {
   position: fixed;
   bottom: 24px;
@@ -6,24 +15,40 @@
   border-radius: 12px;
   color: white;
   font-weight: 500;
+
+  /* Glassmorphism & Depth Logic */
   backdrop-filter: blur(10px);
   background: linear-gradient(90deg, #312e81, #1e1b4b);
   box-shadow: 0 0 15px rgba(147, 51, 234, 0.3);
-  z-index: 9999;
+
+  /* Layering & Layout */
+  z-index: 9999; /* Ensures overlay above modals and sidebars */
   animation: fadeInOut 3s ease;
   max-width: 280px;
 }
 
+/* 2. SUCCESS SEMANTICS */
+/* Uses a brand-aligned blue-to-purple gradient to indicate valid
+   transactions (e.g., 'Password Updated'). */
 .toast.success {
   background: linear-gradient(90deg, #3b82f6, #9333ea);
 }
 
+/* 3. ERROR SEMANTICS */
+/* Employs a high-urgency red/rose gradient to signify failed operations
+   or validation errors. */
 .toast.error {
   background: linear-gradient(90deg, #ef4444, #f43f5e);
 }
 
+/* 4. KINETIC ANIMATION (Fade & Float) */
+/* A 3-second cycle that combines opacity shifts with vertical translation
+   to provide a smooth "entrance and exit" feel. */
 @keyframes fadeInOut {
+  /* Entrance: Slide up from 20px below */
   0% { opacity: 0; transform: translateY(20px); }
+  /* Sustained Visibility: Stable at 100% opacity */
   10%, 90% { opacity: 1; transform: translateY(0); }
+  /* Exit: Sink back down and fade out */
   100% { opacity: 0; transform: translateY(20px); }
 }

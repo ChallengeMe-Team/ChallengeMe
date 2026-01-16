@@ -6,32 +6,41 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+/**
+ * Intercepts all exceptions thrown across the application and converts them
+ * into standardized JSON responses for the frontend.
+ * Provides a clean API interface by hiding stack traces and showing user-friendly messages.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. Validation errors
+    /**
+     * Catches validation errors triggered by @Valid annotations in controllers.
+     * @param ex The exception containing binding and validation results.
+     * @return 400 Bad Request with the first validation error message.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
-        // Luăm mesajul de eroare din adnotarea @ValidContent
         String errorMessage = ex.getBindingResult().getAllErrors().stream()
                 .map(err -> err.getDefaultMessage())
                 .findFirst()
                 .orElse("Validation failed");
 
         Map<String, String> response = new HashMap<>();
-        response.put("error", errorMessage); // Cheia "error" cerută în Acceptance Criteria
+        response.put("error", errorMessage);
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    // 2. Not found – UNIC și GLOBAL
+    /**
+     * Handles all resources not found errors (404).
+     * @param ex The specific NotFoundException instance.
+     * @return Standardized JSON error message.
+     */
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(NotFoundException ex) {
         Map<String, String> error = new HashMap<>();
@@ -47,13 +56,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resp);
     }
 
-    // === 4. HANDLER NOU: Duplicate în baza de date (Username/Email există deja) ===
+    /**
+     * Processes database integrity issues, specifically Unique Constraint violations.
+     * Interprets PostgreSQL error codes to provide friendly messages for duplicate usernames/emails.
+     * @param ex Exception thrown during failed persistence.
+     * @return 409 Conflict with a specific message about the duplicate field.
+     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         Map<String, String> error = new HashMap<>();
-        String msg = ex.getMessage(); // Mesajul detaliat de la PostgreSQL
+        String msg = ex.getMessage();
 
-        // Verificăm ce anume a cauzat eroarea (username sau email)
         if (msg != null && msg.contains("users_username_key")) {
             error.put("message", "Acest nume de utilizator este deja folosit.");
         } else if (msg != null && msg.contains("users_email_key")) {
@@ -62,7 +75,6 @@ public class GlobalExceptionHandler {
             error.put("message", "Datele introduse există deja în sistem.");
         }
 
-        // Returnăm 409 Conflict (nu 500)
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
@@ -70,13 +82,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleConflictException(ConflictException ex) {
         Map<String, String> error = new HashMap<>();
         error.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error); // Returnează 409
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
-    // 5. Orice altă eroare neașteptată (500)
+    /**
+     * Final fallback for any unhandled server-side exceptions (500).
+     * Logs the stack trace internally and returns a generic safe message to the client.
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGlobalException(Exception ex) {
-        ex.printStackTrace(); // Printează eroarea în consolă în IntelliJ pentru tine
+        ex.printStackTrace();
         Map<String, String> body = new HashMap<>();
         body.put("message", "A apărut o eroare neașteptată pe server.");
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);

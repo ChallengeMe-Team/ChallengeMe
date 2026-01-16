@@ -27,6 +27,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * The core engine of the application. Manages the lifecycle of user participation
+ * in challenges, including social assignments, point rewards, and status transitions.
+ */
 @Service
 @RequiredArgsConstructor
 public class ChallengeUserService {
@@ -36,7 +40,9 @@ public class ChallengeUserService {
     private final ChallengeRepository challengeRepository;
     private final NotificationService notificationService;
 
-    // Metoda de creare standard (ex: butonul Start)
+    /**
+     * Standard creation of a challenge-user link (e.g., when a user clicks 'Start').
+     */
     public ChallengeUser createChallengeUser(ChallengeUserCreateRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + request.getUserId()));
@@ -58,6 +64,10 @@ public class ChallengeUserService {
                 .orElseThrow(() -> new ChallengeUserNotFoundException("ChallengeUser not found with id: " + id));
     }
 
+    /**
+     * Formally accepts a challenge, setting start dates and deadlines.
+     * Prevents duplicates and handles timezone-aware timestamps.
+     */
     @Transactional
     public ChallengeUserDTO acceptChallenge(UUID challengeId, String username, UpdateChallengeRequest request) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -72,9 +82,9 @@ public class ChallengeUserService {
         challengeUser.setChallenge(challenge);
         challengeUser.setStatus(ChallengeUserStatus.valueOf(request.getStatus()));
         if (request.getStartDate() != null) {
-            challengeUser.setStartDate(request.getStartDate());
+            challengeUser.setStartDate(LocalDateTime.now());
             LocalDateTime bucharestTime = ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime();
-            System.out.println("DEBUG BACKEND - Ora generată pentru acceptare: " + bucharestTime); //
+            System.out.println("DEBUG BACKEND - Ora generată pentru acceptare: " + bucharestTime);
             challengeUser.setDateAccepted(LocalDateTime.now(ZoneId.of("UTC")));
         }
         if (request.getTargetDeadline() != null) {
@@ -104,6 +114,7 @@ public class ChallengeUserService {
             dto.setChallengeCreatedBy(c.getCreatedBy());
         }
         dto.setStatus(entity.getStatus());
+        dto.setStartDate(entity.getStartDate());
         dto.setDateAccepted(entity.getDateAccepted());
         dto.setDateCompleted(entity.getDateCompleted());
         dto.setDeadline(entity.getDeadline());
@@ -114,19 +125,20 @@ public class ChallengeUserService {
 
     public List<ChallengeUser> getChallengeUsersByUserId(UUID userId) { return repository.findByUserId(userId); }
 
-    // --- LOGICA DE ASSIGN CU MESAJELE EXACTE DIN TICHET ---
+    /**
+     * Logic for social interaction: Assigning a challenge to a friend.
+     * Includes validations for self-assignment and anti-spam measures.
+     */
     @Transactional
     public ChallengeUser assignChallenge(ChallengeUserCreateRequest request) {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new UserNotFoundException("Current user not found"));
 
-        // 1. Validare Self-Assign (Mesaj Corectat)
         if (currentUser.getId().equals(request.getUserId())) {
             throw new IllegalArgumentException("You cannot assign a challenge to yourself. Use the standard 'Start' button instead.");
         }
 
-        // 2. Validare Spam (Mesaj Corectat)
         boolean isAlreadyActive = repository.isChallengeActiveForUser(
                 request.getUserId(),
                 request.getChallengeId(),
@@ -146,7 +158,7 @@ public class ChallengeUserService {
         ChallengeUser linkToSave;
 
         if (existingLinkOpt.isPresent()) {
-            // Update la vechiul challenge
+
             linkToSave = existingLinkOpt.get();
             linkToSave.setStatus(ChallengeUserStatus.PENDING);
             linkToSave.setAssignedBy(currentUser.getId());
@@ -156,7 +168,6 @@ public class ChallengeUserService {
             linkToSave.setStartDate(null);
             linkToSave.setDeadline(null);
         } else {
-            // Creare noua
             linkToSave = new ChallengeUser();
             linkToSave.setUser(targetUser);
             linkToSave.setChallenge(challenge);
@@ -166,6 +177,7 @@ public class ChallengeUserService {
 
         ChallengeUser savedLink = repository.save(linkToSave);
 
+        // Notify the target friend
         notificationService.createNotification(new NotificationCreateRequest(
                 targetUser.getId(),
                 currentUser.getUsername() + " challenged you to: " + challenge.getTitle() + "!",
@@ -175,6 +187,12 @@ public class ChallengeUserService {
         return savedLink;
     }
 
+    /**
+     * Updates challenge progress. If status is COMPLETED, it triggers:
+     * 1. XP Reward calculation.
+     * 2. Global mission counter increment.
+     * 3. Social notification back to the assigner.
+     */
     @Transactional
     public ChallengeUser updateChallengeUserStatus(UUID id, ChallengeUserUpdateRequest request) {
         ChallengeUser link = getChallengeUserById(id);
@@ -182,6 +200,7 @@ public class ChallengeUserService {
 
         if (request.getStatus() != null) link.setStatus(request.getStatus());
 
+        // Handle Acceptance Phase
         if (request.getStatus() == ChallengeUserStatus.ACCEPTED) {
             if (link.getDateAccepted() == null) {
                 link.setDateAccepted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
@@ -189,34 +208,31 @@ public class ChallengeUserService {
             if (request.getStartDate() != null) link.setStartDate(request.getStartDate());
             if (request.getTargetDeadline() != null) link.setDeadline(request.getTargetDeadline());
 
-            // --- FIX START ---
-            // 1. Verificăm "oldStatus" ca să nu trimitem notificare dacă userul doar își actualizează datele
+
             if (oldStatus != ChallengeUserStatus.ACCEPTED) {
 
-                // 2. Verificăm dacă a fost asignat de altcineva (nu self-challenge)
                 if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
 
-                    // Calin primește mesajul
                     String message = "Game on! " + link.getUser().getUsername() + " accepted your challenge: " + link.getChallenge().getTitle();
 
                     notificationService.createNotification(new NotificationCreateRequest(
-                            link.getAssignedBy(), // ID-ul lui Calin
+                            link.getAssignedBy(),
                             message,
                             NotificationType.CHALLENGE
                     ));
                 }
             }
         }
+        // Handle Completion Phase (Rewards Logic)
         if (request.getStatus() == ChallengeUserStatus.COMPLETED) {
             if (link.getDateAccepted() == null) link.setDateAccepted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
             link.setDateCompleted(ZonedDateTime.now(ZoneId.of("Europe/Bucharest")).toLocalDateTime());
 
             if (oldStatus != ChallengeUserStatus.COMPLETED) {
-                // 1. Incrementăm reușitele direct pe entitatea 'link'
+
                 Integer currentTimes = link.getTimesCompleted();
                 link.setTimesCompleted(currentTimes == null ? 1 : currentTimes + 1);
 
-                // 2. Gestionăm punctele și misiunile utilizatorului
                 User user = link.getUser();
                 Challenge challenge = link.getChallenge();
 
@@ -229,8 +245,7 @@ public class ChallengeUserService {
 
                 userRepository.save(user);
 
-                // --- NOTIFICARE COMPLETION START ---
-                // Verificăm dacă a fost o provocare trimisă de altcineva
+                // Social Victory Notification
                 if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
                     String message = "Victory! " + link.getUser().getUsername() +
                             " has crushed your challenge: " + link.getChallenge().getTitle() +
@@ -239,7 +254,7 @@ public class ChallengeUserService {
                     notificationService.createNotification(new NotificationCreateRequest(
                             link.getAssignedBy(),
                             message,
-                            NotificationType.CHALLENGE // Folosim CHALLENGE pentru tematică unitară
+                            NotificationType.CHALLENGE
                     ));
                 }
             }
@@ -249,12 +264,13 @@ public class ChallengeUserService {
         return repository.save(link);
     }
 
+    /**
+     * Deletes a participation record. Sends a 'Refusal' notification if a friend's assignment is declined.
+     */
     @Transactional
     public void deleteChallengeUser(UUID id) {
         ChallengeUser link = getChallengeUserById(id);
 
-        // --- NOTIFICARE REFUSAL START ---
-        // Dacă provocarea a fost trimisă de altcineva și este încă în stadiul PENDING/RECEIVED
         if (link.getAssignedBy() != null && !link.getAssignedBy().equals(link.getUser().getId())) {
             if (link.getStatus() == ChallengeUserStatus.PENDING || link.getStatus() == ChallengeUserStatus.RECEIVED) {
 
@@ -269,11 +285,11 @@ public class ChallengeUserService {
                 ));
             }
         }
-        // --- NOTIFICARE REFUSAL END ---
 
         repository.delete(link);
     }
 
+    // Helper methods...
     public List<ChallengeUserDTO> getChallengeUsersByStatus(UUID userId, String statusString) {
         ChallengeUserStatus status = ChallengeUserStatus.valueOf(statusString.toUpperCase());
         return repository.findByUserIdAndStatus(userId, status).stream().map(this::convertToDto).toList();
